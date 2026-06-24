@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RideKorea Map</title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f8f9fa;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        /* Custom styles for Kakao Map CustomOverlay to look modern */
+        .custom-overlay {
+            position: relative;
+            bottom: 45px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            border-bottom: 2px solid #ddd;
+            float: left;
+            background-color: #fff;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            padding: 6px 12px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            white-space: nowrap;
+        }
+        .custom-overlay:after {
+            content: '';
+            position: absolute;
+            margin-left: -5px;
+            left: 50%;
+            bottom: -5px;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #fff;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+        let map = null;
+        let polyline = null;
+        let markers = [];
+        let overlays = [];
+
+        // 1. Post message helper
+        function sendLog(msg) {
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'LOG', message: msg }));
+            }
+        }
+
+        function sendToRN(payload) {
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify(payload));
+            }
+        }
+
+        // 2. Parse Kakao App Key from URL query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const kakaoAppKey = urlParams.get('appkey') || '2db723cec61dc5715fe7f7f4673b31a5'; // Default placeholder key
+
+        // 3. Load Kakao Map SDK dynamically
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoAppKey}&autoload=false&libraries=services`;
+        
+        script.onload = () => {
+            sendLog("Kakao Map Script Loaded. Initializing...");
+            kakao.maps.load(() => {
+                initMap();
+            });
+        };
+        script.onerror = () => {
+            sendLog("Failed to load Kakao Map Script.");
+            sendToRN({ 
+                type: 'MAP_ERROR', 
+                message: 'Kakao Map SDK failed to load. Please check your network connection and Kakao Console domain settings.' 
+            });
+        };
+        document.head.appendChild(script);
+
+        // 4. Initialize Map
+        function initMap() {
+            const container = document.getElementById('map');
+            const options = {
+                center: new kakao.maps.LatLng(37.56682, 126.97865), // Default: Seoul
+                level: 7
+            };
+
+            map = new kakao.maps.Map(container, options);
+            sendLog("Kakao Map Instance Created.");
+            sendToRN({ type: 'MAP_LOADED' });
+
+            // Set up click listener on map to close open overlays
+            kakao.maps.event.addListener(map, 'click', function() {
+                clearOverlays();
+                sendToRN({ type: 'MAP_CLICKED' });
+            });
+
+            // Set up idle listener to monitor Bounding Box coordinates change
+            kakao.maps.event.addListener(map, 'idle', function() {
+                const bounds = map.getBounds();
+                const sw = bounds.getSouthWest();
+                const ne = bounds.getNorthEast();
+                sendToRN({
+                    type: 'MAP_BOUNDS_CHANGED',
+                    min_lat: sw.getLat(),
+                    min_lng: sw.getLng(),
+                    max_lat: ne.getLat(),
+                    max_lng: ne.getLng()
+                });
+            });
+        }
+
+        function clearOverlays() {
+            overlays.forEach(o => o.setMap(null));
+            overlays = [];
+        }
+
+        // 5. Handle incoming messages from React Native
+        window.addEventListener('message', function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                sendLog("Received message from RN: " + data.type);
+
+                if (!map) return;
+
+                switch (data.type) {
+                    case 'INIT_MAP':
+                        if (data.center) {
+                            const newCenter = new kakao.maps.LatLng(data.center.lat, data.center.lng);
+                            map.setCenter(newCenter);
+                        }
+                        if (data.level) {
+                            map.setLevel(data.level);
+                        }
+                        break;
+
+                    case 'DRAW_ROUTE':
+                        // Clear existing polyline
+                        if (polyline) {
+                            polyline.setMap(null);
+                        }
+
+                        if (data.path && data.path.length > 0) {
+                            const linePath = data.path.map(p => new kakao.maps.LatLng(p.lat, p.lng));
+                            polyline = new kakao.maps.Polyline({
+                                path: linePath,
+                                strokeWeight: 5,
+                                strokeColor: '#007AFF', // Blue path line
+                                strokeOpacity: 0.8,
+                                strokeStyle: 'solid'
+                            });
+                            polyline.setMap(map);
+
+                            // Auto-fit bounds
+                            const bounds = new kakao.maps.LatLngBounds();
+                            linePath.forEach(pt => bounds.extend(pt));
+                            map.setBounds(bounds);
+                            sendLog("Route line drawn and bounds adjusted.");
+                        }
+                        break;
+
+                    case 'SET_SPOTS':
+                        // Clear existing markers & overlays
+                        markers.forEach(m => m.setMap(null));
+                        markers = [];
+                        clearOverlays();
+
+                        if (data.spots && data.spots.length > 0) {
+                            const currentLang = data.lang || 'ko'; // Default to ko
+                            data.spots.forEach(spot => {
+                                const markerPosition = new kakao.maps.LatLng(spot.lat, spot.lng);
+                                
+                                // Create Marker
+                                const marker = new kakao.maps.Marker({
+                                    position: markerPosition,
+                                    title: currentLang === 'en' ? spot.name_en : spot.name
+                                });
+                                marker.setMap(map);
+                                markers.push(marker);
+
+                                // Marker Click Listener
+                                kakao.maps.event.addListener(marker, 'click', function() {
+                                    clearOverlays();
+                                    
+                                    // Smoothly pan to the clicked marker position
+                                    map.panTo(markerPosition);
+                                    
+                                    // Show custom overlay for spot name
+                                    const displayName = currentLang === 'en' ? spot.name_en : spot.name;
+                                    const content = `<div class="custom-overlay">${displayName}</div>`;
+                                    const customOverlay = new kakao.maps.CustomOverlay({
+                                        position: markerPosition,
+                                        content: content,
+                                        yAnchor: 1
+                                    });
+                                    customOverlay.setMap(map);
+                                    overlays.push(customOverlay);
+
+                                    // Send event to RN
+                                    sendToRN({
+                                        type: 'MARKER_CLICKED',
+                                        spotId: spot.id,
+                                        name: spot.name,
+                                        name_en: spot.name_en,
+                                        lat: spot.lat,
+                                        lng: spot.lng
+                                    });
+                                });
+                            });
+                            sendLog(`Added ${data.spots.length} markers.`);
+                        }
+                        break;
+
+                    case 'SET_DIARIES':
+                        // Clear existing diary markers
+                        if (window.diaryMarkers) {
+                            window.diaryMarkers.forEach(m => m.setMap(null));
+                        }
+                        window.diaryMarkers = [];
+
+                        if (data.diaries && data.diaries.length > 0) {
+                            data.diaries.forEach(diary => {
+                                if (diary.lat && diary.lng) {
+                                    const markerPosition = new kakao.maps.LatLng(diary.lat, diary.lng);
+                                    
+                                    // Use a custom star marker image for rider stories
+                                    const imageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png';
+                                    const imageSize = new kakao.maps.Size(24, 35);
+                                    const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+                                    
+                                    const diaryMarker = new kakao.maps.Marker({
+                                        position: markerPosition,
+                                        image: markerImage,
+                                        title: diary.diary_text || 'Rider\'s Story'
+                                    });
+                                    diaryMarker.setMap(map);
+                                    window.diaryMarkers.push(diaryMarker);
+                                    
+                                    // Handle diary marker click
+                                    kakao.maps.event.addListener(diaryMarker, 'click', function() {
+                                        sendToRN({
+                                            type: 'DIARY_MARKER_CLICKED',
+                                            diaryId: diary.id,
+                                            spotId: diary.spot_id
+                                        });
+                                    });
+                                }
+                            });
+                            sendLog(`Added ${data.diaries.length} diary markers.`);
+                        }
+                        break;
+
+                    case 'UPDATE_MY_LOCATION':
+                        if (data.lat && data.lng) {
+                            const myPos = new kakao.maps.LatLng(data.lat, data.lng);
+
+                            // Create or update marker (pulsing blue dot overlay)
+                            if (!window.myLocationMarker) {
+                                const content = '<div style="width: 16px; height: 16px; border-radius: 8px; background-color: #007AFF; border: 2px solid #ffffff; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>';
+                                window.myLocationMarker = new kakao.maps.CustomOverlay({
+                                    position: myPos,
+                                    content: content,
+                                    xAnchor: 0.5,
+                                    yAnchor: 0.5
+                                });
+                                window.myLocationMarker.setMap(map);
+                            } else {
+                                window.myLocationMarker.setPosition(myPos);
+                            }
+                            sendLog("My location marker updated.");
+                        }
+                        break;
+
+                    case 'PAN_TO_LOCATION':
+                        if (data.lat && data.lng) {
+                            const targetPos = new kakao.maps.LatLng(data.lat, data.lng);
+                            map.panTo(targetPos);
+                            sendLog("Panned to target location.");
+                        }
+                        break;
+                }
+            } catch (err) {
+                sendLog("Error parsing message: " + err.message);
+            }
+        });
+    </script>
+</body>
+</html>

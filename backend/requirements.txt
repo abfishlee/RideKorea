@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pydantic[email]
+python-jose[cryptography]
+google-auth
+requests
+geoalchemy2
+shapely
+python-multipart
+pydantic-settings
+psycopg2-binary

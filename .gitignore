@@ -1,0 +1,28 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Node / React Native / Expo
+node_modules/
+.expo/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment / Secrets
+.env
+.env.local
+.env.*.local
+
+# IDE / System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

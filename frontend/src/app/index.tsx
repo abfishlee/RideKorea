@@ -113,6 +113,7 @@ export default function HomeScreen() {
   const [googleRequest, googleResponse, promptAsync] = Google.useAuthRequest({
     androidClientId: "849613742035-j77rn224om2d7idcf41cp30itht8v5k9.apps.googleusercontent.com",
     webClientId: "849613742035-8qdt58uj7g6frgc2fo40f54upm1husnp.apps.googleusercontent.com",
+    iosClientId: "849613742035-dummy-ios-client-id.apps.googleusercontent.com", // iOS 렌더 통과용 더미 값
   });
 
   useEffect(() => {

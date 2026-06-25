@@ -102,12 +102,10 @@ export default function HomeScreen() {
   const [diaryText, setDiaryText] = useState('');
   const [isSubmittingDiary, setIsSubmittingDiary] = useState(false);
 
-  // Google Login Hooks
+  // Google Login Hooks (Expo Go 환경에서는 webClientId만 전달하여 프록시 웹 플로우를 태워야 매칭 오류가 나지 않습니다!)
   const [googleRequest, googleResponse, promptAsync] = Google.useAuthRequest({
-    androidClientId: "849613742035-j77rn224om2d7idcf41cp30itht8v5k9.apps.googleusercontent.com",
     webClientId: "849613742035-8qdt58uj7g6frgc2fo40f54upm1husnp.apps.googleusercontent.com",
-    iosClientId: "849613742035-8g5bhkqg3f0k6cb10e0tr4r4egg3seao.apps.googleusercontent.com",
-    redirectUri: 'https://auth.expo.io/@abfishlee/frontend', // 구글 콘솔에 등록된 프록시 주소 강제 매핑
+    redirectUri: 'https://auth.expo.io/@abfishlee/frontend', // 구글 콘솔 웹 클라이언트에 등록된 주소
   });
 
   useEffect(() => {

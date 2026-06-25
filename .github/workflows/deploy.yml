@@ -34,6 +34,10 @@ jobs:
           echo "Restarting FastAPI Backend Server..."
           # 4. 기존 uvicorn 프로세스를 안전하게 종료하고 nohup으로 무중단 재기동
           pkill -f uvicorn || true
+          
+          # GitHub Actions Runner의 자식 프로세스 강제 종료(Process Tree Killer) 방지
+          export RUNNER_TRACKING_ID=to_prevent_killing
           nohup venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 > uvicorn.log 2>&1 &
           
           echo "Deployment successfully executed!"
+

@@ -20,6 +20,7 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+secrets.json
 
 # IDE / System
 .vscode/

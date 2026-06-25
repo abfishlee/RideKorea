@@ -43,7 +43,7 @@ def verify_google_token(token: str) -> dict:
         id_info = id_token.verify_oauth2_token(
             token, 
             google_requests.Request(), 
-            settings.GOOGLE_CLIENT_ID
+            audience=[settings.GOOGLE_CLIENT_ID_WEB, settings.GOOGLE_CLIENT_ID_ANDROID]
         )
         return id_info
     except Exception as e:

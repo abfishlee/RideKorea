@@ -15,6 +15,11 @@ import {
 import { WebView } from 'react-native-webview';
 import * as SecureStore from 'expo-secure-store';
 import * as Location from 'expo-location';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+
+WebBrowser.maybeCompleteAuthSession();
+
 
 // backend API Base URL (For emulator, localhost might refer to emulator itself. 
 // 10.0.2.2 is typically used for Android emulator to access host machine.
@@ -28,6 +33,8 @@ const MAP_URL = Platform.select({
   android: 'http://10.0.2.2:8000/map',
   default: 'http://localhost:8000/map'
 }) || 'http://localhost:8000/map';
+
+
 
 interface Course {
   id: string;
@@ -101,6 +108,50 @@ export default function HomeScreen() {
   const [isDiaryModalOpen, setIsDiaryModalOpen] = useState(false);
   const [diaryText, setDiaryText] = useState('');
   const [isSubmittingDiary, setIsSubmittingDiary] = useState(false);
+
+  // Google Login Hooks
+  const [googleRequest, googleResponse, promptAsync] = Google.useAuthRequest({
+    androidClientId: "849613742035-j77rn224om2d7idcf41cp30itht8v5k9.apps.googleusercontent.com",
+    webClientId: "849613742035-8qdt58uj7g6frgc2fo40f54upm1husnp.apps.googleusercontent.com",
+  });
+
+  useEffect(() => {
+    if (googleResponse?.type === 'success' && googleResponse.authentication?.idToken) {
+      handleActualGoogleLogin(googleResponse.authentication.idToken);
+    }
+  }, [googleResponse]);
+
+  const handleActualGoogleLogin = async (idToken: string) => {
+    try {
+      setIsMapLoading(true);
+      const response = await fetch(`${BACKEND_BASE}/auth/social-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_token: idToken,
+          provider: 'google'
+        })
+      });
+
+      if (!response.ok) throw new Error('Authentication failed');
+      
+      const data = await response.json();
+      await SecureStore.setItemAsync('auth_token', data.access_token);
+      setToken(data.access_token);
+      
+      await fetchUserProfile(data.access_token);
+      await fetchMyVouchers(data.access_token);
+      
+      Alert.alert(
+        lang === 'ko' ? '로그인 성공' : 'Login Success',
+        lang === 'ko' ? '구글 소셜 로그인 성공!' : 'Google login successful!'
+      );
+    } catch (err: any) {
+      Alert.alert(lang === 'ko' ? '로그인 실패' : 'Login Failed', err.message);
+    } finally {
+      setIsMapLoading(false);
+    }
+  };
 
   const fetchUserProfile = async (authToken: string) => {
     try {
@@ -365,35 +416,39 @@ export default function HomeScreen() {
     }
   };
 
-  // Mock Social Login (using dev endpoint token bypass)
+  // Mock/Actual Social Login
   const handleSocialLogin = async (provider: 'google' | 'apple') => {
-    try {
-      // Send mock token to trigger auto-registration in FastAPI
-      const devToken = `dev-token-${provider}-1`;
-      const response = await fetch(`${BACKEND_BASE}/auth/social-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id_token: devToken,
-          provider: provider
-        })
-      });
+    if (provider === 'google') {
+      promptAsync();
+    } else {
+      // Mock Apple Login
+      try {
+        const devToken = `dev-token-apple-1`;
+        const response = await fetch(`${BACKEND_BASE}/auth/social-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_token: devToken,
+            provider: 'apple'
+          })
+        });
 
-      if (!response.ok) throw new Error('Authentication failed');
-      
-      const data = await response.json();
-      await SecureStore.setItemAsync('auth_token', data.access_token);
-      setToken(data.access_token);
-      
-      await fetchUserProfile(data.access_token);
-      await fetchMyVouchers(data.access_token);
-      
-      Alert.alert(
-        lang === 'ko' ? '로그인 성공' : 'Login Success',
-        lang === 'ko' ? `${provider.toUpperCase()} 소셜 로그인 성공!` : `${provider.toUpperCase()} login successful!`
-      );
-    } catch (err: any) {
-      Alert.alert(lang === 'ko' ? '로그인 실패' : 'Login Failed', err.message);
+        if (!response.ok) throw new Error('Authentication failed');
+        
+        const data = await response.json();
+        await SecureStore.setItemAsync('auth_token', data.access_token);
+        setToken(data.access_token);
+        
+        await fetchUserProfile(data.access_token);
+        await fetchMyVouchers(data.access_token);
+        
+        Alert.alert(
+          lang === 'ko' ? '로그인 성공' : 'Login Success',
+          lang === 'ko' ? 'APPLE 소셜 로그인 성공!' : 'APPLE login successful!'
+        );
+      } catch (err: any) {
+        Alert.alert(lang === 'ko' ? '로그인 실패' : 'Login Failed', err.message);
+      }
     }
   };
 

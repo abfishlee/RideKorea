@@ -26,8 +26,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30  # 30 days
     
     # OAuth Settings
-    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_ID_WEB: str = "849613742035-8qdt58uj7g6frgc2fo40f54upm1husnp.apps.googleusercontent.com"
+    GOOGLE_CLIENT_ID_ANDROID: str = "849613742035-j77rn224om2d7idcf41cp30itht8v5k9.apps.googleusercontent.com"
+    GOOGLE_CLIENT_ID: str = GOOGLE_CLIENT_ID_WEB
     APPLE_CLIENT_ID: str = os.getenv("APPLE_CLIENT_ID", "")
+
     
     # Media Upload Settings
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")

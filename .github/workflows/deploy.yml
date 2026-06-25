@@ -1,0 +1,39 @@
+name: RideKorea Homeserver Continuous Deployment
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # 홈서버에 설치된 self-hosted 러너를 타겟으로 지정
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy Database and API Backend
+        run: |
+          echo "Starting Docker containers..."
+          # 1. DB 컨테이너 동기화 및 기동
+          docker compose up -d
+
+          echo "Setting up Python Virtual Environment..."
+          # 2. 백엔드 디렉토리 이동 및 의존성 라이브러리 갱신
+          cd backend
+          python3 -m venv venv
+          venv/bin/pip install --upgrade pip
+          venv/bin/pip install -r requirements.txt
+
+          echo "Running Database Migration and Seeding..."
+          # 3. Alembic DB 스키마 갱신 및 시드 데이터 적재
+          venv/bin/alembic upgrade head
+          venv/bin/python3 -m app.seed
+
+          echo "Restarting FastAPI Backend Server..."
+          # 4. 기존 uvicorn 프로세스를 안전하게 종료하고 nohup으로 무중단 재기동
+          pkill -f uvicorn || true
+          nohup venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 > uvicorn.log 2>&1 &
+          
+          echo "Deployment successfully executed!"

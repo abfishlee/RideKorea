@@ -107,9 +107,7 @@ export default function HomeScreen() {
     androidClientId: "849613742035-j77rn224om2d7idcf41cp30itht8v5k9.apps.googleusercontent.com",
     webClientId: "849613742035-8qdt58uj7g6frgc2fo40f54upm1husnp.apps.googleusercontent.com",
     iosClientId: "849613742035-8g5bhkqg3f0k6cb10e0tr4r4egg3seao.apps.googleusercontent.com",
-    redirectUri: makeRedirectUri({
-      scheme: 'frontend',
-    }),
+    redirectUri: 'https://auth.expo.io/@abfishlee/frontend', // 구글 콘솔에 등록된 프록시 주소 강제 매핑
   });
 
   useEffect(() => {

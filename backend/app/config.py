@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     # OAuth Settings
     GOOGLE_CLIENT_ID_WEB: str = "849613742035-8qdt58uj7g6frgc2fo40f54upm1husnp.apps.googleusercontent.com"
     GOOGLE_CLIENT_ID_ANDROID: str = "849613742035-j77rn224om2d7idcf41cp30itht8v5k9.apps.googleusercontent.com"
+    GOOGLE_CLIENT_ID_IOS: str = "849613742035-8g5bhkqg3f0k6cb10e0tr4r4egg3seao.apps.googleusercontent.com"
     GOOGLE_CLIENT_ID: str = GOOGLE_CLIENT_ID_WEB
     APPLE_CLIENT_ID: str = os.getenv("APPLE_CLIENT_ID", "")
 

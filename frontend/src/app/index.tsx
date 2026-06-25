@@ -21,18 +21,9 @@ import * as Google from 'expo-auth-session/providers/google';
 WebBrowser.maybeCompleteAuthSession();
 
 
-// backend API Base URL (For emulator, localhost might refer to emulator itself. 
-// 10.0.2.2 is typically used for Android emulator to access host machine.
-// We use a fallback logic here.)
-const BACKEND_BASE = Platform.select({
-  android: 'http://10.0.2.2:8000/api/v1',
-  default: 'http://localhost:8000/api/v1'
-});
-
-const MAP_URL = Platform.select({
-  android: 'http://10.0.2.2:8000/map',
-  default: 'http://localhost:8000/map'
-}) || 'http://localhost:8000/map';
+// backend API Base URL (Local PC internal LAN IP: 192.168.0.70)
+const BACKEND_BASE = 'http://192.168.0.70:8000/api/v1';
+const MAP_URL = 'http://192.168.0.70:8000/map';
 
 
 

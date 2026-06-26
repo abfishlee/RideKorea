@@ -6,7 +6,7 @@ from .config import settings
 # Create async engine for PostgreSQL connection
 engine = create_async_engine(
     settings.public_db_url_async,
-    echo=True, # Logs generated SQL queries for debugging
+    echo=settings.SQL_ECHO,  # Toggle SQL logging via SQL_ECHO env (default: on)
 )
 
 # Async session factory

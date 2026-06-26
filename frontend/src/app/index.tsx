@@ -102,17 +102,7 @@ export default function HomeScreen() {
   const [diaryText, setDiaryText] = useState('');
   const [isSubmittingDiary, setIsSubmittingDiary] = useState(false);
 
-  // Google Login Hooks (Expo Go 환경에서는 webClientId만 전달하여 프록시 웹 플로우를 태워야 매칭 오류가 나지 않습니다!)
-  const [googleRequest, googleResponse, promptAsync] = Google.useAuthRequest({
-    webClientId: "849613742035-8qdt58uj7g6frgc2fo40f54upm1husnp.apps.googleusercontent.com",
-    redirectUri: 'https://auth.expo.io/@abfishlee/frontend', // 구글 콘솔 웹 클라이언트에 등록된 주소
-  });
-
-  useEffect(() => {
-    if (googleResponse?.type === 'success' && googleResponse.authentication?.idToken) {
-      handleActualGoogleLogin(googleResponse.authentication.idToken);
-    }
-  }, [googleResponse]);
+  // Google Login Hooks (제거됨 - 수동 WebBrowser 방식으로 대체)
 
   const handleActualGoogleLogin = async (idToken: string) => {
     try {
@@ -412,7 +402,36 @@ export default function HomeScreen() {
   // Mock/Actual Social Login
   const handleSocialLogin = async (provider: 'google' | 'apple') => {
     if (provider === 'google') {
-      promptAsync();
+      try {
+        const returnUrl = makeRedirectUri(); 
+        const clientId = "849613742035-8qdt58uj7g6frgc2fo40f54upm1husnp.apps.googleusercontent.com";
+        const proxyUri = "https://auth.expo.io/@abfishlee/frontend";
+        
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
+          `client_id=${clientId}` +
+          `&redirect_uri=${encodeURIComponent(proxyUri)}` +
+          `&response_type=id_token` +
+          `&scope=openid%20profile%20email` +
+          `&nonce=default_nonce` +
+          `&state=random_state`;
+
+        const result = await WebBrowser.openAuthSessionAsync(authUrl, returnUrl);
+        
+        if (result.type === 'success' && result.url) {
+          // Extract id_token from the URL fragment (#) or query (?)
+          const match = result.url.match(/[#?&]id_token=([^&]+)/);
+          const idToken = match ? match[1] : null;
+          
+          if (idToken) {
+            handleActualGoogleLogin(idToken);
+            return;
+          } else {
+            Alert.alert(lang === 'ko' ? '로그인 실패' : 'Login Failed', lang === 'ko' ? '토큰을 받아오지 못했습니다.' : 'Failed to retrieve token.');
+          }
+        }
+      } catch (err: any) {
+        Alert.alert(lang === 'ko' ? '에러' : 'Error', err.message);
+      }
     } else {
       // Mock Apple Login
       try {

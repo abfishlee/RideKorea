@@ -8,7 +8,17 @@ from sqlalchemy import text
 
 from .config import settings
 from .database import get_db
-from .routers import auth, courses, spots, journeys, diaries, vouchers, admin_vouchers
+from .core.exceptions import register_exception_handlers
+from .routers import (
+    auth,
+    courses,
+    spots,
+    journeys,
+    diaries,
+    vouchers,
+    admin_vouchers,
+    routing,
+)
 
 # Create uploads directory if not exists
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
@@ -18,10 +28,13 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
 
+# Map domain exceptions (NotFound/PermissionDenied/...) to HTTP responses
+register_exception_handlers(app)
+
 # CORS Middleware configurations
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all origins for mobile app local development
+    allow_origins=settings.cors_origins,  # default ["*"]; restrict via CORS_ORIGINS env
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,6 +51,7 @@ app.include_router(journeys.router, prefix=settings.API_V1_STR)
 app.include_router(diaries.router, prefix=settings.API_V1_STR)
 app.include_router(vouchers.router, prefix=settings.API_V1_STR)
 app.include_router(admin_vouchers.router, prefix=settings.API_V1_STR)
+app.include_router(routing.router, prefix=settings.API_V1_STR)
 
 @app.get("/", include_in_schema=False)
 async def redirect_to_swagger():
@@ -64,15 +78,14 @@ async def health_check(db: AsyncSession = Depends(get_db)):
 
 @app.get("/map", response_class=HTMLResponse, tags=["Map"])
 async def get_map_page():
-    """Serve the Kakao Map HTML page dynamically from frontend assets."""
+    """Serve the map HTML page dynamically from frontend assets."""
     current_dir = os.path.dirname(os.path.abspath(__file__))
     map_html_path = os.path.abspath(os.path.join(current_dir, "..", "..", "frontend", "assets", "map.html"))
-    
+
     if not os.path.exists(map_html_path):
         return HTMLResponse(content="<h1>Map HTML file not found</h1>", status_code=404)
-        
+
     with open(map_html_path, "r", encoding="utf-8") as f:
         html_content = f.read()
-        
-    return HTMLResponse(content=html_content)
 
+    return HTMLResponse(content=html_content)

@@ -112,7 +112,7 @@ async def authenticate_dev_user(db: AsyncSession) -> User:
     remains untouched while local UI work can bypass external providers.
     """
     dev_social_id = "ridekorea-dev-user"
-    dev_email = "dev@ridekorea.local"
+    dev_email = "dev@ridekorea.dev"
 
     user = (
         await db.execute(select(User).where(User.social_id == dev_social_id))

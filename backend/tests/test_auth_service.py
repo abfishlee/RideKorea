@@ -51,7 +51,7 @@ class DevLoginTest(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(user.social_id, "ridekorea-dev-user")
         self.assertEqual(user.provider, "dev")
-        self.assertEqual(user.email, "dev@ridekorea.local")
+        self.assertEqual(user.email, "dev@ridekorea.dev")
         self.assertEqual(user.display_name, "Dev Rider")
         self.assertEqual(user.preferred_language, "ko")
         self.assertEqual(db.added, [user])

@@ -1,8 +1,10 @@
 import type { Journey } from '@/types/ridekorea';
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
+import { Platform } from 'react-native';
 
 const DATABASE_NAME = 'ridekorea.db';
 const ACTIVE_RIDE_KEY = 'active';
+const WEB_ACTIVE_RIDE_KEY = 'ridekorea_active_ride_session_v1';
 
 interface RideMetaRow {
   key: string;
@@ -19,6 +21,21 @@ export interface LocalRideSession {
 }
 
 let dbPromise: Promise<SQLiteDatabase> | null = null;
+
+function readWebSession(): LocalRideSession | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem(WEB_ACTIVE_RIDE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as LocalRideSession;
+    if (!parsed?.journey?.id) return null;
+    return parsed;
+  } catch (err) {
+    console.log('Active ride web session parse error', err);
+    return null;
+  }
+}
 
 async function getDb() {
   if (!dbPromise) {
@@ -43,6 +60,18 @@ export async function saveActiveRideSession(
   journey: Journey,
   startedAt = new Date().toISOString(),
 ): Promise<void> {
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined') {
+      const nowIso = new Date().toISOString();
+      window.localStorage.setItem(WEB_ACTIVE_RIDE_KEY, JSON.stringify({
+        journey,
+        startedAt,
+        updatedAt: nowIso,
+      }));
+    }
+    return;
+  }
+
   const db = await getDb();
   const nowIso = new Date().toISOString();
 
@@ -62,6 +91,10 @@ export async function saveActiveRideSession(
 }
 
 export async function getActiveRideSession(): Promise<LocalRideSession | null> {
+  if (Platform.OS === 'web') {
+    return readWebSession();
+  }
+
   const db = await getDb();
   const row = await db.getFirstAsync<RideMetaRow>(
     `SELECT key, journey_id, journey_json, started_at, updated_at
@@ -88,6 +121,14 @@ export async function getActiveRideSession(): Promise<LocalRideSession | null> {
 }
 
 export async function clearActiveRideSession(journeyId?: string | null): Promise<void> {
+  if (Platform.OS === 'web') {
+    const session = readWebSession();
+    if (typeof window !== 'undefined' && (!journeyId || session?.journey.id === journeyId)) {
+      window.localStorage.removeItem(WEB_ACTIVE_RIDE_KEY);
+    }
+    return;
+  }
+
   const db = await getDb();
   if (journeyId) {
     await db.runAsync(
@@ -100,4 +141,3 @@ export async function clearActiveRideSession(journeyId?: string | null): Promise
 
   await db.runAsync('DELETE FROM ride_meta WHERE key = ?', ACTIVE_RIDE_KEY);
 }
-

@@ -13,7 +13,7 @@ Updated: 2026-07-02
 ## Dev Login Behavior
 
 - The endpoint creates or reuses a stable development user:
-  - Email: `dev@ridekorea.local`
+  - Email: `dev@ridekorea.dev`
   - Display name: `Dev Rider`
   - Provider: `dev`
 - The frontend receives a normal JWT and stores it through the existing auth session flow.

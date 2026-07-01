@@ -5,6 +5,7 @@ import {
 } from '@/utils/offline-track-queue-core';
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 const TRACK_QUEUE_KEY = 'ridekorea_offline_track_queue_v1';
 const TRACK_QUEUE_MIGRATION_KEY = 'secure_store_track_queue_migrated_v1';
@@ -21,6 +22,25 @@ interface TrackQueueRow {
 }
 
 let dbPromise: Promise<SQLiteDatabase> | null = null;
+
+function getWebQueue(): OfflineTrackQueueItem[] {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const raw = window.localStorage.getItem(TRACK_QUEUE_KEY);
+    if (!raw) return [];
+    return normalizeOfflineTrackQueue(JSON.parse(raw));
+  } catch (err) {
+    console.log('Offline track web queue read error', err);
+    return [];
+  }
+}
+
+function setWebQueue(queue: OfflineTrackQueueItem[]) {
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(TRACK_QUEUE_KEY, JSON.stringify(queue));
+  }
+}
 
 async function readLegacySecureStoreQueue(): Promise<OfflineTrackQueueItem[]> {
   try {
@@ -113,6 +133,13 @@ async function getQueueRows(journeyId: string, limit: number) {
 }
 
 export async function getQueuedTrackPointCount(journeyId?: string | null): Promise<number> {
+  if (Platform.OS === 'web') {
+    const queue = getWebQueue();
+    return journeyId
+      ? queue.filter((item) => item.journeyId === journeyId).length
+      : queue.length;
+  }
+
   const db = await getDb();
   const row = journeyId
     ? await db.getFirstAsync<{ count: number }>(
@@ -129,6 +156,21 @@ export async function enqueueTrackPoint(
   journeyId: string,
   point: JourneyTrackPointInput,
 ): Promise<number> {
+  if (Platform.OS === 'web') {
+    const queue = getWebQueue();
+    setWebQueue([
+      ...queue,
+      {
+        journeyId,
+        point,
+        queuedAt: new Date().toISOString(),
+        retryCount: 0,
+        lastTriedAt: null,
+      },
+    ]);
+    return getQueuedTrackPointCount(journeyId);
+  }
+
   const db = await getDb();
   await db.runAsync(
     `INSERT INTO ride_track_queue
@@ -145,6 +187,13 @@ export async function takeQueuedTrackPoints(
   journeyId: string,
   limit = TRACK_QUEUE_BATCH_LIMIT,
 ): Promise<JourneyTrackPointInput[]> {
+  if (Platform.OS === 'web') {
+    return getWebQueue()
+      .filter((item) => item.journeyId === journeyId)
+      .slice(0, limit)
+      .map((item) => item.point);
+  }
+
   const rows = await getQueueRows(journeyId, limit);
   return rows.flatMap((row) => {
     const item = rowToQueueItem(row);
@@ -157,6 +206,22 @@ export async function markQueuedTrackPointAttempt(
   attemptedCount: number,
 ): Promise<number> {
   if (attemptedCount <= 0) return getQueuedTrackPointCount(journeyId);
+  if (Platform.OS === 'web') {
+    let remainingAttempts = attemptedCount;
+    const nowIso = new Date().toISOString();
+    const queue = getWebQueue().map((item) => {
+      if (item.journeyId !== journeyId || remainingAttempts <= 0) return item;
+      remainingAttempts -= 1;
+      return {
+        ...item,
+        retryCount: item.retryCount + 1,
+        lastTriedAt: nowIso,
+      };
+    });
+    setWebQueue(queue);
+    return getQueuedTrackPointCount(journeyId);
+  }
+
   const db = await getDb();
   await db.runAsync(
     `UPDATE ride_track_queue
@@ -180,6 +245,17 @@ export async function removeQueuedTrackPoints(
   removeCount: number,
 ): Promise<number> {
   if (removeCount <= 0) return getQueuedTrackPointCount(journeyId);
+  if (Platform.OS === 'web') {
+    let remainingRemovals = removeCount;
+    const queue = getWebQueue().filter((item) => {
+      if (item.journeyId !== journeyId || remainingRemovals <= 0) return true;
+      remainingRemovals -= 1;
+      return false;
+    });
+    setWebQueue(queue);
+    return getQueuedTrackPointCount(journeyId);
+  }
+
   const db = await getDb();
   await db.runAsync(
     `DELETE FROM ride_track_queue
@@ -196,6 +272,11 @@ export async function removeQueuedTrackPoints(
 }
 
 export async function clearQueuedTrackPoints(journeyId: string): Promise<number> {
+  if (Platform.OS === 'web') {
+    setWebQueue(getWebQueue().filter((item) => item.journeyId !== journeyId));
+    return getQueuedTrackPointCount(journeyId);
+  }
+
   const db = await getDb();
   await db.runAsync(
     'DELETE FROM ride_track_queue WHERE journey_id = ?',

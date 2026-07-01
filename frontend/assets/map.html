@@ -20,7 +20,6 @@
             top: 0;
             left: 0;
         }
-        /* Custom styles for Kakao Map CustomOverlay to look modern */
         .custom-overlay {
             position: relative;
             bottom: 45px;
@@ -57,10 +56,14 @@
     <script>
         let map = null;
         let polyline = null;
+        let trackPolylines = [];
         let markers = [];
         let overlays = [];
+        let localMomentMarkers = [];
+        let travelPoiMarkers = [];
+        let currentTravelPois = [];
+        let currentTravelPoiLang = 'ko';
 
-        // 1. Post message helper
         function sendLog(msg) {
             if (window.ReactNativeWebView) {
                 window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'LOG', message: msg }));
@@ -73,50 +76,46 @@
             }
         }
 
-        // 2. Parse Kakao App Key from URL query parameter
         const urlParams = new URLSearchParams(window.location.search);
-        const kakaoAppKey = urlParams.get('appkey') || '2db723cec61dc5715fe7f7f4673b31a5'; // Default placeholder key
+        const kakaoAppKey = urlParams.get('appkey') || '2db723cec61dc5715fe7f7f4673b31a5';
 
-        // 3. Load Kakao Map SDK dynamically
         const script = document.createElement('script');
         script.type = 'text/javascript';
         script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoAppKey}&autoload=false&libraries=services`;
-        
+
         script.onload = () => {
-            sendLog("Kakao Map Script Loaded. Initializing...");
+            sendLog('Kakao Map Script Loaded. Initializing...');
             kakao.maps.load(() => {
                 initMap();
             });
         };
         script.onerror = () => {
-            sendLog("Failed to load Kakao Map Script.");
-            sendToRN({ 
-                type: 'MAP_ERROR', 
-                message: 'Kakao Map SDK failed to load. Please check your network connection and Kakao Console domain settings.' 
+            sendLog('Failed to load Kakao Map Script.');
+            sendToRN({
+                type: 'MAP_ERROR',
+                message: 'Kakao Map SDK failed to load. Please check your network connection and Kakao Console domain settings.'
             });
         };
         document.head.appendChild(script);
 
-        // 4. Initialize Map
         function initMap() {
             const container = document.getElementById('map');
             const options = {
-                center: new kakao.maps.LatLng(37.56682, 126.97865), // Default: Seoul
+                center: new kakao.maps.LatLng(37.56682, 126.97865),
                 level: 7
             };
 
             map = new kakao.maps.Map(container, options);
-            sendLog("Kakao Map Instance Created.");
+            sendLog('Kakao Map Instance Created.');
             sendToRN({ type: 'MAP_LOADED' });
 
-            // Set up click listener on map to close open overlays
             kakao.maps.event.addListener(map, 'click', function() {
                 clearOverlays();
                 sendToRN({ type: 'MAP_CLICKED' });
             });
 
-            // Set up idle listener to monitor Bounding Box coordinates change
             kakao.maps.event.addListener(map, 'idle', function() {
+                renderTravelPoiMarkers();
                 const bounds = map.getBounds();
                 const sw = bounds.getSouthWest();
                 const ne = bounds.getNorthEast();
@@ -131,15 +130,241 @@
         }
 
         function clearOverlays() {
-            overlays.forEach(o => o.setMap(null));
+            overlays.forEach(overlay => overlay.setMap(null));
             overlays = [];
         }
 
-        // 5. Handle incoming messages from React Native
+        function clearTrackPolylines() {
+            trackPolylines.forEach(line => line.setMap(null));
+            trackPolylines = [];
+        }
+
+        function drawTrackSegment(segment, isOffRoute) {
+            if (!segment || segment.length < 2) return;
+
+            const linePath = segment.map(point => new kakao.maps.LatLng(point.lat, point.lng));
+            const line = new kakao.maps.Polyline({
+                path: linePath,
+                strokeWeight: 6,
+                strokeColor: isOffRoute ? '#EC4899' : '#38BDF8',
+                strokeOpacity: 0.88,
+                strokeStyle: 'solid'
+            });
+            line.setMap(map);
+            trackPolylines.push(line);
+        }
+
+        function drawTrackPoints(points) {
+            clearTrackPolylines();
+            if (!points || points.length < 2) return;
+
+            let segment = [points[0]];
+            let currentState = Boolean(points[0].is_off_route);
+
+            for (let i = 1; i < points.length; i++) {
+                const nextState = Boolean(points[i].is_off_route);
+                if (nextState !== currentState) {
+                    segment.push(points[i]);
+                    drawTrackSegment(segment, currentState);
+                    segment = [points[i]];
+                    currentState = nextState;
+                } else {
+                    segment.push(points[i]);
+                }
+            }
+
+            drawTrackSegment(segment, currentState);
+        }
+
+        function addLocalMomentMarker(moment) {
+            if (!moment || !moment.lat || !moment.lng) return;
+
+            const markerPosition = new kakao.maps.LatLng(moment.lat, moment.lng);
+            const content = `
+                <div style="width: 34px; height: 34px; border-radius: 17px; overflow: hidden; border: 3px solid #ffffff; box-shadow: 0 2px 8px rgba(15,23,42,0.35); background: #0F172A;">
+                    ${moment.photoUrl
+                        ? `<img src="${moment.photoUrl}" style="width: 100%; height: 100%; object-fit: cover;" />`
+                        : '<div style="width:100%; height:100%; background:#38BDF8;"></div>'}
+                </div>
+            `;
+            const marker = new kakao.maps.CustomOverlay({
+                position: markerPosition,
+                content: content,
+                xAnchor: 0.5,
+                yAnchor: 0.5
+            });
+            marker.setMap(map);
+            localMomentMarkers.push(marker);
+        }
+
+        function clearTravelPoiMarkers() {
+            travelPoiMarkers.forEach(marker => marker.setMap(null));
+            travelPoiMarkers = [];
+        }
+
+        function getPoiMarkerStyle(category) {
+            const styles = {
+                repair: { label: '수리', bg: '#FEF3C7', fg: '#B45309', border: '#F59E0B' },
+                food: { label: '맛집', bg: '#FFE4E6', fg: '#BE123C', border: '#FB7185' },
+                lodging: { label: '숙소', bg: '#EDE9FE', fg: '#6D28D9', border: '#A78BFA' },
+                scenic: { label: '경치', bg: '#D1FAE5', fg: '#047857', border: '#34D399' },
+                transport: { label: '교통', bg: '#DBEAFE', fg: '#1D4ED8', border: '#60A5FA' },
+                culture: { label: '문화', bg: '#CCFBF1', fg: '#0F766E', border: '#2DD4BF' }
+            };
+            return styles[category] || styles.scenic;
+        }
+
+        function getTravelPoiGridSize() {
+            const level = map ? map.getLevel() : 7;
+            if (level <= 5) return 0;
+            if (level <= 7) return 0.018;
+            if (level <= 9) return 0.045;
+            return 0.09;
+        }
+
+        function clusterTravelPois(pois) {
+            const gridSize = getTravelPoiGridSize();
+            if (gridSize === 0) {
+                return pois
+                    .filter(poi => poi.lat && poi.lng)
+                    .map(poi => ({ lat: poi.lat, lng: poi.lng, pois: [poi] }));
+            }
+
+            const clusterMap = new Map();
+            pois.forEach(poi => {
+                if (!poi.lat || !poi.lng) return;
+
+                const key = `${Math.round(poi.lat / gridSize)}:${Math.round(poi.lng / gridSize)}`;
+                const cluster = clusterMap.get(key) || { lat: 0, lng: 0, pois: [] };
+                cluster.lat += poi.lat;
+                cluster.lng += poi.lng;
+                cluster.pois.push(poi);
+                clusterMap.set(key, cluster);
+            });
+
+            return Array.from(clusterMap.values()).map(cluster => ({
+                lat: cluster.lat / cluster.pois.length,
+                lng: cluster.lng / cluster.pois.length,
+                pois: cluster.pois
+            }));
+        }
+
+        function createPoiMarkerContent(markerStyle) {
+            const markerContent = document.createElement('div');
+            markerContent.textContent = markerStyle.label;
+            markerContent.style.minWidth = '38px';
+            markerContent.style.height = '28px';
+            markerContent.style.borderRadius = '14px';
+            markerContent.style.padding = '0 8px';
+            markerContent.style.display = 'flex';
+            markerContent.style.alignItems = 'center';
+            markerContent.style.justifyContent = 'center';
+            markerContent.style.background = markerStyle.bg;
+            markerContent.style.border = `2px solid ${markerStyle.border}`;
+            markerContent.style.boxShadow = '0 2px 8px rgba(15,23,42,0.24)';
+            markerContent.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+            markerContent.style.fontSize = '11px';
+            markerContent.style.fontWeight = '900';
+            markerContent.style.color = markerStyle.fg;
+            markerContent.style.cursor = 'pointer';
+            return markerContent;
+        }
+
+        function createPoiClusterContent(count) {
+            const markerContent = document.createElement('div');
+            markerContent.textContent = count;
+            markerContent.style.width = '42px';
+            markerContent.style.height = '42px';
+            markerContent.style.borderRadius = '21px';
+            markerContent.style.display = 'flex';
+            markerContent.style.alignItems = 'center';
+            markerContent.style.justifyContent = 'center';
+            markerContent.style.background = '#0F172A';
+            markerContent.style.border = '3px solid #FFFFFF';
+            markerContent.style.boxShadow = '0 3px 12px rgba(15,23,42,0.34)';
+            markerContent.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+            markerContent.style.fontSize = '13px';
+            markerContent.style.fontWeight = '900';
+            markerContent.style.color = '#FFFFFF';
+            markerContent.style.cursor = 'pointer';
+            return markerContent;
+        }
+
+        function setTravelPoiMarkers(pois, lang) {
+            currentTravelPois = Array.isArray(pois) ? pois : [];
+            currentTravelPoiLang = lang || 'ko';
+            renderTravelPoiMarkers();
+        }
+
+        function renderTravelPoiMarkers() {
+            clearTravelPoiMarkers();
+            if (!map || !currentTravelPois || currentTravelPois.length === 0) return;
+
+            clusterTravelPois(currentTravelPois).forEach(cluster => {
+                const markerPosition = new kakao.maps.LatLng(cluster.lat, cluster.lng);
+
+                if (cluster.pois.length > 1) {
+                    const markerContent = createPoiClusterContent(cluster.pois.length);
+                    const marker = new kakao.maps.CustomOverlay({
+                        position: markerPosition,
+                        content: markerContent,
+                        xAnchor: 0.5,
+                        yAnchor: 0.5,
+                        zIndex: 9
+                    });
+                    marker.setMap(map);
+                    travelPoiMarkers.push(marker);
+
+                    markerContent.addEventListener('click', function(event) {
+                        event.stopPropagation();
+                        clearOverlays();
+                        map.panTo(markerPosition);
+                        map.setLevel(Math.max(3, map.getLevel() - 2));
+                    });
+                    return;
+                }
+
+                const poi = cluster.pois[0];
+                const markerStyle = getPoiMarkerStyle(poi.category);
+                const displayName = currentTravelPoiLang === 'en' ? (poi.name_en || poi.name) : poi.name;
+                const markerContent = createPoiMarkerContent(markerStyle);
+
+                const marker = new kakao.maps.CustomOverlay({
+                    position: markerPosition,
+                    content: markerContent,
+                    xAnchor: 0.5,
+                    yAnchor: 0.5,
+                    zIndex: 8
+                });
+                marker.setMap(map);
+                travelPoiMarkers.push(marker);
+
+                markerContent.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    clearOverlays();
+                    map.panTo(markerPosition);
+
+                    const content = `<div class="custom-overlay">${displayName}</div>`;
+                    const customOverlay = new kakao.maps.CustomOverlay({
+                        position: markerPosition,
+                        content: content,
+                        yAnchor: 1
+                    });
+                    customOverlay.setMap(map);
+                    overlays.push(customOverlay);
+
+                    sendToRN({
+                        type: 'POI_MARKER_CLICKED',
+                        poiId: poi.id
+                    });
+                });
+            });
+        }
+
         window.addEventListener('message', function(event) {
             try {
                 const data = JSON.parse(event.data);
-                sendLog("Received message from RN: " + data.type);
+                sendLog('Received message from RN: ' + data.type);
 
                 if (!map) return;
 
@@ -155,42 +380,52 @@
                         break;
 
                     case 'DRAW_ROUTE':
-                        // Clear existing polyline
                         if (polyline) {
                             polyline.setMap(null);
                         }
 
                         if (data.path && data.path.length > 0) {
-                            const linePath = data.path.map(p => new kakao.maps.LatLng(p.lat, p.lng));
+                            const linePath = data.path.map(point => new kakao.maps.LatLng(point.lat, point.lng));
                             polyline = new kakao.maps.Polyline({
                                 path: linePath,
                                 strokeWeight: 5,
-                                strokeColor: '#007AFF', // Blue path line
+                                strokeColor: '#007AFF',
                                 strokeOpacity: 0.8,
                                 strokeStyle: 'solid'
                             });
                             polyline.setMap(map);
 
-                            // Auto-fit bounds
                             const bounds = new kakao.maps.LatLngBounds();
-                            linePath.forEach(pt => bounds.extend(pt));
+                            linePath.forEach(point => bounds.extend(point));
                             map.setBounds(bounds);
-                            sendLog("Route line drawn and bounds adjusted.");
+                            sendLog('Route line drawn and bounds adjusted.');
                         }
                         break;
 
+                    case 'SET_TRACK_POINTS':
+                        drawTrackPoints(data.points);
+                        sendLog(`Track points drawn: ${data.points ? data.points.length : 0}`);
+                        break;
+
+                    case 'CLEAR_TRACK_POINTS':
+                        clearTrackPolylines();
+                        sendLog('Track points cleared.');
+                        break;
+
+                    case 'ADD_LOCAL_MOMENT_MARKER':
+                        addLocalMomentMarker(data.marker);
+                        sendLog('Local moment marker added.');
+                        break;
+
                     case 'SET_SPOTS':
-                        // Clear existing markers & overlays
-                        markers.forEach(m => m.setMap(null));
+                        markers.forEach(marker => marker.setMap(null));
                         markers = [];
                         clearOverlays();
 
                         if (data.spots && data.spots.length > 0) {
-                            const currentLang = data.lang || 'ko'; // Default to ko
+                            const currentLang = data.lang || 'ko';
                             data.spots.forEach(spot => {
                                 const markerPosition = new kakao.maps.LatLng(spot.lat, spot.lng);
-                                
-                                // Create Marker
                                 const marker = new kakao.maps.Marker({
                                     position: markerPosition,
                                     title: currentLang === 'en' ? spot.name_en : spot.name
@@ -198,14 +433,10 @@
                                 marker.setMap(map);
                                 markers.push(marker);
 
-                                // Marker Click Listener
                                 kakao.maps.event.addListener(marker, 'click', function() {
                                     clearOverlays();
-                                    
-                                    // Smoothly pan to the clicked marker position
                                     map.panTo(markerPosition);
-                                    
-                                    // Show custom overlay for spot name
+
                                     const displayName = currentLang === 'en' ? spot.name_en : spot.name;
                                     const content = `<div class="custom-overlay">${displayName}</div>`;
                                     const customOverlay = new kakao.maps.CustomOverlay({
@@ -216,7 +447,6 @@
                                     customOverlay.setMap(map);
                                     overlays.push(customOverlay);
 
-                                    // Send event to RN
                                     sendToRN({
                                         type: 'MARKER_CLICKED',
                                         spotId: spot.id,
@@ -232,9 +462,8 @@
                         break;
 
                     case 'SET_DIARIES':
-                        // Clear existing diary markers
                         if (window.diaryMarkers) {
-                            window.diaryMarkers.forEach(m => m.setMap(null));
+                            window.diaryMarkers.forEach(marker => marker.setMap(null));
                         }
                         window.diaryMarkers = [];
 
@@ -242,22 +471,20 @@
                             data.diaries.forEach(diary => {
                                 if (diary.lat && diary.lng) {
                                     const markerPosition = new kakao.maps.LatLng(diary.lat, diary.lng);
-                                    
-                                    // Use a custom star marker image for rider stories
                                     const imageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png';
                                     const imageSize = new kakao.maps.Size(24, 35);
                                     const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
-                                    
+
                                     const diaryMarker = new kakao.maps.Marker({
                                         position: markerPosition,
                                         image: markerImage,
-                                        title: diary.diary_text || 'Rider\'s Story'
+                                        title: diary.title || diary.diary_text || 'Rider Story'
                                     });
                                     diaryMarker.setMap(map);
                                     window.diaryMarkers.push(diaryMarker);
-                                    
-                                    // Handle diary marker click
+
                                     kakao.maps.event.addListener(diaryMarker, 'click', function() {
+                                        map.panTo(markerPosition);
                                         sendToRN({
                                             type: 'DIARY_MARKER_CLICKED',
                                             diaryId: diary.id,
@@ -270,11 +497,15 @@
                         }
                         break;
 
+                    case 'SET_TRAVEL_POIS':
+                        setTravelPoiMarkers(data.pois, data.lang || 'ko');
+                        sendLog(`Added ${data.pois ? data.pois.length : 0} travel POI markers.`);
+                        break;
+
                     case 'UPDATE_MY_LOCATION':
                         if (data.lat && data.lng) {
                             const myPos = new kakao.maps.LatLng(data.lat, data.lng);
 
-                            // Create or update marker (pulsing blue dot overlay)
                             if (!window.myLocationMarker) {
                                 const content = '<div style="width: 16px; height: 16px; border-radius: 8px; background-color: #007AFF; border: 2px solid #ffffff; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>';
                                 window.myLocationMarker = new kakao.maps.CustomOverlay({
@@ -287,7 +518,7 @@
                             } else {
                                 window.myLocationMarker.setPosition(myPos);
                             }
-                            sendLog("My location marker updated.");
+                            sendLog('My location marker updated.');
                         }
                         break;
 
@@ -295,12 +526,12 @@
                         if (data.lat && data.lng) {
                             const targetPos = new kakao.maps.LatLng(data.lat, data.lng);
                             map.panTo(targetPos);
-                            sendLog("Panned to target location.");
+                            sendLog('Panned to target location.');
                         }
                         break;
                 }
             } catch (err) {
-                sendLog("Error parsing message: " + err.message);
+                sendLog('Error parsing message: ' + err.message);
             }
         });
     </script>

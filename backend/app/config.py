@@ -55,6 +55,7 @@ class Settings(BaseSettings):
 
     # Media Upload Settings
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")
+    MAX_IMAGE_UPLOAD_BYTES: int = int(os.getenv("MAX_IMAGE_UPLOAD_BYTES", str(10 * 1024 * 1024)))
     # Storage backend selector: "local" today; "s3" (MinIO/S3) planned.
     STORAGE_BACKEND: str = os.getenv("STORAGE_BACKEND", "local")
 

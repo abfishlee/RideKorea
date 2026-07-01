@@ -29,6 +29,23 @@ async def get_current_user(
     return user
 
 
+async def get_optional_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    """Resolve the current user when a bearer token is present; otherwise return None."""
+    if not token:
+        return None
+
+    user_id = decode_access_token(token)
+    user = (
+        await db.execute(select(User).where(User.id == user_id))
+    ).scalars().first()
+    if user is None:
+        raise UnauthorizedError()
+    return user
+
+
 async def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
     """Authorize an admin user.
 

@@ -1,16 +1,13 @@
-import { Ionicons } from '@expo/vector-icons';
 import { PropsWithChildren, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 
 export function Collapsible({ children, title }: PropsWithChildren & { title: string }) {
   const [isOpen, setIsOpen] = useState(false);
-  const theme = useTheme();
 
   return (
     <ThemedView>
@@ -18,12 +15,9 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
         style={({ pressed }) => [styles.heading, pressed && styles.pressedHeading]}
         onPress={() => setIsOpen((value) => !value)}>
         <ThemedView type="backgroundElement" style={styles.button}>
-          <Ionicons
-            name="chevron-forward-outline"
-            size={14}
-            color={theme.text}
-            style={{ transform: [{ rotate: isOpen ? '90deg' : '0deg' }] }}
-          />
+          <Text style={[styles.chevron, { transform: [{ rotate: isOpen ? '90deg' : '0deg' }] }]}>
+            ›
+          </Text>
         </ThemedView>
 
         <ThemedText type="small">{title}</ThemedText>
@@ -54,6 +48,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  chevron: {
+    color: '#334155',
+    fontSize: 18,
+    fontWeight: '900',
+    lineHeight: 18,
   },
   content: {
     marginTop: Spacing.three,

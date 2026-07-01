@@ -62,6 +62,110 @@ class SpotResponse(SpotBase):
         from_attributes = True
 
 
+# --- Travel POI Schemas ---
+class TravelPoiBase(BaseModel):
+    name: str
+    name_en: str
+    category: str
+    description: Optional[str] = None
+    description_en: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    source: Optional[str] = None
+    external_id: Optional[str] = None
+    source_url: Optional[str] = None
+    source_name: Optional[str] = None
+    license_type: Optional[str] = None
+    attribution: Optional[str] = None
+    retrieved_at: Optional[datetime] = None
+    review_status: str = "approved"
+    transport_mode: Optional[str] = None
+    route_name: Optional[str] = None
+    bike_policy: Optional[str] = None
+    bike_policy_en: Optional[str] = None
+    packing_required: Optional[bool] = None
+    packing_notes: Optional[str] = None
+    packing_notes_en: Optional[str] = None
+    booking_url: Optional[str] = None
+    recommend_count: int = 0
+    caution_count: int = 0
+    my_feedback: Optional[str] = None
+    is_active: bool = True
+
+
+class TravelPoiCreate(TravelPoiBase):
+    location: LocationSchema
+
+
+class TravelPoiAdminUpdate(BaseModel):
+    source_url: Optional[str] = None
+    source_name: Optional[str] = None
+    license_type: Optional[str] = None
+    attribution: Optional[str] = None
+    retrieved_at: Optional[datetime] = None
+    review_status: Optional[str] = None
+    transport_mode: Optional[str] = None
+    route_name: Optional[str] = None
+    bike_policy: Optional[str] = None
+    bike_policy_en: Optional[str] = None
+    packing_required: Optional[bool] = None
+    packing_notes: Optional[str] = None
+    packing_notes_en: Optional[str] = None
+    booking_url: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class TravelPoiResponse(TravelPoiBase):
+    id: UUID
+    location: LocationSchema
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TravelPoiFeedbackRequest(BaseModel):
+    feedback_type: str = Field(..., pattern="^(recommend|caution)$")
+
+
+class TravelPoiFeedbackResponse(BaseModel):
+    feedback_type: Optional[str] = None
+    poi: TravelPoiResponse
+
+
+class TravelPoiReportCreate(BaseModel):
+    report_type: str = Field(..., pattern="^(closed|wrong_location|danger|other)$")
+    note: Optional[str] = Field(default=None, max_length=1000)
+
+
+class TravelPoiReportUpdate(BaseModel):
+    status: str = Field(..., pattern="^(open|resolved|dismissed)$")
+
+
+class TravelPoiReportAuthor(BaseModel):
+    display_name: Optional[str] = None
+    profile_photo_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class TravelPoiReportResponse(BaseModel):
+    id: UUID
+    poi_id: UUID
+    user_id: UUID
+    report_type: str
+    note: Optional[str] = None
+    status: str
+    created_at: datetime
+    resolved_at: Optional[datetime] = None
+    poi: TravelPoiResponse
+    author: TravelPoiReportAuthor
+
+    class Config:
+        from_attributes = True
+
+
 # --- Course Schemas ---
 class CourseBase(BaseModel):
     name: str
@@ -94,18 +198,26 @@ class CourseListResponse(CourseBase):
 
 # --- Spot Diary Schemas ---
 class SpotDiaryBase(BaseModel):
+    title: Optional[str] = None
     diary_text: Optional[str] = None
     photo_urls: Optional[List[str]] = None
     visibility: str = "private"
 
 class SpotDiaryCreate(SpotDiaryBase):
     spot_id: Optional[UUID] = None
+    source_shared_route_stop_id: Optional[UUID] = None
+    location: Optional[LocationSchema] = None
     visited_at: Optional[datetime] = None
+
+
+class SpotDiaryUpdate(BaseModel):
+    visibility: Optional[str] = None
 
 class SpotDiaryResponse(SpotDiaryBase):
     id: UUID
     journey_id: UUID
     spot_id: Optional[UUID] = None
+    source_shared_route_stop_id: Optional[UUID] = None
     user_id: UUID
     lat: Optional[float] = None
     lng: Optional[float] = None
@@ -128,7 +240,10 @@ class SpotDiaryFeedResponse(SpotDiaryBase):
     id: UUID
     journey_id: UUID
     spot_id: Optional[UUID] = None
+    source_shared_route_stop_id: Optional[UUID] = None
     user_id: UUID
+    lat: Optional[float] = None
+    lng: Optional[float] = None
     visited_at: datetime
     created_at: datetime
     user: DiaryAuthor
@@ -159,6 +274,7 @@ class JourneyResponse(JourneyBase):
     id: UUID
     user_id: UUID
     course_id: Optional[UUID] = None
+    source_shared_route_id: Optional[UUID] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     created_at: datetime
@@ -166,6 +282,94 @@ class JourneyResponse(JourneyBase):
 
     class Config:
         from_attributes = True
+
+
+# --- Journey Track Schemas ---
+class JourneyTrackPointBase(BaseModel):
+    location: LocationSchema
+    speed_kmh: Optional[float] = None
+    altitude_m: Optional[float] = None
+    is_off_route: bool = False
+    recorded_at: datetime
+
+
+class JourneyTrackPointCreate(JourneyTrackPointBase):
+    pass
+
+
+class JourneyTrackBatchCreate(BaseModel):
+    points: List[JourneyTrackPointCreate]
+
+
+class JourneyTrackPointResponse(JourneyTrackPointBase):
+    id: UUID
+    journey_id: UUID
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# --- Shared Route Schemas ---
+class SharedRouteStopResponse(BaseModel):
+    id: UUID
+    shared_route_id: UUID
+    source_diary_id: Optional[UUID] = None
+    title: str
+    body: Optional[str] = None
+    location: Optional[LocationSchema] = None
+    photo_urls: Optional[List[str]] = None
+    sort_order: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SharedRouteResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    source_journey_id: Optional[UUID] = None
+    title: str
+    summary: Optional[str] = None
+    start_name: Optional[str] = None
+    end_name: Optional[str] = None
+    visibility: str
+    like_count: int = 0
+    comment_count: int = 0
+    share_count: int = 0
+    liked_by_me: bool = False
+    created_at: datetime
+    author: Optional[DiaryAuthor] = None
+    stops: List[SharedRouteStopResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
+class SharedRouteUpdate(BaseModel):
+    visibility: Optional[str] = None
+
+
+class SharedRouteCommentCreate(BaseModel):
+    body: str = Field(..., min_length=1, max_length=1000)
+
+
+class SharedRouteCommentResponse(BaseModel):
+    id: UUID
+    shared_route_id: UUID
+    user_id: UUID
+    body: str
+    created_at: datetime
+    author: DiaryAuthor
+
+    class Config:
+        from_attributes = True
+
+
+class SharedRouteLikeResponse(BaseModel):
+    liked: bool
+    route: SharedRouteResponse
 
 
 # --- Voucher Schemas ---

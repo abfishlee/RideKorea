@@ -34,6 +34,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~56.0.4",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -42,6 +44,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "test:utils": "tsc --ignoreConfig --module commonjs --target ES2020 --outDir ../scratch/frontend-utils-test src/utils/ride-metrics.ts src/utils/ride-metrics.test.ts src/utils/offline-track-queue-core.ts src/utils/offline-track-queue-core.test.ts && node ../scratch/frontend-utils-test/utils/ride-metrics.test.js && node ../scratch/frontend-utils-test/utils/offline-track-queue-core.test.js",
     "lint": "expo lint"
   },
   "private": true

@@ -1,0 +1,4 @@
+external_id,source,source_url,source_name,license_type,commercial_use_allowed,derivative_allowed,attribution,retrieved_at,review_status
+sample-repair-ara,demo,https://www.data.go.kr/ugs/selectPortalPolicyView.do,RideKorea demo dataset,demo,true,true,RideKorea demo data,2026-06-30T00:00:00+09:00,approved
+sample-transport-airport,demo,https://www.data.go.kr/ugs/selectPortalPolicyView.do,RideKorea demo dataset,demo,true,true,RideKorea demo data,2026-06-30T00:00:00+09:00,approved
+sample-food-yeouido,demo,https://www.data.go.kr/ugs/selectPortalPolicyView.do,RideKorea demo dataset,demo,true,true,RideKorea demo data,2026-06-30T00:00:00+09:00,approved

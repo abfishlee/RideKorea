@@ -6,7 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from ..models import User
-from ..schemas import JourneyResponse, JourneyCreate, JourneyUpdate
+from ..schemas import (
+    JourneyResponse,
+    JourneyCreate,
+    JourneyTrackBatchCreate,
+    JourneyTrackPointResponse,
+    JourneyUpdate,
+)
 from ..api.deps import get_current_user
 from ..services import journey_service
 
@@ -51,3 +57,24 @@ async def update_journey(
 ):
     """Update a journey's title, status (e.g. riding, completed), or visibility."""
     return await journey_service.update_journey(db, current_user, journey_id, payload)
+
+
+@router.post("/{journey_id}/track-points", response_model=List[JourneyTrackPointResponse])
+async def add_track_points(
+    journey_id: UUID,
+    payload: JourneyTrackBatchCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Append GPS track points recorded while riding a journey."""
+    return await journey_service.add_track_points(db, current_user, journey_id, payload)
+
+
+@router.get("/{journey_id}/track-points", response_model=List[JourneyTrackPointResponse])
+async def list_track_points(
+    journey_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List GPS track points for a journey in recorded order."""
+    return await journey_service.list_track_points(db, current_user, journey_id)

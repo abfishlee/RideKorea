@@ -10,7 +10,6 @@ router changes required.
 from __future__ import annotations
 
 import os
-import shutil
 import uuid
 from abc import ABC, abstractmethod
 from typing import BinaryIO
@@ -45,8 +44,15 @@ class LocalStorage(StorageBackend):
         ext = self._validate_and_ext(original_filename)
         unique_name = f"{uuid.uuid4()}{ext}"
         file_path = os.path.join(self.upload_dir, unique_name)
+        written = 0
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file_obj, buffer)
+            while chunk := file_obj.read(1024 * 1024):
+                written += len(chunk)
+                if written > settings.MAX_IMAGE_UPLOAD_BYTES:
+                    buffer.close()
+                    os.remove(file_path)
+                    raise ValidationError("Uploaded image is too large")
+                buffer.write(chunk)
         return f"/uploads/{unique_name}"
 
 

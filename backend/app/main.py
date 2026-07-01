@@ -17,7 +17,10 @@ from .routers import (
     diaries,
     vouchers,
     admin_vouchers,
+    admin_travel_pois,
     routing,
+    shared_routes,
+    travel_pois,
 )
 
 # Create uploads directory if not exists
@@ -51,7 +54,10 @@ app.include_router(journeys.router, prefix=settings.API_V1_STR)
 app.include_router(diaries.router, prefix=settings.API_V1_STR)
 app.include_router(vouchers.router, prefix=settings.API_V1_STR)
 app.include_router(admin_vouchers.router, prefix=settings.API_V1_STR)
+app.include_router(admin_travel_pois.router, prefix=settings.API_V1_STR)
 app.include_router(routing.router, prefix=settings.API_V1_STR)
+app.include_router(shared_routes.router, prefix=settings.API_V1_STR)
+app.include_router(travel_pois.router, prefix=settings.API_V1_STR)
 
 @app.get("/", include_in_schema=False)
 async def redirect_to_swagger():

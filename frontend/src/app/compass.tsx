@@ -7,6 +7,8 @@ import {
   getAdminTravelPoiReports,
   getAdminTravelPois,
   getMyVouchers,
+  lookupAdminVoucherByCode,
+  redeemAdminVoucherByCode,
   redeemVoucher,
   saveVoucherConfig,
   updateAdminTravelPoi,
@@ -27,6 +29,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -50,6 +53,10 @@ export default function CompassScreen() {
   const [adminPoiFilter, setAdminPoiFilter] = useState<string | null>('needs-review');
   const [savingPoiId, setSavingPoiId] = useState<string | null>(null);
   const [savingPoiReportId, setSavingPoiReportId] = useState<string | null>(null);
+  const [redemptionCode, setRedemptionCode] = useState('');
+  const [redemptionPreview, setRedemptionPreview] = useState<Voucher | null>(null);
+  const [isLookingUpRedemption, setIsLookingUpRedemption] = useState(false);
+  const [isRedeemingByCode, setIsRedeemingByCode] = useState(false);
 
   const [editingSpotId, setEditingSpotId] = useState<string | null>(null);
   const [editIsActive, setEditIsActive] = useState(false);
@@ -131,6 +138,61 @@ export default function CompassScreen() {
                 Alert.alert(isKo ? '오류' : 'Error', err.message || 'Failed to redeem voucher');
               } finally {
                 setRedeemingVoucherId(null);
+              }
+            })();
+          },
+        },
+      ],
+    );
+  };
+
+  const normalizedRedemptionCode = redemptionCode.trim();
+
+  const handleLookupRedemptionCode = async () => {
+    if (!token || !normalizedRedemptionCode) return;
+
+    setIsLookingUpRedemption(true);
+    try {
+      const voucher = await lookupAdminVoucherByCode(token, normalizedRedemptionCode);
+      setRedemptionPreview(voucher);
+    } catch (err: any) {
+      setRedemptionPreview(null);
+      Alert.alert(isKo ? '조회 실패' : 'Lookup failed', err.message || 'Voucher not found');
+    } finally {
+      setIsLookingUpRedemption(false);
+    }
+  };
+
+  const handleRedeemByCode = () => {
+    if (!token || !normalizedRedemptionCode) return;
+
+    Alert.alert(
+      isKo ? '코드 사용 처리' : 'Redeem by code',
+      isKo
+        ? '제휴 매장에서 실제 사용 확인 후 처리해주세요. 사용 완료 후에는 되돌릴 수 없습니다.'
+        : 'Confirm the voucher was used at a partner shop. This cannot be undone.',
+      [
+        { text: isKo ? '취소' : 'Cancel', style: 'cancel' },
+        {
+          text: isKo ? '사용 처리' : 'Redeem',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              setIsRedeemingByCode(true);
+              try {
+                const voucher = await redeemAdminVoucherByCode(token, normalizedRedemptionCode);
+                setRedemptionPreview(voucher);
+                setVouchers((current) => current.map((item) => (
+                  item.id === voucher.id ? voucher : item
+                )));
+                Alert.alert(
+                  isKo ? '처리 완료' : 'Redeemed',
+                  isKo ? '바우처 코드가 사용 완료 처리되었습니다.' : 'The voucher code has been redeemed.',
+                );
+              } catch (err: any) {
+                Alert.alert(isKo ? '처리 실패' : 'Redeem failed', err.message || 'Failed to redeem code');
+              } finally {
+                setIsRedeemingByCode(false);
               }
             })();
           },
@@ -395,6 +457,63 @@ export default function CompassScreen() {
             </View>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
+          <View style={[styles.redemptionPanel, !token && styles.disabledCard]}>
+            <Text style={styles.primaryText}>
+              {isKo ? '제휴처 바우처 코드 처리' : 'Partner voucher redemption'}
+            </Text>
+            <Text style={styles.secondaryText}>
+              {isKo
+                ? '매장에서 받은 코드를 조회하고 사용 완료 처리합니다.'
+                : 'Look up and redeem a voucher code from a partner shop.'}
+            </Text>
+            <TextInput
+              style={styles.codeInput}
+              placeholder={isKo ? '바우처 코드 입력' : 'Voucher code'}
+              autoCapitalize="characters"
+              value={redemptionCode}
+              onChangeText={(value) => {
+                setRedemptionCode(value);
+                setRedemptionPreview(null);
+              }}
+              editable={!!token}
+            />
+            <View style={styles.redemptionActions}>
+              <TouchableOpacity
+                style={[styles.lookupButton, (!token || !normalizedRedemptionCode || isLookingUpRedemption) && styles.disabledButton]}
+                onPress={handleLookupRedemptionCode}
+                disabled={!token || !normalizedRedemptionCode || isLookingUpRedemption}>
+                <Text style={styles.lookupButtonText}>
+                  {isLookingUpRedemption ? '...' : isKo ? '조회' : 'Lookup'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.redeemCodeButton,
+                  (!token || !normalizedRedemptionCode || !redemptionPreview || redemptionPreview.is_redeemed || isRedeemingByCode) && styles.disabledButton,
+                ]}
+                onPress={handleRedeemByCode}
+                disabled={!token || !normalizedRedemptionCode || !redemptionPreview || redemptionPreview.is_redeemed || isRedeemingByCode}>
+                <Text style={styles.redeemCodeButtonText}>
+                  {isRedeemingByCode ? '...' : isKo ? '사용 처리' : 'Redeem'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {redemptionPreview && (
+              <View style={styles.redemptionPreview}>
+                <Text style={styles.previewTitle}>
+                  {(isKo ? redemptionPreview.title : redemptionPreview.title_en)
+                    || redemptionPreview.title
+                    || redemptionPreview.title_en
+                    || 'Voucher'}
+                </Text>
+                <Text style={styles.previewMeta}>
+                  {redemptionPreview.is_redeemed
+                    ? isKo ? '이미 사용 완료됨' : 'Already redeemed'
+                    : isKo ? '사용 가능' : 'Ready to redeem'}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       </ScrollView>
 
@@ -516,6 +635,75 @@ const styles = StyleSheet.create({
   },
   disabledCard: {
     opacity: 0.55,
+  },
+  redemptionPanel: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 10,
+    padding: 14,
+  },
+  codeInput: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+    borderWidth: 1,
+    color: '#0F172A',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  redemptionActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  lookupButton: {
+    alignItems: 'center',
+    backgroundColor: '#334155',
+    borderRadius: 8,
+    flex: 1,
+    paddingVertical: 10,
+  },
+  lookupButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  redeemCodeButton: {
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+    borderRadius: 8,
+    flex: 1,
+    paddingVertical: 10,
+  },
+  redeemCodeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  redemptionPreview: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 10,
+  },
+  previewTitle: {
+    color: '#1E3A8A',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  previewMeta: {
+    color: '#2563EB',
+    fontSize: 11,
+    fontWeight: '800',
+    marginTop: 3,
   },
   primaryText: {
     color: '#0F172A',

@@ -29,6 +29,35 @@ def _generate_code(length: int = CODE_LENGTH) -> str:
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
 
+def _normalize_code(code: str) -> str:
+    return code.strip().replace("-", "").replace(" ", "").upper()
+
+
+async def _mark_voucher_redeemed(
+    db: AsyncSession,
+    voucher: Voucher,
+    redeemed_by: User,
+    source: str,
+) -> Voucher:
+    if voucher.is_redeemed:
+        return voucher
+
+    now = datetime.now(timezone.utc)
+    expires_at = voucher.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < now:
+        raise ValidationError("Voucher has expired")
+
+    voucher.is_redeemed = True
+    voucher.redeemed_at = now
+    voucher.redeemed_by_user_id = redeemed_by.id
+    voucher.redemption_source = source
+    await db.commit()
+    await db.refresh(voucher)
+    return voucher
+
+
 async def issue_for_diary(
     db: AsyncSession, user_id: UUID, spot_id: UUID
 ) -> Optional[Voucher]:
@@ -168,20 +197,24 @@ async def redeem_voucher(db: AsyncSession, user: User, voucher_id: UUID) -> Vouc
     if not voucher:
         raise NotFoundError("Voucher not found")
 
-    if voucher.is_redeemed:
-        return voucher
+    return await _mark_voucher_redeemed(db, voucher, user, "self")
 
-    now = datetime.now(timezone.utc)
-    expires_at = voucher.expires_at
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    if expires_at < now:
-        raise ValidationError("Voucher has expired")
 
-    voucher.is_redeemed = True
-    await db.commit()
-    await db.refresh(voucher)
+async def admin_lookup_voucher_by_code(db: AsyncSession, code: str) -> Voucher:
+    """Look up a voucher by redemption code for admin/merchant tooling."""
+    normalized_code = _normalize_code(code)
+    voucher = (
+        await db.execute(select(Voucher).where(Voucher.code == normalized_code))
+    ).scalars().first()
+    if not voucher:
+        raise NotFoundError("Voucher not found")
     return voucher
+
+
+async def admin_redeem_voucher_by_code(db: AsyncSession, admin: User, code: str) -> Voucher:
+    """Redeem a voucher by code through admin/merchant tooling."""
+    voucher = await admin_lookup_voucher_by_code(db, code)
+    return await _mark_voucher_redeemed(db, voucher, admin, "merchant")
 
 
 # --- Admin configuration -----------------------------------------------------

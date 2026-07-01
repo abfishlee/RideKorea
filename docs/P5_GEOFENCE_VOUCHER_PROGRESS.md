@@ -155,3 +155,63 @@ $env:PYTHONPATH='backend'; .\venv\Scripts\python.exe -m unittest discover -s bac
 - QR 스캔 기반 코드 검증 및 merchant redemption API 분리
 - 사용 완료 시각, 사용 매장, 정산 상태를 저장하는 DB 컬럼/테이블 추가
 - 실제 운영에서는 사용자 자가 처리보다 가맹점 승인 흐름을 우선 적용해야 한다.
+
+## 완료: 관리자/제휴처 코드 redemption 1차
+
+적용 파일:
+
+- `backend/app/models.py`
+- `backend/app/schemas.py`
+- `backend/app/routers/admin_vouchers.py`
+- `backend/app/services/voucher_service.py`
+- `backend/alembic/versions/c8e9f0a1b2c3_add_voucher_redemption_metadata.py`
+- `frontend/src/services/api.ts`
+- `frontend/src/types/ridekorea.ts`
+- `frontend/src/app/compass.tsx`
+
+완료 내용:
+
+- `vouchers` 테이블에 `redeemed_at`, `redeemed_by_user_id`, `redemption_source` 컬럼을 추가하는 Alembic migration을 만들었다.
+- 사용자 자가 사용 완료와 관리자/제휴처 코드 사용 완료가 같은 내부 redemption 검증 로직을 사용하도록 정리했다.
+- 관리자/제휴처용 `POST /admin/voucher-redemptions/lookup` API를 추가했다.
+- 관리자/제휴처용 `POST /admin/voucher-redemptions/redeem` API를 추가했다.
+- redemption code는 공백, 하이픈, 대소문자 차이를 정규화해서 조회한다.
+- 코드 사용 완료 시 `redeemed_at`, `redeemed_by_user_id`, `redemption_source="merchant"`를 기록한다.
+- Compass 관리자 영역에 바우처 코드 입력, 조회, 사용 처리 패널을 추가했다.
+- 사용 처리 전에 확인 Alert를 표시하고, 처리 후 조회 결과와 지갑 목록을 즉시 갱신한다.
+
+로컬 DB 반영:
+
+```powershell
+cd backend
+..\venv\Scripts\alembic.exe upgrade head
+```
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:utils
+```
+
+```powershell
+$env:PYTHONPATH='backend'; .\venv\Scripts\python.exe -m unittest discover -s backend\tests
+.\venv\Scripts\python.exe -m compileall -f backend\app backend\alembic
+```
+
+검증 결과:
+
+- frontend typecheck 통과
+- frontend lint 통과
+- frontend test:utils 통과
+- backend unittest 31개 통과
+- backend compileall 통과
+
+남은 보완:
+
+- 실제 merchant 계정/역할 모델 분리
+- QR 카메라 스캔 UI 추가
+- redemption 정산 상태, 사용 매장, 가맹점별 리포트 테이블 추가
+- 사용 완료 취소/분쟁 처리 정책 정의

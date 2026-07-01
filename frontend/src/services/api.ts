@@ -187,6 +187,22 @@ export function updateAdminTravelPoi(
   });
 }
 
+export function lookupAdminVoucherByCode(token: string, code: string): Promise<Voucher> {
+  return apiFetch<Voucher>('/admin/voucher-redemptions/lookup', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ code }),
+  });
+}
+
+export function redeemAdminVoucherByCode(token: string, code: string): Promise<Voucher> {
+  return apiFetch<Voucher>('/admin/voucher-redemptions/redeem', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ code }),
+  });
+}
+
 export function getAdminTravelPoiReports(
   token: string,
   status: TravelPoiReportStatus | null = 'open',

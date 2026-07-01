@@ -391,6 +391,9 @@ class VoucherResponse(BaseModel):
     description_en: Optional[str] = None
     code: str
     is_redeemed: bool
+    redeemed_at: Optional[datetime] = None
+    redeemed_by_user_id: Optional[UUID] = None
+    redemption_source: Optional[str] = None
     created_at: datetime
     expires_at: datetime
 
@@ -402,6 +405,10 @@ class VoucherClaimRequest(BaseModel):
     spot_id: UUID
     location: LocationSchema
     radius_meters: float = Field(default=150.0, ge=10.0, le=1000.0)
+
+
+class VoucherCodeRequest(BaseModel):
+    code: str = Field(..., min_length=4, max_length=32)
 
 
 # --- Voucher Config Schemas ---

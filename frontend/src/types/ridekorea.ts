@@ -137,6 +137,9 @@ export interface Voucher {
   reward_title_en?: string;
   reward_amount?: number;
   is_redeemed?: boolean;
+  redeemed_at?: string | null;
+  redeemed_by_user_id?: string | null;
+  redemption_source?: string | null;
   created_at?: string;
   expires_at?: string;
   [key: string]: unknown;

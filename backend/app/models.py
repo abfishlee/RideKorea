@@ -21,7 +21,7 @@ class User(Base):
     # Relationships
     journeys = relationship("Journey", back_populates="user", cascade="all, delete-orphan")
     diaries = relationship("SpotDiary", back_populates="user", cascade="all, delete-orphan")
-    vouchers = relationship("Voucher", back_populates="user", cascade="all, delete-orphan")
+    vouchers = relationship("Voucher", back_populates="user", cascade="all, delete-orphan", foreign_keys="Voucher.user_id")
     shared_routes = relationship("SharedRoute", back_populates="user", cascade="all, delete-orphan")
     shared_route_comments = relationship("SharedRouteComment", back_populates="user", cascade="all, delete-orphan")
     shared_route_likes = relationship("SharedRouteLike", back_populates="user", cascade="all, delete-orphan")
@@ -282,11 +282,15 @@ class Voucher(Base):
     description_en = Column(Text, nullable=True)
     code = Column(String, unique=True, nullable=False, index=True)
     is_redeemed = Column(Boolean, default=False, nullable=False)
+    redeemed_at = Column(DateTime(timezone=True), nullable=True)
+    redeemed_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    redemption_source = Column(String(20), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
 
     # Relationships
-    user = relationship("User", back_populates="vouchers")
+    user = relationship("User", back_populates="vouchers", foreign_keys=[user_id])
+    redeemed_by_user = relationship("User", foreign_keys=[redeemed_by_user_id])
     spot = relationship("Spot")
 
 

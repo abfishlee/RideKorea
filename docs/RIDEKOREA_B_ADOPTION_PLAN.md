@@ -1,5 +1,7 @@
 # RideKorea_b Ideas Adoption Plan
 
+Latest completed item: P5 geofence voucher claiming is documented in `docs/P5_GEOFENCE_VOUCHER_PROGRESS.md`.
+
 작성일: 2026-07-01
 
 이 문서는 `docs/COMPARISON_with_RideKorea.md`의 비교 결과를 바탕으로, 오늘 집에서 로컬 환경을 세팅한 뒤 바로 적용할 수 있는 작업 순서를 정리한다.

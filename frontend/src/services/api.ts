@@ -77,6 +77,23 @@ export function getMyVouchers(token: string): Promise<Voucher[]> {
   return apiFetch<Voucher[]>('/vouchers/me', { token });
 }
 
+export function claimVoucher(
+  token: string,
+  spotId: string,
+  location: { lat: number; lng: number },
+  radiusMeters = 150,
+): Promise<Voucher> {
+  return apiFetch<Voucher>('/vouchers/claim', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({
+      spot_id: spotId,
+      location,
+      radius_meters: radiusMeters,
+    }),
+  });
+}
+
 export function getCourses(): Promise<Course[]> {
   return apiFetch<Course[]>('/courses/');
 }

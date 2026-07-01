@@ -45,7 +45,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test:utils": "tsc --ignoreConfig --module commonjs --target ES2020 --outDir ../scratch/frontend-utils-test src/utils/ride-metrics.ts src/utils/ride-metrics.test.ts src/utils/offline-track-queue-core.ts src/utils/offline-track-queue-core.test.ts src/utils/route-deviation-core.ts src/utils/route-deviation-core.test.ts src/utils/ride-track-core.ts src/utils/ride-track-core.test.ts && node ../scratch/frontend-utils-test/utils/ride-metrics.test.js && node ../scratch/frontend-utils-test/utils/offline-track-queue-core.test.js && node ../scratch/frontend-utils-test/utils/route-deviation-core.test.js && node ../scratch/frontend-utils-test/utils/ride-track-core.test.js",
+    "test:utils": "tsc --ignoreConfig --module commonjs --target ES2020 --outDir ../scratch/frontend-utils-test src/utils/ride-metrics.ts src/utils/ride-metrics.test.ts src/utils/offline-track-queue-core.ts src/utils/offline-track-queue-core.test.ts src/utils/route-deviation-core.ts src/utils/route-deviation-core.test.ts src/utils/ride-track-core.ts src/utils/ride-track-core.test.ts src/utils/geofence-core.ts src/utils/geofence-core.test.ts && node ../scratch/frontend-utils-test/utils/ride-metrics.test.js && node ../scratch/frontend-utils-test/utils/offline-track-queue-core.test.js && node ../scratch/frontend-utils-test/utils/route-deviation-core.test.js && node ../scratch/frontend-utils-test/utils/ride-track-core.test.js && node ../scratch/frontend-utils-test/utils/geofence-core.test.js",
     "lint": "expo lint"
   },
   "private": true

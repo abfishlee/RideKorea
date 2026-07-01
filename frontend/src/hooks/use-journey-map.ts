@@ -404,6 +404,7 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
   return {
     activeRoutePath: cachedPath,
     courses,
+    voucherSpots: spots.filter((spot) => spot.is_voucher_active),
     selectedCourse,
     selectedPublicDiary,
     selectedTravelPoi,

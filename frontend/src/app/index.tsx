@@ -17,6 +17,7 @@ import { useJourneyRide } from '@/hooks/use-journey-ride';
 import { useRiderLocation } from '@/hooks/use-rider-location';
 import { nextLanguage, t } from '@/i18n';
 import {
+  claimVoucher,
   createTravelPoiReport,
   getJourney,
   getJourneyTrackPoints,
@@ -38,11 +39,12 @@ import type {
   TravelPoi,
   TravelPoiReportType,
 } from '@/types/ridekorea';
+import { findNearestGeofenceHit } from '@/utils/geofence-core';
 import { makeRedirectUri } from 'expo-auth-session';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
@@ -135,6 +137,8 @@ export default function HomeScreen() {
   const [isSubmittingPoiFeedback, setIsSubmittingPoiFeedback] = useState(false);
   const [isSubmittingPoiReport, setIsSubmittingPoiReport] = useState(false);
   const [hasCheckedRideRecovery, setHasCheckedRideRecovery] = useState(false);
+  const claimedVoucherSpotIdsRef = useRef<Set<string>>(new Set());
+  const claimingVoucherSpotIdsRef = useRef<Set<string>>(new Set());
 
   const {
     courses,
@@ -148,6 +152,7 @@ export default function HomeScreen() {
     isMapLoading,
     activeTravelPoiCategory,
     activeRoutePath,
+    voucherSpots,
     setActiveTravelPoiCategory,
     fetchCourses,
     handleSelectCourse,
@@ -223,6 +228,14 @@ export default function HomeScreen() {
   const selectedServerDraft = selectedServerJourney && selectedServerRoute
     ? toImportedDraft(selectedServerJourney, selectedServerRoute)
     : null;
+  const voucherGeofenceTargets = useMemo(() => (
+    voucherSpots.map((spot) => ({
+      id: spot.id,
+      lat: spot.location.lat,
+      lng: spot.location.lng,
+      radiusMeters: 150,
+    }))
+  ), [voucherSpots]);
 
   const restoreJourneyTrackPoints = useCallback(async (journeyId: string) => {
     if (!token) return;
@@ -252,6 +265,38 @@ export default function HomeScreen() {
 
     return () => clearTimeout(timer);
   }, [fetchCourses, resetJourney, resetMapState, token]);
+
+  useEffect(() => {
+    if (!token || !activeJourney || !riderLocation || voucherGeofenceTargets.length === 0) return;
+
+    const hit = findNearestGeofenceHit(riderLocation, voucherGeofenceTargets);
+    if (!hit) return;
+
+    const spotId = hit.target.id;
+    if (claimedVoucherSpotIdsRef.current.has(spotId)) return;
+    if (claimingVoucherSpotIdsRef.current.has(spotId)) return;
+
+    const spot = voucherSpots.find((item) => item.id === spotId);
+    if (!spot) return;
+
+    claimingVoucherSpotIdsRef.current.add(spotId);
+    void claimVoucher(token, spotId, riderLocation, hit.target.radiusMeters)
+      .then((voucher) => {
+        claimedVoucherSpotIdsRef.current.add(spotId);
+        Alert.alert(
+          lang === 'ko' ? '지역 바우처가 도착했어요' : 'Voucher unlocked',
+          lang === 'ko'
+            ? `${spot.name} 주변에서 사용할 수 있는 바우처를 지갑에 담았습니다.`
+            : `${voucher.title_en || spot.name_en} has been added to your wallet.`,
+        );
+      })
+      .catch((err) => {
+        console.log('Voucher geofence claim failed', err);
+      })
+      .finally(() => {
+        claimingVoucherSpotIdsRef.current.delete(spotId);
+      });
+  }, [activeJourney, lang, riderLocation, token, voucherGeofenceTargets, voucherSpots]);
 
   useEffect(() => {
     if (!token || hasCheckedRideRecovery) return;

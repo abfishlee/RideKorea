@@ -398,6 +398,12 @@ class VoucherResponse(BaseModel):
         from_attributes = True
 
 
+class VoucherClaimRequest(BaseModel):
+    spot_id: UUID
+    location: LocationSchema
+    radius_meters: float = Field(default=150.0, ge=10.0, le=1000.0)
+
+
 # --- Voucher Config Schemas ---
 class VoucherConfigResponse(BaseModel):
     id: UUID

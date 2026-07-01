@@ -1,0 +1,66 @@
+# P5 Geofence Voucher Progress
+
+작성일: 2026-07-01
+
+## 완료: 지오펜스 기반 바우처 감지 1차
+
+이번 작업은 사용자가 공식 코스 주행 중 활성 바우처 spot 반경에 들어오면 앱이 자동으로 바우처를 claim하는 뼈대를 만든 작업이다.
+
+적용 파일:
+
+- `backend/app/schemas.py`
+- `backend/app/routers/vouchers.py`
+- `backend/app/services/voucher_service.py`
+- `frontend/src/services/api.ts`
+- `frontend/src/types/ridekorea.ts`
+- `frontend/src/utils/geofence-core.ts`
+- `frontend/src/utils/geofence-core.test.ts`
+- `frontend/src/hooks/use-journey-map.ts`
+- `frontend/src/app/index.tsx`
+- `frontend/package.json`
+
+완료 내용:
+
+- `/vouchers/claim` API를 추가했다.
+- 서버는 라이더 위치와 spot ID를 받아 PostGIS `ST_DWithin`으로 실제 반경 내 위치인지 검증한다.
+- 동일 사용자가 같은 spot에서 이미 받은 바우처가 있으면 중복 발급하지 않고 기존 바우처를 반환한다.
+- 클라이언트에 `findNearestGeofenceHit` 순수 유틸을 추가했다.
+- Journey 화면은 선택된 공식 코스의 활성 바우처 spot을 감시한다.
+- 주행 중 현재 위치가 바우처 spot 반경에 들어오면 자동으로 claim API를 호출한다.
+- claim 성공 시 `지역 바우처가 도착했어요` 알림을 표시한다.
+- geofence 유틸 테스트를 `test:utils`에 포함했다.
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:utils
+```
+
+```powershell
+$env:PYTHONPATH='backend'; .\venv\Scripts\python.exe -m unittest discover -s backend\tests
+.\venv\Scripts\python.exe -m compileall -f backend\app backend\alembic
+```
+
+검증 결과:
+
+- frontend typecheck 통과
+- frontend lint 통과
+- frontend test:utils 통과
+- backend unittest 31개 통과
+- backend compileall 통과
+
+남은 보완:
+
+- Wallet 화면에서 새로 받은 바우처를 refresh하거나 unread 상태로 보여주는 UX
+- 운영용 abuse control: per-user cooldown, device/account cap, claim 실패 cooldown
+- 실제 제휴처 QR/코드 사용, merchant redemption, 정산 흐름
+- 백그라운드 위치 권한을 켠 상태에서 앱이 뒤에 있을 때의 지오펜스 알림 정책
+
+다음 작업 후보:
+
+1. Wallet UX refresh/unread 상태 보강
+2. Naver Client ID 입력 후 실제 기기 WebView 렌더링 QA
+3. 바우처 abuse control과 redemption API 설계

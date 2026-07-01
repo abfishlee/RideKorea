@@ -126,7 +126,12 @@ export interface AuthResponse {
 
 export interface Voucher {
   id?: string;
+  spot_id?: string;
   code?: string;
+  title?: string;
+  title_en?: string;
+  description?: string | null;
+  description_en?: string | null;
   reward_title?: string;
   reward_title_en?: string;
   reward_amount?: number;

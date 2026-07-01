@@ -12,12 +12,13 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import Voucher, VoucherConfig, Spot, User
-from ..schemas import VoucherConfigUpsert, VoucherConfigAdminResponse
-from ..core.exceptions import NotFoundError
+from ..schemas import VoucherConfigUpsert, VoucherConfigAdminResponse, VoucherClaimRequest
+from ..core.exceptions import NotFoundError, ValidationError
+from ..core.geo import latlng_to_point_wkt
 
 CODE_LENGTH = 8
 DEFAULT_REWARD_AMOUNT = 5000
@@ -70,6 +71,67 @@ async def issue_for_diary(
     voucher = Voucher(
         user_id=user_id,
         spot_id=spot_id,
+        title=config.reward_title,
+        title_en=config.reward_title_en,
+        description=description,
+        description_en=description_en,
+        code=_generate_code(),
+        expires_at=datetime.now(timezone.utc) + timedelta(days=config.valid_days),
+    )
+    db.add(voucher)
+    await db.commit()
+    await db.refresh(voucher)
+    return voucher
+
+
+async def claim_for_location(
+    db: AsyncSession,
+    user: User,
+    payload: VoucherClaimRequest,
+) -> Voucher:
+    """Claim a voucher after server-side GPS proximity verification."""
+    reference = func.ST_GeographyFromText(
+        latlng_to_point_wkt(payload.location.lat, payload.location.lng)
+    )
+    row = (
+        await db.execute(
+            select(Spot, VoucherConfig)
+            .join(VoucherConfig, Spot.id == VoucherConfig.spot_id)
+            .where(
+                Spot.id == payload.spot_id,
+                VoucherConfig.is_active.is_(True),
+                func.ST_DWithin(Spot.location, reference, payload.radius_meters),
+            )
+            .order_by(func.ST_Distance(Spot.location, reference).asc())
+        )
+    ).first()
+
+    if not row:
+        raise ValidationError("Voucher spot is not active or rider is outside the claim radius")
+
+    existing = (
+        await db.execute(
+            select(Voucher).where(
+                Voucher.user_id == user.id,
+                Voucher.spot_id == payload.spot_id,
+            )
+        )
+    ).scalars().first()
+    if existing:
+        return existing
+
+    spot, config = row
+    description = (
+        f"{spot.name} 주변 지정 식당, 민박, 전통시장에서 즉시 사용 가능한 할인 쿠폰입니다."
+    )
+    description_en = (
+        f"Discount coupon usable at designated restaurants, guesthouses, "
+        f"and traditional markets near {spot.name_en}."
+    )
+
+    voucher = Voucher(
+        user_id=user.id,
+        spot_id=spot.id,
         title=config.reward_title,
         title_en=config.reward_title_en,
         description=description,

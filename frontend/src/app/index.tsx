@@ -192,6 +192,7 @@ export default function HomeScreen() {
     token,
     selectedCourse,
     selectedSpot,
+    onTrackPointsChange: setTrackPoints,
     onCreateLocalMomentMarker: (marker) => {
       webViewRef.current?.postMessage(JSON.stringify({
         type: 'ADD_LOCAL_MOMENT_MARKER',

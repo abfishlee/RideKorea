@@ -7,6 +7,7 @@ import {
 } from '@/services/api';
 import { clearActiveRideSession, saveActiveRideSession } from '@/services/local-ride-session';
 import { clearQueuedTrackPoints } from '@/services/offline-track-queue';
+import { flushJourneyTrackQueue } from '@/services/track-point-sync';
 import type { AppLanguage, Course, Journey, LatLng, Spot } from '@/types/ridekorea';
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
@@ -27,6 +28,7 @@ interface UseJourneyRideParams {
   selectedSpot: Spot | null;
   currentLocation: LatLng | null;
   onCreateLocalMomentMarker?: (marker: LocalMomentMarker) => void;
+  onTrackPointsChange?: (points: { lat: number; lng: number; is_off_route?: boolean }[]) => void;
 }
 
 function pick(lang: AppLanguage, ko: string, en: string, ja: string) {
@@ -42,6 +44,7 @@ export function useJourneyRide({
   selectedCourse,
   selectedSpot,
   onCreateLocalMomentMarker,
+  onTrackPointsChange,
 }: UseJourneyRideParams) {
   const [activeJourney, setActiveJourney] = useState<Journey | null>(null);
   const [isDiaryModalOpen, setIsDiaryModalOpen] = useState(false);
@@ -140,6 +143,18 @@ export function useJourneyRide({
     if (!activeJourney || !token) return;
 
     try {
+      const flushResult = await flushJourneyTrackQueue({
+        token,
+        journeyId: activeJourney.id,
+      });
+      if (flushResult.trackPoints.length > 0) {
+        onTrackPointsChange?.(flushResult.trackPoints.map((point) => ({
+          lat: point.location.lat,
+          lng: point.location.lng,
+          is_off_route: point.is_off_route,
+        })));
+      }
+
       await updateJourneyStatus(token, activeJourney.id, 'completed');
       await clearActiveRideSession(activeJourney.id);
       Alert.alert(
@@ -148,9 +163,17 @@ export function useJourneyRide({
       );
       setActiveJourney(null);
     } catch (err: any) {
-      Alert.alert(t(lang, journeyCopy.error), err.message);
+      Alert.alert(
+        t(lang, journeyCopy.error),
+        err.message || pick(
+          lang,
+          '저장되지 않은 주행 기록을 서버에 반영하지 못했습니다. 네트워크를 확인한 뒤 다시 종료해 주세요.',
+          'Could not sync pending ride points. Check the network and try finishing again.',
+          '未同期の走行記録を保存できませんでした。通信状態を確認してもう一度終了してください。',
+        ),
+      );
     }
-  }, [activeJourney, lang, token]);
+  }, [activeJourney, lang, onTrackPointsChange, token]);
 
   const handleRecoverJourney = useCallback(async (journey: Journey) => {
     if (!token) return;

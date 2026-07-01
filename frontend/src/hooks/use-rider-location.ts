@@ -1,11 +1,8 @@
-import { addJourneyTrackPoints } from '@/services/api';
 import {
   enqueueTrackPoint,
   getQueuedTrackPointCount,
-  markQueuedTrackPointAttempt,
-  removeQueuedTrackPoints,
-  takeQueuedTrackPoints,
 } from '@/services/offline-track-queue';
+import { flushJourneyTrackQueue } from '@/services/track-point-sync';
 import type { AppLanguage } from '@/types/ridekorea';
 import { detectRouteDeviation, type DeviationState, type LatLngPoint } from '@/utils/route-deviation-core';
 import { addRideTrackPoint, createEmptyRideTrackState, type RideTrackState } from '@/utils/ride-track-core';
@@ -186,20 +183,12 @@ export function useRiderLocation({
               }
 
               isFlushingTrackQueueRef.current = true;
-              void takeQueuedTrackPoints(activeJourneyId)
-                .then(async (queuedPoints) => {
-                  if (queuedPoints.length > 0) {
-                    await markQueuedTrackPointAttempt(activeJourneyId, queuedPoints.length);
-                  }
-
-                  const trackPoints = await addJourneyTrackPoints(token, activeJourneyId, [
-                    ...queuedPoints,
-                    trackPoint,
-                  ]);
-                  const pendingTrackPointCount = queuedPoints.length > 0
-                    ? await removeQueuedTrackPoints(activeJourneyId, queuedPoints.length)
-                    : await getQueuedTrackPointCount(activeJourneyId);
-
+              void flushJourneyTrackQueue({
+                token,
+                journeyId: activeJourneyId,
+                extraPoint: trackPoint,
+              })
+                .then(({ pendingTrackPointCount, trackPoints }) => {
                   setRideStats(previous => ({
                     ...previous,
                     pendingTrackPointCount,

@@ -398,7 +398,6 @@ npm.cmd run test:utils
 남은 보완:
 
 - ride photo pin queue를 SQLite에 저장하는 확장
-- 완료 직전 pending queue가 남아 있을 때 flush/finalize를 보장하는 흐름
 
 다음 작업:
 
@@ -440,3 +439,45 @@ npm.cmd run test:utils
 
 - P3 보강: 완료 직전 pending queue flush/finalize 강화
 - 또는 P4 Naver Map incremental update adapter 정리
+
+### 완료: P3 보강 - 완료 전 pending queue flush
+
+적용 파일:
+
+- `frontend/src/services/track-point-sync.ts`
+- `frontend/src/hooks/use-rider-location.ts`
+- `frontend/src/hooks/use-journey-ride.ts`
+- `frontend/src/app/index.tsx`
+
+완료 내용:
+
+- queued track point 전송 로직을 `flushJourneyTrackQueue` 공통 서비스로 분리했다.
+- 주행 중 위치 저장과 Journey 완료 직전 flush가 같은 sync 경로를 사용한다.
+- Journey 완료 버튼을 누르면 먼저 SQLite pending queue를 서버에 반영한다.
+- pending queue flush가 실패하면 Journey를 `completed`로 닫지 않고 사용자에게 재시도를 안내한다.
+- flush 성공 시 지도 track cache도 최신 서버 응답 기준으로 갱신한다.
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:utils
+```
+
+결과:
+
+- `tsc --noEmit` 통과
+- `lint` 통과
+- `test:utils` 통과
+
+남은 보완:
+
+- ride photo pin queue를 SQLite에 저장하는 확장
+- 완료 시 마지막 GPS fix를 한 번 더 기록하는 UX 검토
+
+다음 작업:
+
+- P4 Naver Map incremental update adapter 정리
+- 또는 P3 보강: ride photo pin queue SQLite 확장

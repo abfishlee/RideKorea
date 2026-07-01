@@ -162,6 +162,7 @@ export interface VoucherRedemption {
   code: string;
   title: string;
   title_en: string;
+  reward_amount: number;
   is_redeemed: boolean;
   redemption_source?: string | null;
   redeemed_at?: string | null;

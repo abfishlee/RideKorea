@@ -281,6 +281,7 @@ class Voucher(Base):
     description = Column(Text, nullable=True)
     description_en = Column(Text, nullable=True)
     code = Column(String, unique=True, nullable=False, index=True)
+    reward_amount = Column(Integer, default=5000, nullable=False)
     is_redeemed = Column(Boolean, default=False, nullable=False)
     redeemed_at = Column(DateTime(timezone=True), nullable=True)
     redeemed_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)

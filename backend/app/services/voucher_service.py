@@ -112,6 +112,7 @@ async def issue_for_diary(
         description=description,
         description_en=description_en,
         code=_generate_code(),
+        reward_amount=config.reward_amount,
         expires_at=datetime.now(timezone.utc) + timedelta(days=config.valid_days),
     )
     db.add(voucher)
@@ -173,6 +174,7 @@ async def claim_for_location(
         description=description,
         description_en=description_en,
         code=_generate_code(),
+        reward_amount=config.reward_amount,
         expires_at=datetime.now(timezone.utc) + timedelta(days=config.valid_days),
     )
     db.add(voucher)
@@ -237,6 +239,7 @@ async def admin_list_redemptions(
             Voucher.code,
             Voucher.title,
             Voucher.title_en,
+            Voucher.reward_amount,
             Voucher.is_redeemed,
             Voucher.redemption_source,
             Voucher.redeemed_at,
@@ -261,6 +264,7 @@ async def admin_list_redemptions(
             code=row.code,
             title=row.title,
             title_en=row.title_en,
+            reward_amount=row.reward_amount,
             is_redeemed=row.is_redeemed,
             redemption_source=row.redemption_source,
             redeemed_at=row.redeemed_at,
@@ -281,9 +285,9 @@ async def admin_get_settlement_summary(
 ) -> VoucherSettlementSummaryResponse:
     """Summarize recent redeemed vouchers for first-pass settlement reporting."""
     since = datetime.now(timezone.utc) - timedelta(days=days)
-    reward_amount = func.coalesce(VoucherConfig.reward_amount, DEFAULT_REWARD_AMOUNT)
     redeemed_count = func.count(Voucher.id)
-    total_amount = func.coalesce(func.sum(reward_amount), 0)
+    reward_amount = func.coalesce(func.max(Voucher.reward_amount), DEFAULT_REWARD_AMOUNT)
+    total_amount = func.coalesce(func.sum(Voucher.reward_amount), 0)
 
     query = (
         select(
@@ -295,12 +299,11 @@ async def admin_get_settlement_summary(
             total_amount.label("total_amount"),
         )
         .join(Spot, Voucher.spot_id == Spot.id)
-        .outerjoin(VoucherConfig, Voucher.spot_id == VoucherConfig.spot_id)
         .where(
             Voucher.is_redeemed.is_(True),
             Voucher.redeemed_at >= since,
         )
-        .group_by(Spot.id, Spot.name, Spot.name_en, reward_amount)
+        .group_by(Spot.id, Spot.name, Spot.name_en)
         .order_by(total_amount.desc(), redeemed_count.desc())
     )
     rows = (await db.execute(query)).all()

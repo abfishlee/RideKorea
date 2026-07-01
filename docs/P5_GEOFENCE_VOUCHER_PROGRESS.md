@@ -320,3 +320,58 @@ $env:PYTHONPATH='backend'; .\venv\Scripts\python.exe -m unittest discover -s bac
 - 월별/기간별 필터 UI
 - CSV export
 - merchant 계정별 정산 분리
+
+## 완료: 바우처 발급 시점 금액 스냅샷 1차
+
+적용 파일:
+
+- `backend/app/models.py`
+- `backend/app/schemas.py`
+- `backend/app/services/voucher_service.py`
+- `backend/alembic/versions/d9f2a4b6c8e1_add_voucher_reward_amount_snapshot.py`
+- `frontend/src/types/ridekorea.ts`
+
+완료 내용:
+
+- `vouchers.reward_amount` 컬럼을 추가하는 Alembic migration을 만들었다.
+- 기존 바우처에는 migration 시 기본값 `5000`을 채우도록 했다.
+- 새 바우처 발급 시 `voucher_configs.reward_amount`를 `vouchers.reward_amount`에 스냅샷으로 저장한다.
+- 사용자 지갑, 코드 조회, 사용 처리 응답에 발급 시점 금액을 포함한다.
+- 정산 요약 API가 현재 제휴 설정 금액이 아니라 `vouchers.reward_amount` 스냅샷 합계를 기준으로 계산하도록 변경했다.
+- spot별 정산 요약도 바우처 스냅샷 금액 합계 기준으로 계산한다.
+
+로컬 DB 반영:
+
+```powershell
+cd backend
+..\venv\Scripts\alembic.exe upgrade head
+```
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:utils
+```
+
+```powershell
+$env:PYTHONPATH='backend'; .\venv\Scripts\python.exe -m unittest discover -s backend\tests
+.\venv\Scripts\python.exe -m compileall -f backend\app backend\alembic
+```
+
+검증 결과:
+
+- frontend typecheck 통과
+- frontend lint 통과
+- frontend test:utils 통과
+- backend unittest 31개 통과
+- backend compileall 통과
+
+남은 보완:
+
+- 정산 ledger 테이블 분리
+- merchant 계정별 정산 구분
+- CSV export
+- 월별/기간별 필터 UI

@@ -390,6 +390,7 @@ class VoucherResponse(BaseModel):
     description: Optional[str] = None
     description_en: Optional[str] = None
     code: str
+    reward_amount: int
     is_redeemed: bool
     redeemed_at: Optional[datetime] = None
     redeemed_by_user_id: Optional[UUID] = None
@@ -416,6 +417,7 @@ class VoucherRedemptionAdminResponse(BaseModel):
     code: str
     title: str
     title_en: str
+    reward_amount: int
     is_redeemed: bool
     redemption_source: Optional[str] = None
     redeemed_at: Optional[datetime] = None

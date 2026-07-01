@@ -474,7 +474,6 @@ npm.cmd run test:utils
 
 남은 보완:
 
-- ride photo pin queue를 SQLite에 저장하는 확장
 - 완료 시 마지막 GPS fix를 한 번 더 기록하는 UX 검토
 
 다음 작업:
@@ -550,3 +549,45 @@ EXPO_PUBLIC_MAP_PROVIDER=naver
 
 - Naver Client ID 입력 후 실기기/WebView 렌더링 QA
 - 또는 P3 보강: ride photo pin queue SQLite 확장
+
+### 완료: P3 보강 - ride photo pin queue SQLite 확장
+
+적용 파일:
+
+- `frontend/src/services/local-diary-queue.ts`
+- `frontend/src/hooks/use-journey-ride.ts`
+
+완료 내용:
+
+- SQLite `spot_diary_queue` table을 추가했다.
+- 사진/글/위치 기반 다이어리 저장이 네트워크 문제로 실패하면 로컬 queue에 임시 저장한다.
+- 로컬 queue에는 Journey ID, spot ID, 원본 공유 루트 stop ID, 제목, 본문, 사진 URI, 위치, 공개 상태, retry metadata를 보존한다.
+- 로컬 저장된 다이어리는 지도에 임시 로컬 마커로 남겨 사용자가 기록이 사라졌다고 느끼지 않게 했다.
+- Journey 완료 전에 `flushQueuedSpotDiaries`로 pending 다이어리 동기화를 한 번 더 시도한다.
+- 동기화된 다이어리는 SQLite queue에서 삭제하고, 실패한 항목은 다음 재시도를 위해 남긴다.
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:utils
+```
+
+결과:
+
+- `tsc --noEmit` 통과
+- `lint` 통과
+- `test:utils` 통과
+
+남은 보완:
+
+- 완료 시 마지막 GPS fix를 한 번 더 기록하는 UX 검토
+- pending diary count를 HUD 또는 My Path에 표시할지 결정
+- 앱 시작 시 전체 pending diary background sync 정책 검토
+
+다음 작업:
+
+- P5 지오펜스 기반 바우처 감지
+- 또는 Naver Client ID 입력 후 실기기/WebView 렌더링 QA

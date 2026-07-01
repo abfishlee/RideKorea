@@ -5,6 +5,11 @@ import {
   updateJourneyStatus,
   uploadDiaryPhotos,
 } from '@/services/api';
+import {
+  enqueueSpotDiary,
+  flushQueuedSpotDiaries,
+  getQueuedSpotDiaryCount,
+} from '@/services/local-diary-queue';
 import { clearActiveRideSession, saveActiveRideSession } from '@/services/local-ride-session';
 import { clearQueuedTrackPoints } from '@/services/offline-track-queue';
 import { flushJourneyTrackQueue } from '@/services/track-point-sync';
@@ -56,6 +61,7 @@ export function useJourneyRide({
   const [sourceSharedRouteStopId, setSourceSharedRouteStopId] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [isSubmittingDiary, setIsSubmittingDiary] = useState(false);
+  const [pendingDiaryCount, setPendingDiaryCount] = useState(0);
 
   const resetDiaryDraft = useCallback(() => {
     setDiaryTitle('');
@@ -72,6 +78,7 @@ export function useJourneyRide({
     setIsDiaryModalOpen(false);
     resetDiaryDraft();
     setIsSubmittingDiary(false);
+    setPendingDiaryCount(0);
   }, [resetDiaryDraft]);
 
   const uploadImageToServer = useCallback(async (photoUri: string): Promise<string[]> => {
@@ -97,6 +104,7 @@ export function useJourneyRide({
       );
       const startedJourney = await updateJourneyStatus(token, journey.id, 'riding');
       await saveActiveRideSession(startedJourney);
+      setPendingDiaryCount(await getQueuedSpotDiaryCount(startedJourney.id));
       setActiveJourney(startedJourney);
       Alert.alert(
         t(lang, journeyCopy.journeyStartedTitle),
@@ -124,6 +132,7 @@ export function useJourneyRide({
     try {
       const startedJourney = await updateJourneyStatus(token, journey.id, 'riding');
       await saveActiveRideSession(startedJourney, journey.started_at || journey.created_at || undefined);
+      setPendingDiaryCount(await getQueuedSpotDiaryCount(startedJourney.id));
       setActiveJourney(startedJourney);
       Alert.alert(
         t(lang, journeyCopy.rideStartedTitle),
@@ -154,6 +163,8 @@ export function useJourneyRide({
           is_off_route: point.is_off_route,
         })));
       }
+      const diaryFlushResult = await flushQueuedSpotDiaries(token, activeJourney.id);
+      setPendingDiaryCount(diaryFlushResult.pendingDiaryCount);
 
       await updateJourneyStatus(token, activeJourney.id, 'completed');
       await clearActiveRideSession(activeJourney.id);
@@ -184,6 +195,7 @@ export function useJourneyRide({
         recoveredJourney,
         journey.started_at || journey.created_at || undefined,
       );
+      setPendingDiaryCount(await getQueuedSpotDiaryCount(recoveredJourney.id));
       setActiveJourney(recoveredJourney);
       Alert.alert(
         pick(lang, '二쇳뻾 蹂듦뎄', 'Ride recovered', 'ライドを復元'),
@@ -208,6 +220,7 @@ export function useJourneyRide({
       await clearActiveRideSession(journey.id);
       if (activeJourney?.id === journey.id) {
         setActiveJourney(null);
+        setPendingDiaryCount(0);
       }
     } catch (err: any) {
       Alert.alert(t(lang, journeyCopy.error), err.message);
@@ -297,17 +310,27 @@ export function useJourneyRide({
     }
 
     setIsSubmittingDiary(true);
+    const diaryPayload = {
+      journeyId: activeJourney.id,
+      spotId: selectedSpot?.id ?? null,
+      sourceSharedRouteStopId,
+      title: diaryTitle.trim() || null,
+      body: diaryText,
+      photoUri: selectedPhoto,
+      location: saveLocation,
+      visibility: 'private',
+    };
     try {
       const uploadedUrls = selectedPhoto ? await uploadImageToServer(selectedPhoto) : [];
       const savedDiary = await createSpotDiary(
         token,
-        activeJourney.id,
-        selectedSpot?.id ?? null,
-        sourceSharedRouteStopId,
-        diaryTitle.trim() || null,
-        diaryText,
+        diaryPayload.journeyId,
+        diaryPayload.spotId,
+        diaryPayload.sourceSharedRouteStopId,
+        diaryPayload.title,
+        diaryPayload.body,
         uploadedUrls,
-        saveLocation,
+        diaryPayload.location,
       );
 
       if (saveLocation) {
@@ -325,8 +348,25 @@ export function useJourneyRide({
       );
       resetDiaryDraft();
       setIsDiaryModalOpen(false);
-    } catch (err: any) {
-      Alert.alert(t(lang, journeyCopy.error), err.message);
+    } catch {
+      const nextPendingCount = await enqueueSpotDiary(diaryPayload);
+      setPendingDiaryCount(nextPendingCount);
+      if (saveLocation) {
+        onCreateLocalMomentMarker?.({
+          id: `queued-diary-${Date.now()}`,
+          location: saveLocation,
+          photoUrl: selectedPhoto,
+          title: diaryPayload.title || diaryPayload.body,
+        });
+      }
+      Alert.alert(
+        t(lang, journeyCopy.error),
+        lang === 'ko'
+          ? '네트워크 문제로 다이어리를 로컬에 임시 저장했습니다. 주행 종료 전 다시 동기화합니다.'
+          : 'The diary was saved locally and will sync again before the ride finishes.',
+      );
+      resetDiaryDraft();
+      setIsDiaryModalOpen(false);
     } finally {
       setIsSubmittingDiary(false);
     }
@@ -363,6 +403,7 @@ export function useJourneyRide({
     handleDiscardRecoveredJourney,
     isDiaryModalOpen,
     isSubmittingDiary,
+    pendingDiaryCount,
     resetJourney,
     selectedPhoto,
     setDiaryTitle,

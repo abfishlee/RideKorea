@@ -106,7 +106,7 @@ Priority: low.
 
 - [x] Refresh shared route cards with stronger photography and story hierarchy.
 - [x] Refresh diary cards with magazine-like spacing and photo emphasis.
-- [ ] Keep import/open/comment/share flows unchanged.
+- [x] Keep import/open/comment/share flows unchanged.
 
 ### Phase 4: Detail Screens
 
@@ -127,3 +127,13 @@ Priority: low.
 - Do not add new map provider dependencies during visual refresh.
 - Do not use decorative gradients or effects on dense admin workflows.
 - Any motion or glow effect must be optional and should not hide map or ride data.
+
+## Flow Preservation Audit
+
+### Moments Editorial Refresh
+
+- Shared route card open flow remains callback-based through `onOpen(route)`.
+- Shared route import flow remains callback-based through `onImport(route)`.
+- Import button still stops card press propagation before importing.
+- Public diary map open flow remains routed by `publicDiaryId`.
+- Recent Phase 3 visual changes did not add or remove API calls.

@@ -1,3 +1,4 @@
+import { adminVoucherCopy, t } from '@/i18n';
 import type { AppLanguage } from '@/types/ridekorea';
 import React from 'react';
 import {
@@ -56,7 +57,14 @@ export function AdminVoucherModal({
   onValidDaysChange,
   onSave,
 }: AdminVoucherModalProps) {
-  const isKo = lang === 'ko';
+  const copy = (item: Record<AppLanguage, string>) => t(lang, item);
+  const spotName = (config: any) => (lang === 'ko' ? config.spot_name : config.spot_name_en) || config.spot_name;
+  const statusLine = (config: any) => {
+    if (!config.is_active) return copy(adminVoucherCopy.inactive);
+    const amount = config.reward_amount.toLocaleString(lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'ko-KR');
+    const currency = lang === 'ko' ? '원' : 'KRW';
+    return `${copy(adminVoucherCopy.active)} - ${amount}${currency}`;
+  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -64,16 +72,14 @@ export function AdminVoucherModal({
         <View style={[styles.modalContent, { maxHeight: '90%' }]}>
           <View style={styles.walletHeader}>
             <Text style={styles.modalTitle}>
-              {isKo ? '바우처 지자체 제휴 설정' : 'Voucher Settings'}
+              {copy(adminVoucherCopy.title)}
             </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Text style={styles.closeBtnText}>x</Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.walletSubtitle}>
-            {isKo
-              ? '인증센터별로 지자체 제휴 바우처 발급 옵션과 세부 정책을 관리합니다.'
-              : 'Toggle and customize local merchant voucher rewards for each certification spot.'}
+            {copy(adminVoucherCopy.subtitle)}
           </Text>
 
           {isLoading ? (
@@ -90,22 +96,16 @@ export function AdminVoucherModal({
                     <View style={styles.adminConfigHeader}>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.adminSpotName}>
-                          {isKo ? config.spot_name : config.spot_name_en}
+                          {spotName(config)}
                         </Text>
                         <Text style={styles.adminSpotSub}>
-                          {config.is_active
-                            ? isKo
-                              ? `Active - ${config.reward_amount.toLocaleString()}원`
-                              : `Active - ${config.reward_amount.toLocaleString()} KRW`
-                            : isKo
-                              ? 'Inactive'
-                              : 'Inactive'}
+                          {statusLine(config)}
                         </Text>
                       </View>
 
                       {!isEditing && (
                         <TouchableOpacity style={styles.adminEditBtn} onPress={() => onStartEdit(config)}>
-                          <Text style={styles.adminEditBtnText}>{isKo ? '설정 편집' : 'Edit'}</Text>
+                          <Text style={styles.adminEditBtnText}>{copy(adminVoucherCopy.editSettings)}</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -114,7 +114,7 @@ export function AdminVoucherModal({
                       <View style={styles.adminEditForm}>
                         <View style={styles.formRow}>
                           <Text style={styles.formLabel}>
-                            {isKo ? '바우처 지급 활성화' : 'Enable Voucher'}
+                            {copy(adminVoucherCopy.enableVoucher)}
                           </Text>
                           <TouchableOpacity
                             style={[
@@ -127,29 +127,29 @@ export function AdminVoucherModal({
                         </View>
 
                         <Text style={styles.formInputLabel}>
-                          {isKo ? '보상 명칭 (국문)' : 'Reward Title (KO)'}
+                          {copy(adminVoucherCopy.rewardTitleKo)}
                         </Text>
                         <TextInput
                           style={styles.adminInput}
                           value={editRewardTitle}
                           onChangeText={onRewardTitleChange}
-                          placeholder="예: 문경 소도시 활성화 바우처"
+                          placeholder={copy(adminVoucherCopy.rewardTitleKoPlaceholder)}
                         />
 
                         <Text style={styles.formInputLabel}>
-                          {isKo ? '보상 명칭 (영문)' : 'Reward Title (EN)'}
+                          {copy(adminVoucherCopy.rewardTitleEn)}
                         </Text>
                         <TextInput
                           style={styles.adminInput}
                           value={editRewardTitleEn}
                           onChangeText={onRewardTitleEnChange}
-                          placeholder="e.g. Mungyeong Revitalization Voucher"
+                          placeholder={copy(adminVoucherCopy.rewardTitleEnPlaceholder)}
                         />
 
                         <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
                           <View style={{ flex: 1 }}>
                             <Text style={styles.formInputLabel}>
-                              {isKo ? '리워드 금액 (KRW)' : 'Amount (KRW)'}
+                              {copy(adminVoucherCopy.amountKrw)}
                             </Text>
                             <TextInput
                               style={styles.adminInput}
@@ -161,7 +161,7 @@ export function AdminVoucherModal({
                           </View>
                           <View style={{ flex: 1 }}>
                             <Text style={styles.formInputLabel}>
-                              {isKo ? '유효 기간 (일)' : 'Valid Days'}
+                              {copy(adminVoucherCopy.validDays)}
                             </Text>
                             <TextInput
                               style={styles.adminInput}
@@ -178,7 +178,7 @@ export function AdminVoucherModal({
                             style={[styles.formBtn, styles.formCancelBtn]}
                             onPress={onCancelEdit}
                             disabled={isSaving}>
-                            <Text style={styles.formCancelBtnText}>{isKo ? '취소' : 'Cancel'}</Text>
+                            <Text style={styles.formCancelBtnText}>{copy(adminVoucherCopy.cancel)}</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
                             style={[styles.formBtn, styles.formSaveBtn]}
@@ -187,7 +187,7 @@ export function AdminVoucherModal({
                             {isSaving ? (
                               <ActivityIndicator size="small" color="#fff" />
                             ) : (
-                              <Text style={styles.formSaveBtnText}>{isKo ? '저장' : 'Save'}</Text>
+                              <Text style={styles.formSaveBtnText}>{copy(adminVoucherCopy.save)}</Text>
                             )}
                           </TouchableOpacity>
                         </View>

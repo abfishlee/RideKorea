@@ -244,6 +244,177 @@ export const compassScreenCopy = {
   },
 } satisfies Record<string, Record<AppLanguage, string>>;
 
+export const adminVoucherCopy = {
+  title: {
+    ko: '바우처 지자체 제휴 설정',
+    en: 'Voucher Settings',
+    ja: 'バウチャー提携設定',
+  },
+  subtitle: {
+    ko: '인증센터별로 지자체 제휴 바우처 발급 옵션과 세부 정책을 관리합니다.',
+    en: 'Toggle and customize local merchant voucher rewards for each certification spot.',
+    ja: '認証スポットごとに地域バウチャーの発行設定と詳細ポリシーを管理します。',
+  },
+  active: {
+    ko: '활성',
+    en: 'Active',
+    ja: '有効',
+  },
+  inactive: {
+    ko: '비활성',
+    en: 'Inactive',
+    ja: '無効',
+  },
+  editSettings: {
+    ko: '설정 편집',
+    en: 'Edit',
+    ja: '設定編集',
+  },
+  enableVoucher: {
+    ko: '바우처 지급 활성화',
+    en: 'Enable Voucher',
+    ja: 'バウチャー支給を有効化',
+  },
+  rewardTitleKo: {
+    ko: '보상 명칭 (국문)',
+    en: 'Reward Title (KO)',
+    ja: '報酬名 (韓国語)',
+  },
+  rewardTitleEn: {
+    ko: '보상 명칭 (영문)',
+    en: 'Reward Title (EN)',
+    ja: '報酬名 (英語)',
+  },
+  rewardTitleKoPlaceholder: {
+    ko: '예: 문경 소도시 활성화 바우처',
+    en: 'e.g. Mungyeong local voucher',
+    ja: '例: 聞慶ローカルバウチャー',
+  },
+  rewardTitleEnPlaceholder: {
+    ko: '예: Mungyeong Revitalization Voucher',
+    en: 'e.g. Mungyeong Revitalization Voucher',
+    ja: '例: Mungyeong Revitalization Voucher',
+  },
+  amountKrw: {
+    ko: '리워드 금액 (KRW)',
+    en: 'Amount (KRW)',
+    ja: '金額 (KRW)',
+  },
+  validDays: {
+    ko: '유효 기간 (일)',
+    en: 'Valid Days',
+    ja: '有効日数',
+  },
+  cancel: {
+    ko: '취소',
+    en: 'Cancel',
+    ja: 'キャンセル',
+  },
+  save: {
+    ko: '저장',
+    en: 'Save',
+    ja: '保存',
+  },
+} satisfies Record<string, Record<AppLanguage, string>>;
+
+export const adminTravelPoiCopy = {
+  title: {
+    ko: 'POI 데이터 검수',
+    en: 'POI Data Review',
+    ja: 'POIデータ確認',
+  },
+  subtitle: {
+    ko: '출처, 라이선스, 표시 여부를 확인하고 지도 노출 상태를 관리합니다.',
+    en: 'Review provenance, license, and map visibility for travel POIs.',
+    ja: '出典、ライセンス、表示可否を確認し、地図表示状態を管理します。',
+  },
+  all: {
+    ko: '전체',
+    en: 'All',
+    ja: 'すべて',
+  },
+  review: {
+    ko: '검토중',
+    en: 'Review',
+    ja: '確認中',
+  },
+  approved: {
+    ko: '승인',
+    en: 'Approved',
+    ja: '承認',
+  },
+  rejected: {
+    ko: '거절',
+    en: 'Rejected',
+    ja: '却下',
+  },
+  needsReview: {
+    ko: '검토 필요',
+    en: 'Needs review',
+    ja: '確認必要',
+  },
+  openReports: {
+    ko: '열린 신고 {count}건',
+    en: '{count} open reports',
+    ja: '未処理の報告 {count}件',
+  },
+  report: {
+    ko: '신고',
+    en: 'Report',
+    ja: '報告',
+  },
+  resolve: {
+    ko: '해결',
+    en: 'Resolve',
+    ja: '解決',
+  },
+  dismiss: {
+    ko: '무시',
+    en: 'Dismiss',
+    ja: '無視',
+  },
+  empty: {
+    ko: '검수할 POI가 없습니다.',
+    en: 'No POIs to review.',
+    ja: '確認するPOIはありません。',
+  },
+  source: {
+    ko: '출처',
+    en: 'Source',
+    ja: '出典',
+  },
+  license: {
+    ko: '라이선스',
+    en: 'License',
+    ja: 'ライセンス',
+  },
+  checked: {
+    ko: '확인일',
+    en: 'Checked',
+    ja: '確認日',
+  },
+  approve: {
+    ko: '승인',
+    en: 'Approve',
+    ja: '承認',
+  },
+  reject: {
+    ko: '거절',
+    en: 'Reject',
+    ja: '却下',
+  },
+  hide: {
+    ko: '숨김',
+    en: 'Hide',
+    ja: '非表示',
+  },
+  show: {
+    ko: '노출',
+    en: 'Show',
+    ja: '表示',
+  },
+} satisfies Record<string, Record<AppLanguage, string>>;
+
 export const authCopy = {
   subtitle: {
     ko: '외국인 라이더를 위한 한국 자전거 종주 동반자',

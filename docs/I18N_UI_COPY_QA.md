@@ -24,6 +24,8 @@
 - [x] My Path 화면의 가져온 공유 루트 카드 문구를 KO/EN/JA copy key 기반으로 전환
 - [x] My Path 화면의 언어 선택을 KO/EN/JA 세그먼트 컨트롤로 정리
 - [x] My Path 화면의 시간 단위, 작성자, 출발/도착 문구 QA
+- [x] Admin 바우처 설정 모달의 KO/EN/JA copy key coverage 정리
+- [x] Admin POI 데이터 검수 모달의 필터, 상태, 액션, 출처 라벨 문구 QA
 
 ## QA 기준
 
@@ -39,7 +41,7 @@
 - [x] Journey 화면의 공개 일지/공유 루트 스팟 시트 문구 QA 3차
 - [x] Moments/Diary 화면의 사진 스팟, 댓글, 공유 문구 QA
 - [x] My Path 화면의 공유 루트/가져오기 문구 QA
-- [ ] Admin 모달 내부 문구의 KO/EN/JA coverage 점검
+- [x] Admin 모달 내부 문구의 KO/EN/JA coverage 점검
 - [ ] 앱 전체에서 깨진 문자 패턴을 자동 탐지하는 i18n QA 스크립트 추가 검토
 
 ## 검증

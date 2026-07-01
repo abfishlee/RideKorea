@@ -1,3 +1,4 @@
+import { adminTravelPoiCopy, t } from '@/i18n';
 import type { AppLanguage, TravelPoi, TravelPoiReport, TravelPoiReportStatus } from '@/types/ridekorea';
 import React from 'react';
 import {
@@ -26,17 +27,17 @@ interface AdminTravelPoiModalProps {
   onUpdateReportStatus: (report: TravelPoiReport, status: TravelPoiReportStatus) => void;
 }
 
-const FILTERS: { value: string | null; ko: string; en: string }[] = [
-  { value: null, ko: '전체', en: 'All' },
-  { value: 'needs-review', ko: '검토중', en: 'Review' },
-  { value: 'approved', ko: '승인', en: 'Approved' },
-  { value: 'rejected', ko: '거절', en: 'Rejected' },
+const FILTERS: { value: string | null; copy: Record<AppLanguage, string> }[] = [
+  { value: null, copy: adminTravelPoiCopy.all },
+  { value: 'needs-review', copy: adminTravelPoiCopy.review },
+  { value: 'approved', copy: adminTravelPoiCopy.approved },
+  { value: 'rejected', copy: adminTravelPoiCopy.rejected },
 ];
 
-const STATUS_LABELS: Record<string, { ko: string; en: string; color: string; background: string }> = {
-  approved: { ko: '승인', en: 'Approved', color: '#047857', background: '#D1FAE5' },
-  'needs-review': { ko: '검토중', en: 'Needs review', color: '#B45309', background: '#FEF3C7' },
-  rejected: { ko: '거절', en: 'Rejected', color: '#BE123C', background: '#FFE4E6' },
+const STATUS_LABELS: Record<string, { copy: Record<AppLanguage, string>; color: string; background: string }> = {
+  approved: { copy: adminTravelPoiCopy.approved, color: '#047857', background: '#D1FAE5' },
+  'needs-review': { copy: adminTravelPoiCopy.needsReview, color: '#B45309', background: '#FEF3C7' },
+  rejected: { copy: adminTravelPoiCopy.rejected, color: '#BE123C', background: '#FFE4E6' },
 };
 
 function formatDate(value?: string | null) {
@@ -61,7 +62,14 @@ export function AdminTravelPoiModal({
   onToggleActive,
   onUpdateReportStatus,
 }: AdminTravelPoiModalProps) {
-  const isKo = lang === 'ko';
+  const copy = (item: Record<AppLanguage, string>) => t(lang, item);
+  const localizedName = (poi: { name: string; name_en?: string | null }) => (
+    lang === 'ko' ? poi.name : poi.name_en || poi.name
+  );
+  const openReportsLabel = copy(adminTravelPoiCopy.openReports).replace(
+    '{count}',
+    reports.length.toLocaleString(lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'ko-KR'),
+  );
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -69,11 +77,9 @@ export function AdminTravelPoiModal({
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.title}>{isKo ? 'POI 데이터 검수' : 'POI Data Review'}</Text>
+              <Text style={styles.title}>{copy(adminTravelPoiCopy.title)}</Text>
               <Text style={styles.subtitle}>
-                {isKo
-                  ? '출처, 라이선스, 표시 여부를 확인하고 지도 노출 상태를 관리합니다.'
-                  : 'Review provenance, license, and map visibility for travel POIs.'}
+                {copy(adminTravelPoiCopy.subtitle)}
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -91,7 +97,7 @@ export function AdminTravelPoiModal({
                   onPress={() => onChangeFilter(filter.value)}
                   activeOpacity={0.86}>
                   <Text style={[styles.filterButtonText, isActive && styles.filterButtonTextActive]}>
-                    {isKo ? filter.ko : filter.en}
+                    {copy(filter.copy)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -105,7 +111,7 @@ export function AdminTravelPoiModal({
               {reports.length > 0 && (
                 <View style={styles.reportSection}>
                   <Text style={styles.sectionLabel}>
-                    {isKo ? `열린 신고 ${reports.length}건` : `${reports.length} open reports`}
+                    {openReportsLabel}
                   </Text>
                   {reports.map(report => {
                     const isReportSaving = isSavingReportId === report.id;
@@ -114,7 +120,7 @@ export function AdminTravelPoiModal({
                         <View style={styles.cardTop}>
                           <View style={styles.cardTitleBlock}>
                             <Text style={styles.poiName} numberOfLines={1}>
-                              {isKo ? report.poi.name : report.poi.name_en || report.poi.name}
+                              {localizedName(report.poi)}
                             </Text>
                             <Text style={styles.poiMeta} numberOfLines={1}>
                               {report.report_type} · {formatDate(report.created_at)}
@@ -122,7 +128,7 @@ export function AdminTravelPoiModal({
                           </View>
                           <View style={[styles.statusBadge, { backgroundColor: '#FEF3C7' }]}>
                             <Text style={[styles.statusBadgeText, { color: '#B45309' }]}>
-                              {isKo ? '신고' : 'Report'}
+                              {copy(adminTravelPoiCopy.report)}
                             </Text>
                           </View>
                         </View>
@@ -138,13 +144,13 @@ export function AdminTravelPoiModal({
                             style={[styles.actionButton, styles.approveButton]}
                             disabled={isReportSaving}
                             onPress={() => onUpdateReportStatus(report, 'resolved')}>
-                            <Text style={styles.actionButtonText}>{isKo ? '해결' : 'Resolve'}</Text>
+                            <Text style={styles.actionButtonText}>{copy(adminTravelPoiCopy.resolve)}</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
                             style={[styles.actionButton, styles.hideButton]}
                             disabled={isReportSaving}
                             onPress={() => onUpdateReportStatus(report, 'dismissed')}>
-                            <Text style={styles.actionButtonText}>{isKo ? '무시' : 'Dismiss'}</Text>
+                            <Text style={styles.actionButtonText}>{copy(adminTravelPoiCopy.dismiss)}</Text>
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -155,7 +161,7 @@ export function AdminTravelPoiModal({
 
               {pois.length === 0 ? (
                 <Text style={styles.emptyText}>
-                  {isKo ? '검수할 POI가 없습니다.' : 'No POIs to review.'}
+                  {copy(adminTravelPoiCopy.empty)}
                 </Text>
               ) : (
                 pois.map(poi => {
@@ -167,7 +173,7 @@ export function AdminTravelPoiModal({
                       <View style={styles.cardTop}>
                         <View style={styles.cardTitleBlock}>
                           <Text style={styles.poiName} numberOfLines={1}>
-                            {isKo ? poi.name : poi.name_en || poi.name}
+                            {localizedName(poi)}
                           </Text>
                           <Text style={styles.poiMeta} numberOfLines={1}>
                             {poi.category} · {poi.source || 'unknown'} · {poi.external_id || '-'}
@@ -175,20 +181,20 @@ export function AdminTravelPoiModal({
                         </View>
                         <View style={[styles.statusBadge, { backgroundColor: status.background }]}>
                           <Text style={[styles.statusBadgeText, { color: status.color }]}>
-                            {isKo ? status.ko : status.en}
+                            {copy(status.copy)}
                           </Text>
                         </View>
                       </View>
 
                       <View style={styles.provenanceBox}>
                         <Text style={styles.provenanceLine} numberOfLines={1}>
-                          {isKo ? '출처' : 'Source'}: {poi.source_name || poi.source || '-'}
+                          {copy(adminTravelPoiCopy.source)}: {poi.source_name || poi.source || '-'}
                         </Text>
                         <Text style={styles.provenanceLine} numberOfLines={1}>
-                          {isKo ? '라이선스' : 'License'}: {poi.license_type || '-'}
+                          {copy(adminTravelPoiCopy.license)}: {poi.license_type || '-'}
                         </Text>
                         <Text style={styles.provenanceLine} numberOfLines={1}>
-                          {isKo ? '확인일' : 'Checked'}: {formatDate(poi.retrieved_at)}
+                          {copy(adminTravelPoiCopy.checked)}: {formatDate(poi.retrieved_at)}
                         </Text>
                       </View>
 
@@ -197,26 +203,26 @@ export function AdminTravelPoiModal({
                           style={[styles.actionButton, styles.approveButton]}
                           disabled={isSaving}
                           onPress={() => onUpdateStatus(poi, 'approved')}>
-                          <Text style={styles.actionButtonText}>{isKo ? '승인' : 'Approve'}</Text>
+                          <Text style={styles.actionButtonText}>{copy(adminTravelPoiCopy.approve)}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[styles.actionButton, styles.reviewButton]}
                           disabled={isSaving}
                           onPress={() => onUpdateStatus(poi, 'needs-review')}>
-                          <Text style={styles.actionButtonText}>{isKo ? '검토' : 'Review'}</Text>
+                          <Text style={styles.actionButtonText}>{copy(adminTravelPoiCopy.review)}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[styles.actionButton, styles.rejectButton]}
                           disabled={isSaving}
                           onPress={() => onUpdateStatus(poi, 'rejected')}>
-                          <Text style={styles.actionButtonText}>{isKo ? '거절' : 'Reject'}</Text>
+                          <Text style={styles.actionButtonText}>{copy(adminTravelPoiCopy.reject)}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[styles.actionButton, poi.is_active ? styles.hideButton : styles.showButton]}
                           disabled={isSaving}
                           onPress={() => onToggleActive(poi)}>
                           <Text style={styles.actionButtonText}>
-                            {poi.is_active ? (isKo ? '숨김' : 'Hide') : (isKo ? '노출' : 'Show')}
+                            {poi.is_active ? copy(adminTravelPoiCopy.hide) : copy(adminTravelPoiCopy.show)}
                           </Text>
                         </TouchableOpacity>
                       </View>

@@ -118,7 +118,7 @@ Priority: low.
 
 - [x] Run visual QA across Journey, Moments, My Path, Compass.
 - [x] Add a design QA checklist for color contrast, text fit, and mobile spacing.
-- [ ] Decide whether to keep or simplify high-energy neon accents after real-device review.
+- [x] Decide whether to keep or simplify high-energy neon accents after real-device review.
 
 ## Change Guardrails
 
@@ -205,3 +205,30 @@ Use this checklist before merging visual changes, especially on Journey, Moments
 - Moments and detail screens may use editorial photo framing and warm paper surfaces.
 - My Path remains calmer than Moments and should feel like a personal library.
 - Compass and admin panels remain restrained, operational, and scan-friendly.
+
+## Neon Accent Decision
+
+Decision: keep the high-energy Neo-Outdoors accents, but restrict them to navigation, route state, ride state, and small editorial emphasis. Do not expand neon into dense content surfaces.
+
+### Keep
+
+- Electric Cyan stays on planned routes, active tabs, active route badges, and small highlight borders.
+- Adventure Pink stays on off-route paths, detours, and user-created route emphasis.
+- Sunset Amber stays on diary spots, voucher/reward moments, and warm travel highlights.
+- Glass HUD styling stays on live Journey map controls and ride-critical overlays.
+
+### Simplify
+
+- Body text, long descriptions, and admin copy should stay Ink, Slate, or Slate Muted.
+- My Path should use neon only for route provenance or GPS-ready badges.
+- Compass/Admin should prefer restrained Ink/Slate controls, using accents only for state cues.
+- Editorial cards should use photos, spacing, and Warm Paper before adding more accent color.
+
+### Review Trigger
+
+Revisit this decision after real-device testing if:
+
+- route lines are hard to distinguish outdoors,
+- neon borders distract from diary photos,
+- Japanese or English labels feel crowded inside accent badges,
+- admin workflows feel visually louder than Journey or Moments.

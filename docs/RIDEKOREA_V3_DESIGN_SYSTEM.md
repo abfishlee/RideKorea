@@ -117,7 +117,7 @@ Priority: low.
 ### Phase 5: Polish
 
 - [x] Run visual QA across Journey, Moments, My Path, Compass.
-- [ ] Add a design QA checklist for color contrast, text fit, and mobile spacing.
+- [x] Add a design QA checklist for color contrast, text fit, and mobile spacing.
 - [ ] Decide whether to keep or simplify high-energy neon accents after real-device review.
 
 ## Change Guardrails
@@ -158,3 +158,50 @@ Priority: low.
 - My Path: route library cards now use shared editorial cards, tokenized colors, and wrapping draft footer actions for multilingual labels.
 - Compass: operational cards keep restrained styling, 8px card radius, and shrink-safe text blocks beside action indicators.
 - No API calls, route import behavior, diary visibility behavior, voucher actions, or admin actions were changed during this QA pass.
+
+## Design QA Checklist
+
+Use this checklist before merging visual changes, especially on Journey, Moments, My Path, Compass, shared route detail, and journey detail screens.
+
+### Color Contrast
+
+- Primary text uses Ink or Ink Soft on Paper, Warm Paper, or White surfaces.
+- Secondary text uses Slate or Slate Muted only on light surfaces where it remains readable.
+- Electric Cyan is used as an accent, route color, or badge border, not as long body text.
+- Adventure Pink is reserved for off-route, detour, or user-created route emphasis.
+- Sunset Amber is reserved for diary spots, vouchers, and warm travel highlights.
+- Glass HUD text remains white or high-contrast over dark translucent surfaces.
+- Disabled states use opacity or muted surfaces without hiding the label completely.
+
+### Text Fit
+
+- Korean, English, and Japanese labels fit inside segmented controls and compact buttons.
+- Long route titles and diary titles use `numberOfLines` or flexible containers.
+- Text blocks beside buttons, chevrons, or badges use `flex: 1` and `minWidth: 0`.
+- Repeated metric cards keep stable height when values change from short to long.
+- Button rows that can contain translated labels allow wrapping or move secondary metadata to a full row.
+- No visible text overlaps photos, map controls, action buttons, or adjacent cards.
+
+### Mobile Spacing
+
+- Screen content keeps at least 20px horizontal padding on app pages unless a map or full-bleed media area requires otherwise.
+- Dense operational screens keep cards at 8px radius and avoid nested card stacks.
+- Editorial screens use photo-first spacing, but action buttons remain reachable without excessive scrolling.
+- Bottom action areas leave enough padding for tab bars and device safe areas.
+- Timeline rails align with their card content and do not collapse on short entries.
+- Empty, loading, and error states keep a stable minimum height.
+
+### Interaction Stability
+
+- Import, publish, redeem, visibility, like, comment, and share actions preserve their existing API calls.
+- Nested action buttons inside pressable cards stop propagation when needed.
+- Disabled buttons remain readable and keep their dimensions.
+- Refresh controls continue to work after visual changes.
+- Navigation paths are unchanged unless a product change explicitly approves it.
+
+### Visual Tone
+
+- Journey map and ride HUD may use high-energy cyan/pink accents.
+- Moments and detail screens may use editorial photo framing and warm paper surfaces.
+- My Path remains calmer than Moments and should feel like a personal library.
+- Compass and admin panels remain restrained, operational, and scan-friendly.

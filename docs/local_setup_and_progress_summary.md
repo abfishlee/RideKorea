@@ -156,35 +156,32 @@ npm.cmd run test:utils
 - 가져온 공유 루트의 원본 스팟 표시/숨김 토글
 - 라이딩 시작, 위치 추적, 속도/거리/시간 HUD
 - Journey track point 저장 API와 주행 요약 카드
-- 오프라인 위치 큐 1차 구현
-- 오프라인 위치 큐 정규화, 배치 제한, 재시도 메타데이터 보강
+- 오프라인 위치 큐와 재시도 메타데이터
 - 사진 일지, 공개 일지, 지도 마커 연동
 - Travel POI 모델/API/UI, 피드백/신고, 관리자 검수 구조
 - POI CSV/JSON importer와 라이선스 sidecar 지원
 - 교통 POI 자전거 포장/운송 정책 필드
 - 바우처 설정/발급 골격
-- `ko/en/ja` 언어 타입과 일부 화면 i18n dictionary
+- `ko/en/ja` 언어 타입과 dictionary 구조
+- Moments, My Path, 주변 POI 주요 문구의 `ko/en/ja` 확장
 - 백엔드 서비스 단위 테스트와 프론트 순수 유틸 테스트
 
 ## 8. 이번 푸시에 포함되는 최신 보강
 
-- `frontend/src/utils/offline-track-queue-core.ts`
-  - 저장소와 분리된 오프라인 트랙 큐 순수 로직
-  - 기존 저장 데이터 스키마 정규화
-  - 큐 최대 개수 제한
-  - 전송 배치 조회
-  - 재시도 횟수와 마지막 시도 시각 기록
-- `frontend/src/utils/offline-track-queue-core.test.ts`
-  - 큐 정규화, cap/drop, journey별 count/peek/remove, attempt marking 테스트
-- `frontend/src/services/offline-track-queue.ts`
-  - SecureStore 기반 저장 계층에 순수 큐 유틸 연결
-  - 현재 큐 보관 상한: 80개
-  - 현재 전송 배치 기본값: 20개
-- `frontend/src/hooks/use-rider-location.ts`
-  - 큐에 쌓인 위치 포인트를 전송하기 전에 attempt metadata 기록
+- `frontend/src/i18n/index.ts`
+  - `momentsCopy`, `myPathCopy`, `poiCopy` 추가
+  - Moments, My Path, 주변 POI에서 공통 `t(lang, copy)` 패턴을 재사용
+- `frontend/src/app/moments.tsx`
+  - 화면 내 언어 토글 추가
+  - 피드 제목, 설명, 탭, 로딩/오류/빈 상태, Alert, 일지 기본 문구를 `ko/en/ja`로 확장
+- `frontend/src/app/my-path.tsx`
+  - 화면 내 언어 토글 추가
+  - 통계 카드, 가져온 루트, Journey 기록, 삭제 확인 Alert, 날짜/거리/시간 포맷을 언어별로 표시
+- `frontend/src/components/journey/NearbyTravelPoiPanel.tsx`
+  - 주변 POI 패널 제목, 상태 문구, 카테고리 라벨을 `ko/en/ja` dictionary로 연결
 - `docs/ridekorea_sasaki_scenario_qa_checklist.md`
-  - 사사키 시나리오 기준 완성도 95%로 갱신
-  - 다음 우선순위를 i18n 확장으로 정리
+  - 사사키 시나리오 기준 완성도 96%로 갱신
+  - 다음 우선순위를 My Path 서버 집계 API로 정리
 
 ## 9. 아직 사용자가 준비해야 하는 외부 의존 작업
 
@@ -198,6 +195,6 @@ npm.cmd run test:utils
 
 ## 10. 다음 추천 작업
 
-외부 키 없이 바로 이어갈 수 있는 다음 작업은 `Moments`, `POI`, `My Path` 화면까지 i18n dictionary를 확장하는 것이다.
+외부 키 없이 바로 이어갈 수 있는 다음 작업은 My Path 요약을 서버 집계 API로 최적화하는 것이다.
 
-이 작업을 먼저 하면 외국인 라이더 시나리오의 사용성이 좋아지고, 이후 Naver Map이나 Google OAuth 같은 외부 연동을 붙일 때 화면 문구를 다시 크게 손대지 않아도 된다.
+현재 My Path는 각 Journey의 track point를 화면에서 여러 번 가져와 요약한다. 기록이 늘어나면 API 호출 수와 모바일 계산량이 커지므로, 서버에서 거리, 시간, 포인트 수, 이탈 포인트 수를 집계해 내려주는 방식으로 바꾸는 것이 좋다.

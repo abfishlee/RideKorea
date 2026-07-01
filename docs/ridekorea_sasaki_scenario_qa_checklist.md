@@ -6,7 +6,7 @@
 
 ## 1. 현재 완성도 요약
 
-현재 제품 시나리오 완성도는 약 95%로 본다.
+현재 제품 시나리오 완성도는 약 96%로 본다.
 
 - 기본 구조: 지원
 - 로그인 우선 UX: 부분 지원
@@ -17,7 +17,7 @@
 - 주행 중 속도/거리/시간 HUD: 지원
 - 오프라인 위치 큐: 부분 지원, 큐 정규화/배치 제한/재시도 메타데이터 보강 완료
 - 주행 기록 요약 카드: 지원
-- i18n dictionary 1차 구조: 부분 지원
+- i18n dictionary 구조: 부분 지원, Journey/Moments/My Path/주변 POI 주요 문구 확장 완료
 - My Path 기록 요약 배지: 지원
 - 공개 일지/지도 마커: 지원
 - 지역 정보/수리점/숙소/교통 POI: 부분 지원
@@ -43,13 +43,13 @@
 | 공항에서 출발지 이동 팁 | 부분 지원 | transport POI 메모 콘텐츠와 자전거 포장/운송/공식 안내 URL 필드 구조가 있다. | 실제 규정 검증, 노선별 상세 콘텐츠 |
 | 수리점/맛집/숙소/경치 정보 | 부분 지원 | `travel_pois` 모델, 조회 API, 주변 POI UI, 지도 마커, 피드백/신고, 관리자 검수, CSV/JSON 파이프라인이 있다. | 실제 데이터셋 승인, 신고 처리 정책 고도화 |
 | 지역 바우처 발급 | 부분 지원 | 인증 스팟 기반 바우처 설정/발급 골격이 있다. | 제휴처, 사용 처리, 부정사용 방지 |
-| 외국인 친화 다국어 | 부분 지원 | `ko/en/ja` 언어 타입과 dictionary 기반이 있으며 로그인/Journey 일부가 일본어를 지원한다. | My Path, Moments, POI, Admin 화면까지 dictionary 확장 |
+| 외국인 친화 다국어 | 부분 지원 | `ko/en/ja` dictionary가 로그인/Journey에 이어 Moments, My Path, 주변 POI 핵심 문구까지 확장됐다. | 상세 루트, 공유 루트 상세, Admin 화면까지 확장 |
 | 테스트와 회귀 방지 | 부분 지원 | 백엔드 서비스는 `unittest`, 프론트 순수 유틸은 `npm run test:utils`로 확인한다. | 오프라인 큐 통합 테스트, E2E 테스트 |
 
 ## 3. 이미 계정/계약 없이 이어갈 수 있는 작업
 
-1. Moments, POI, My Path 화면까지 i18n dictionary 확장
-2. My Path 요약을 서버 집계 API로 최적화
+1. My Path 요약을 서버 집계 API로 최적화
+2. 상세 루트, 공유 루트 상세, Admin 화면까지 i18n dictionary 확장
 3. 오프라인 위치 큐를 앱 백그라운드 전송 정책과 연결
 4. 공유 루트 검색/필터 UX 고도화
 5. POI 신고 처리 운영 플로우 고도화
@@ -81,15 +81,15 @@ npm.cmd run test:utils
 ```
 
 ```powershell
-C:\Users\fishlee\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m compileall -f backend/app backend/alembic
+venv\Scripts\python.exe -m compileall -f backend/app backend/alembic
 ```
 
 ## 6. 다음 추천 작업
 
-다음 구현 작업은 Moments, POI, My Path 화면까지 i18n dictionary를 확장하는 것이 좋다.
+다음 구현 작업은 My Path 요약을 서버 집계 API로 최적화하는 것이 좋다.
 
 이유:
 
-- 외국인 라이더 시나리오에서 일본어/영어 품질은 핵심 사용성이다.
-- Naver Map, Google OAuth, 실제 데이터 계약 없이도 계속 진행할 수 있다.
-- 현재 화면별 하드코딩 문구가 남아 있어, 더 깊은 기능 구현 전에 구조를 정리하면 이후 유지보수가 쉬워진다.
+- 현재 My Path는 각 Journey의 track point를 화면에서 여러 번 가져와 요약한다.
+- 기록이 늘어나면 모바일 화면 진입 시 API 호출 수와 계산량이 빠르게 늘어난다.
+- 서버에서 거리, 시간, 포인트 수, 이탈 포인트 수를 집계해 내려주면 앱이 훨씬 가볍고 안정적으로 동작한다.

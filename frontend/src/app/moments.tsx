@@ -1,6 +1,7 @@
 import { SharedRouteCard } from '@/components/routes/SharedRouteCard';
 import { useAuthSession } from '@/context/AuthSessionContext';
 import { SHARED_ROUTE_SAMPLES } from '@/data/shared-routes';
+import { LANGUAGE_LABELS, momentsCopy, nextLanguage, t } from '@/i18n';
 import {
   getPublicSharedRoutes,
   getRecentPublicDiaries,
@@ -8,7 +9,7 @@ import {
   mediaUrl,
 } from '@/services/api';
 import { importSharedRoute } from '@/services/imported-routes';
-import type { Diary, PublishedSharedRoute, SharedRoute } from '@/types/ridekorea';
+import type { AppLanguage, Diary, PublishedSharedRoute, SharedRoute } from '@/types/ridekorea';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -25,14 +26,15 @@ import {
 
 type FeedMode = 'routes' | 'diaries';
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('ko-KR', {
+function formatDate(value: string, lang: AppLanguage) {
+  const locale = lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'ko-KR';
+  return new Date(value).toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
   });
 }
 
-function toSharedRouteCardModel(route: PublishedSharedRoute): SharedRoute {
+function toSharedRouteCardModel(route: PublishedSharedRoute, lang: AppLanguage): SharedRoute {
   const stops = [...route.stops].sort((a, b) => a.sort_order - b.sort_order);
   const coverImageUrl = stops.find((stop) => stop.photo_urls?.[0])?.photo_urls?.[0];
 
@@ -40,9 +42,9 @@ function toSharedRouteCardModel(route: PublishedSharedRoute): SharedRoute {
     id: route.id,
     title: route.title,
     authorName: route.author?.display_name || 'RideKorea Rider',
-    summary: route.summary || '라이더가 직접 남긴 사진과 메모로 구성한 공유 루트입니다.',
-    startName: route.start_name || '출발지 미정',
-    endName: route.end_name || '도착지 미정',
+    summary: route.summary || t(lang, momentsCopy.defaultRouteSummary),
+    startName: route.start_name || t(lang, momentsCopy.unknownStart),
+    endName: route.end_name || t(lang, momentsCopy.unknownEnd),
     distanceKm: 0,
     durationHours: 0,
     stayedPlaces: [],
@@ -51,7 +53,10 @@ function toSharedRouteCardModel(route: PublishedSharedRoute): SharedRoute {
     shareCount: route.share_count,
     likedByMe: route.liked_by_me,
     coverImageUrl: coverImageUrl ? mediaUrl(coverImageUrl) : undefined,
-    tags: ['라이더 공유', route.visibility === 'public' ? '공개 루트' : '초안'],
+    tags: [
+      t(lang, momentsCopy.riderShared),
+      route.visibility === 'public' ? t(lang, momentsCopy.publicRoute) : t(lang, momentsCopy.draft),
+    ],
     stops: stops.map((stop) => ({
       id: stop.id,
       title: stop.title,
@@ -66,6 +71,7 @@ function toSharedRouteCardModel(route: PublishedSharedRoute): SharedRoute {
 
 export default function MomentsScreen() {
   const { token } = useAuthSession();
+  const [lang, setLang] = useState<AppLanguage>('ko');
   const [feedMode, setFeedMode] = useState<FeedMode>('routes');
   const [diaries, setDiaries] = useState<Diary[]>([]);
   const [publicRoutes, setPublicRoutes] = useState<PublishedSharedRoute[]>([]);
@@ -89,12 +95,12 @@ export default function MomentsScreen() {
       setPublicRoutes(routesData);
       setDiaries(diaryData);
     } catch (err: any) {
-      setError(err.message || '공개 기록을 불러오지 못했습니다.');
+      setError(err.message || t(lang, momentsCopy.publicRecordLoadFailed));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [token]);
+  }, [lang, token]);
 
   const handleImportRoute = useCallback(async (route: SharedRoute) => {
     try {
@@ -102,11 +108,11 @@ export default function MomentsScreen() {
       if (isSampleRoute) {
         await importSharedRoute(route);
         Alert.alert(
-          '루트 추가 완료',
-          `${route.title} 루트를 My Path의 Journey 계획으로 저장했습니다.`,
+          t(lang, momentsCopy.routeAddedTitle),
+          `${route.title} ${t(lang, momentsCopy.routeAddedBody)}`,
           [
-            { text: '계속 보기', style: 'cancel' },
-            { text: 'My Path로 이동', onPress: () => router.push('/my-path' as never) },
+            { text: t(lang, momentsCopy.keepBrowsing), style: 'cancel' },
+            { text: t(lang, momentsCopy.goToMyPath), onPress: () => router.push('/my-path' as never) },
           ],
         );
         return;
@@ -114,28 +120,28 @@ export default function MomentsScreen() {
 
       if (!token) {
         Alert.alert(
-          '로그인이 필요합니다',
-          '공개 루트를 내 Journey 계획으로 가져오려면 먼저 Google 로그인을 완료해 주세요.',
+          t(lang, momentsCopy.loginRequiredTitle),
+          t(lang, momentsCopy.loginRequiredBody),
         );
         return;
       }
 
       const journey = await importPublicSharedRoute(token, route.id);
       Alert.alert(
-        '루트 추가 완료',
-        `${route.title} 루트를 내 Journey 계획으로 저장했습니다.`,
+        t(lang, momentsCopy.routeAddedTitle),
+        `${route.title} ${t(lang, momentsCopy.routeAddedBody)}`,
         [
-          { text: '계속 보기', style: 'cancel' },
+          { text: t(lang, momentsCopy.keepBrowsing), style: 'cancel' },
           {
-            text: 'Journey 열기',
+            text: t(lang, momentsCopy.openJourney),
             onPress: () => router.push(`/journeys/${journey.id}` as never),
           },
         ],
       );
     } catch (err: any) {
-      Alert.alert('저장 실패', err.message || '루트 초안을 저장하지 못했습니다.');
+      Alert.alert(t(lang, momentsCopy.saveFailed), err.message || t(lang, momentsCopy.saveFailedBody));
     }
-  }, [token]);
+  }, [lang, token]);
 
   const handleOpenRoute = useCallback((route: SharedRoute) => {
     const isSampleRoute = SHARED_ROUTE_SAMPLES.some((sample) => sample.id === route.id);
@@ -168,10 +174,15 @@ export default function MomentsScreen() {
         />
       }>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>Moments</Text>
-        <Text style={styles.title}>라이더들이 남긴 한국 종단의 조각들</Text>
+        <View style={styles.headerTopRow}>
+          <Text style={styles.eyebrow}>Moments</Text>
+          <TouchableOpacity style={styles.langButton} onPress={() => setLang(prev => nextLanguage(prev))}>
+            <Text style={styles.langButtonText}>{LANGUAGE_LABELS[nextLanguage(lang)]}</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.title}>{t(lang, momentsCopy.title)}</Text>
         <Text style={styles.copy}>
-          공식 코스만으로 부족한 수리점, 동선, 맛집, 교통 정보를 실제 라이더의 루트와 일지로 확인합니다.
+          {t(lang, momentsCopy.copy)}
         </Text>
       </View>
 
@@ -184,7 +195,7 @@ export default function MomentsScreen() {
               styles.segmentButtonText,
               feedMode === 'routes' && styles.segmentButtonTextActive,
             ]}>
-            공유 루트
+            {t(lang, momentsCopy.sharedRoutes)}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -195,7 +206,7 @@ export default function MomentsScreen() {
               styles.segmentButtonText,
               feedMode === 'diaries' && styles.segmentButtonTextActive,
             ]}>
-            공개 일지
+            {t(lang, momentsCopy.publicDiaries)}
           </Text>
         </TouchableOpacity>
       </View>
@@ -204,14 +215,14 @@ export default function MomentsScreen() {
         isLoading ? (
           <View style={styles.emptyState}>
             <ActivityIndicator size="large" color="#0EA5E9" />
-            <Text style={styles.emptyText}>공유 루트를 불러오는 중입니다.</Text>
+            <Text style={styles.emptyText}>{t(lang, momentsCopy.loadingRoutes)}</Text>
           </View>
         ) : error ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>공유 루트를 불러오지 못했습니다</Text>
+            <Text style={styles.emptyTitle}>{t(lang, momentsCopy.routeLoadFailed)}</Text>
             <Text style={styles.emptyText}>{error}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => loadMoments()}>
-              <Text style={styles.retryButtonText}>다시 시도</Text>
+              <Text style={styles.retryButtonText}>{t(lang, momentsCopy.retry)}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -219,7 +230,7 @@ export default function MomentsScreen() {
             {publicRoutes.map((route) => (
               <SharedRouteCard
                 key={route.id}
-                route={toSharedRouteCardModel(route)}
+                route={toSharedRouteCardModel(route, lang)}
                 onImport={handleImportRoute}
                 onOpen={handleOpenRoute}
               />
@@ -237,28 +248,28 @@ export default function MomentsScreen() {
       ) : isLoading ? (
         <View style={styles.emptyState}>
           <ActivityIndicator size="large" color="#0EA5E9" />
-          <Text style={styles.emptyText}>공개 기록을 불러오는 중입니다.</Text>
+          <Text style={styles.emptyText}>{t(lang, momentsCopy.loadingDiaries)}</Text>
         </View>
       ) : error ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>피드를 불러오지 못했습니다</Text>
+          <Text style={styles.emptyTitle}>{t(lang, momentsCopy.diaryLoadFailed)}</Text>
           <Text style={styles.emptyText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => loadMoments()}>
-            <Text style={styles.retryButtonText}>다시 시도</Text>
+            <Text style={styles.retryButtonText}>{t(lang, momentsCopy.retry)}</Text>
           </TouchableOpacity>
         </View>
       ) : diaries.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>아직 공개된 라이딩 기록이 없습니다</Text>
+          <Text style={styles.emptyTitle}>{t(lang, momentsCopy.emptyDiariesTitle)}</Text>
           <Text style={styles.emptyText}>
-            Journey에서 스팟을 인증하고 일지를 공개하면 여기에 모입니다.
+            {t(lang, momentsCopy.emptyDiariesBody)}
           </Text>
         </View>
       ) : (
         <View style={styles.feedList}>
           {diaries.map((diary) => {
             const photoUrl = diary.photo_urls?.[0];
-            const author = diary.user?.display_name || 'Anonymous Rider';
+            const author = diary.user?.display_name || t(lang, momentsCopy.anonymousRider);
 
             return (
               <View key={diary.id} style={styles.feedCard}>
@@ -281,14 +292,14 @@ export default function MomentsScreen() {
                         {author}
                       </Text>
                     </View>
-                    <Text style={styles.feedDate}>{formatDate(diary.created_at)}</Text>
+                    <Text style={styles.feedDate}>{formatDate(diary.created_at, lang)}</Text>
                   </View>
 
                   <Text style={styles.feedTitle} numberOfLines={2}>
-                    {diary.title || '제목 없는 라이딩 기록'}
+                    {diary.title || t(lang, momentsCopy.untitledDiary)}
                   </Text>
                   <Text style={styles.feedText} numberOfLines={4}>
-                    {diary.diary_text || '아직 본문이 없는 공개 기록입니다.'}
+                    {diary.diary_text || t(lang, momentsCopy.emptyDiaryText)}
                   </Text>
                   {diary.lat && diary.lng && (
                     <Text style={styles.locationText}>
@@ -298,7 +309,7 @@ export default function MomentsScreen() {
                   <TouchableOpacity
                     style={styles.mapButton}
                     onPress={() => handleOpenDiaryOnMap(diary)}>
-                    <Text style={styles.mapButtonText}>지도에서 보기</Text>
+                    <Text style={styles.mapButtonText}>{t(lang, momentsCopy.viewOnMap)}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -323,12 +334,31 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 18,
   },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
   eyebrow: {
     color: '#0EA5E9',
     fontSize: 12,
     fontWeight: '900',
     marginBottom: 8,
     textTransform: 'uppercase',
+  },
+  langButton: {
+    minWidth: 40,
+    minHeight: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    backgroundColor: '#E0F2FE',
+  },
+  langButtonText: {
+    color: '#0369A1',
+    fontSize: 12,
+    fontWeight: '900',
   },
   title: {
     color: '#0F172A',

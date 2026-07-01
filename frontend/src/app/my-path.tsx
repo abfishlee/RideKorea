@@ -1,7 +1,8 @@
 import { useAuthSession } from '@/context/AuthSessionContext';
+import { LANGUAGE_LABELS, myPathCopy, nextLanguage, t } from '@/i18n';
 import { getJourneyTrackPoints, getMyJourneys } from '@/services/api';
 import { getImportedRouteDrafts, removeImportedRouteDraft } from '@/services/imported-routes';
-import type { ImportedRouteDraft, Journey, JourneyTrackPoint } from '@/types/ridekorea';
+import type { AppLanguage, ImportedRouteDraft, Journey, JourneyTrackPoint } from '@/types/ridekorea';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -22,37 +23,42 @@ interface JourneyListSummary {
   offRouteCount: number;
 }
 
-function formatDate(value?: string | null) {
-  if (!value) return '날짜 없음';
-  return new Date(value).toLocaleDateString('ko-KR', {
+function formatDate(value: string | null | undefined, lang: AppLanguage) {
+  if (!value) return t(lang, myPathCopy.noDate);
+  const locale = lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'ko-KR';
+  return new Date(value).toLocaleDateString(locale, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
 }
 
-function formatPlannedDuration(hours: number) {
-  if (hours <= 0) return '기록 없음';
+function formatPlannedDuration(hours: number, lang: AppLanguage) {
+  if (hours <= 0) return t(lang, myPathCopy.noRecord);
 
   const roundedHours = Math.floor(hours);
   const minutes = Math.round((hours - roundedHours) * 60);
+  const hourLabel = lang === 'ko' ? '시간' : lang === 'ja' ? '時間' : 'h';
+  const minuteLabel = lang === 'ko' ? '분' : lang === 'ja' ? '分' : 'm';
 
-  if (roundedHours <= 0) return `${minutes}분`;
-  if (minutes === 0) return `${roundedHours}시간`;
-  return `${roundedHours}시간 ${minutes}분`;
+  if (roundedHours <= 0) return `${minutes}${minuteLabel}`;
+  if (minutes === 0) return `${roundedHours}${hourLabel}`;
+  return `${roundedHours}${hourLabel} ${minutes}${minuteLabel}`;
 }
 
-function formatTrackDuration(totalSeconds: number) {
-  if (totalSeconds <= 0) return '기록 없음';
+function formatTrackDuration(totalSeconds: number, lang: AppLanguage) {
+  if (totalSeconds <= 0) return t(lang, myPathCopy.noRecord);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
-  if (hours <= 0) return `${minutes}분`;
-  if (minutes <= 0) return `${hours}시간`;
-  return `${hours}시간 ${minutes}분`;
+  const hourLabel = lang === 'ko' ? '시간' : lang === 'ja' ? '時間' : 'h';
+  const minuteLabel = lang === 'ko' ? '분' : lang === 'ja' ? '分' : 'm';
+  if (hours <= 0) return `${minutes}${minuteLabel}`;
+  if (minutes <= 0) return `${hours}${hourLabel}`;
+  return `${hours}${hourLabel} ${minutes}${minuteLabel}`;
 }
 
-function formatDistance(distanceKm: number) {
-  if (distanceKm <= 0) return '기록 없음';
+function formatDistance(distanceKm: number, lang: AppLanguage) {
+  if (distanceKm <= 0) return t(lang, myPathCopy.noRecord);
   if (distanceKm < 10) return `${distanceKm.toFixed(2)} km`;
   return `${distanceKm.toFixed(1)} km`;
 }
@@ -102,27 +108,28 @@ function summarizeTrack(points: JourneyTrackPoint[]): JourneyListSummary {
   };
 }
 
-function statusLabel(status?: string) {
+function statusLabel(status: string | undefined, lang: AppLanguage) {
   switch (status) {
     case 'completed':
-      return '완료';
+      return t(lang, myPathCopy.completed);
     case 'riding':
-      return '진행 중';
+      return t(lang, myPathCopy.riding);
     case 'paused':
-      return '일시정지';
+      return t(lang, myPathCopy.paused);
     case 'planning':
-      return '준비 중';
+      return t(lang, myPathCopy.planning);
     default:
-      return '기록';
+      return t(lang, myPathCopy.record);
   }
 }
 
-function journeySourceLabel(journey: Journey) {
-  return journey.source_shared_route_id ? '가져온 루트' : statusLabel(journey.status);
+function journeySourceLabel(journey: Journey, lang: AppLanguage) {
+  return journey.source_shared_route_id ? t(lang, myPathCopy.importedRoutes) : statusLabel(journey.status, lang);
 }
 
 export default function MyPathScreen() {
   const { token, isAuthChecked } = useAuthSession();
+  const [lang, setLang] = useState<AppLanguage>('ko');
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [drafts, setDrafts] = useState<ImportedRouteDraft[]>([]);
   const [journeySummaries, setJourneySummaries] = useState<Record<string, JourneyListSummary>>({});
@@ -182,18 +189,18 @@ export default function MyPathScreen() {
       );
       setJourneySummaries(Object.fromEntries(summaries));
     } catch (err: any) {
-      setError(err.message || '내 종주 기록을 불러오지 못했습니다.');
+      setError(err.message || t(lang, myPathCopy.loadFailedBody));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [isAuthChecked, token]);
+  }, [isAuthChecked, lang, token]);
 
   const handleRemoveDraft = useCallback((draft: ImportedRouteDraft) => {
-    Alert.alert('초안 삭제', `${draft.title} 루트 초안을 삭제할까요?`, [
-      { text: '취소', style: 'cancel' },
+    Alert.alert(t(lang, myPathCopy.deleteDraftTitle), `${draft.title} ${t(lang, myPathCopy.deleteDraftBody)}`, [
+      { text: t(lang, myPathCopy.cancel), style: 'cancel' },
       {
-        text: '삭제',
+        text: t(lang, myPathCopy.delete),
         style: 'destructive',
         onPress: async () => {
           const nextDrafts = await removeImportedRouteDraft(draft.id);
@@ -201,7 +208,7 @@ export default function MyPathScreen() {
         },
       },
     ]);
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -219,24 +226,29 @@ export default function MyPathScreen() {
         <RefreshControl refreshing={isRefreshing} onRefresh={() => loadData('refresh')} />
       }>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>My Path</Text>
-        <Text style={styles.title}>준비 중인 길과 내가 남긴 기록</Text>
+        <View style={styles.headerTopRow}>
+          <Text style={styles.eyebrow}>My Path</Text>
+          <TouchableOpacity style={styles.langButton} onPress={() => setLang(prev => nextLanguage(prev))}>
+            <Text style={styles.langButtonText}>{LANGUAGE_LABELS[nextLanguage(lang)]}</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.title}>{t(lang, myPathCopy.title)}</Text>
         <Text style={styles.copy}>
-          가져온 공유 루트, 진행 중인 종주, 완료한 기록을 한곳에서 확인합니다.
+          {t(lang, myPathCopy.copy)}
         </Text>
       </View>
 
       {!isAuthChecked || isLoading ? (
         <View style={styles.emptyState}>
           <ActivityIndicator size="large" color="#F59E0B" />
-          <Text style={styles.emptyText}>내 기록을 불러오는 중입니다.</Text>
+          <Text style={styles.emptyText}>{t(lang, myPathCopy.loading)}</Text>
         </View>
       ) : error ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>기록을 불러오지 못했습니다</Text>
+          <Text style={styles.emptyTitle}>{t(lang, myPathCopy.loadFailed)}</Text>
           <Text style={styles.emptyText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => loadData()}>
-            <Text style={styles.retryButtonText}>다시 시도</Text>
+            <Text style={styles.retryButtonText}>{t(lang, myPathCopy.retry)}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -244,23 +256,23 @@ export default function MyPathScreen() {
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <Text style={styles.statValue}>{stats.total}</Text>
-              <Text style={styles.statLabel}>전체 경로</Text>
+              <Text style={styles.statLabel}>{t(lang, myPathCopy.totalRoutes)}</Text>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statValue}>{stats.completed}</Text>
-              <Text style={styles.statLabel}>완료 기록</Text>
+              <Text style={styles.statLabel}>{t(lang, myPathCopy.completedRecords)}</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{formatDistance(stats.recordedDistanceKm)}</Text>
-              <Text style={styles.statLabel}>기록 거리</Text>
+              <Text style={styles.statValue}>{formatDistance(stats.recordedDistanceKm, lang)}</Text>
+              <Text style={styles.statLabel}>{t(lang, myPathCopy.recordedDistance)}</Text>
             </View>
           </View>
 
           {drafts.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>가져온 루트</Text>
-                <Text style={styles.sectionMeta}>출발 전 계획</Text>
+                <Text style={styles.sectionTitle}>{t(lang, myPathCopy.importedRoutes)}</Text>
+                <Text style={styles.sectionMeta}>{t(lang, myPathCopy.startPlan)}</Text>
               </View>
 
               <View style={styles.list}>
@@ -274,7 +286,7 @@ export default function MyPathScreen() {
                         <Text style={styles.draftAuthor}>from {draft.authorName}</Text>
                       </View>
                       <View style={styles.planBadge}>
-                        <Text style={styles.planBadgeText}>계획</Text>
+                        <Text style={styles.planBadgeText}>{t(lang, myPathCopy.plan)}</Text>
                       </View>
                     </View>
 
@@ -284,32 +296,32 @@ export default function MyPathScreen() {
 
                     <View style={styles.metaGrid}>
                       <View style={styles.metaItem}>
-                        <Text style={styles.metaLabel}>거리</Text>
+                        <Text style={styles.metaLabel}>{t(lang, myPathCopy.distance)}</Text>
                         <Text style={styles.metaValue}>{draft.distanceKm.toFixed(1)} km</Text>
                       </View>
                       <View style={styles.metaItem}>
-                        <Text style={styles.metaLabel}>예상 시간</Text>
-                        <Text style={styles.metaValue}>{formatPlannedDuration(draft.durationHours)}</Text>
+                        <Text style={styles.metaLabel}>{t(lang, myPathCopy.plannedTime)}</Text>
+                        <Text style={styles.metaValue}>{formatPlannedDuration(draft.durationHours, lang)}</Text>
                       </View>
                       <View style={styles.metaItem}>
-                        <Text style={styles.metaLabel}>스팟</Text>
-                        <Text style={styles.metaValue}>{draft.stopCount}개</Text>
+                        <Text style={styles.metaLabel}>{t(lang, myPathCopy.stops)}</Text>
+                        <Text style={styles.metaValue}>{draft.stopCount.toLocaleString(lang === 'en' ? 'en-US' : lang === 'ja' ? 'ja-JP' : 'ko-KR')}</Text>
                       </View>
                     </View>
 
                     <View style={styles.draftFooter}>
                       <Text style={styles.importedDate}>
-                        {formatDate(draft.importedAt)} 가져옴
+                        {formatDate(draft.importedAt, lang)} {t(lang, myPathCopy.imported)}
                       </Text>
                       <TouchableOpacity
                         style={styles.prepareButton}
                         onPress={() => router.push(`/?draftId=${draft.id}` as never)}>
-                        <Text style={styles.prepareButtonText}>Journey에서 준비</Text>
+                        <Text style={styles.prepareButtonText}>{t(lang, myPathCopy.prepareInJourney)}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.removeButton}
                         onPress={() => handleRemoveDraft(draft)}>
-                        <Text style={styles.removeButtonText}>삭제</Text>
+                        <Text style={styles.removeButtonText}>{t(lang, myPathCopy.delete)}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -320,23 +332,23 @@ export default function MyPathScreen() {
 
           {!token ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>로그인이 필요합니다</Text>
+              <Text style={styles.emptyTitle}>{t(lang, myPathCopy.loginRequiredTitle)}</Text>
               <Text style={styles.emptyText}>
-                Journey 탭에서 Google 로그인을 완료하면 실제 종주 기록을 볼 수 있습니다.
+                {t(lang, myPathCopy.loginRequiredBody)}
               </Text>
             </View>
           ) : journeys.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>아직 시작한 종주가 없습니다</Text>
+              <Text style={styles.emptyTitle}>{t(lang, myPathCopy.emptyJourneyTitle)}</Text>
               <Text style={styles.emptyText}>
-                Journey 탭에서 코스를 선택하고 종주 기록을 시작해보세요.
+                {t(lang, myPathCopy.emptyJourneyBody)}
               </Text>
             </View>
           ) : (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>내 주행 기록</Text>
-                <Text style={styles.sectionMeta}>상세 타임라인</Text>
+                <Text style={styles.sectionTitle}>{t(lang, myPathCopy.myRideRecords)}</Text>
+                <Text style={styles.sectionMeta}>{t(lang, myPathCopy.detailedTimeline)}</Text>
               </View>
 
               <View style={styles.list}>
@@ -357,24 +369,24 @@ export default function MyPathScreen() {
                           {journey.title}
                         </Text>
                         <View style={styles.statusBadge}>
-                          <Text style={styles.statusText}>{journeySourceLabel(journey)}</Text>
+                          <Text style={styles.statusText}>{journeySourceLabel(journey, lang)}</Text>
                         </View>
                       </View>
 
                       <View style={styles.summaryBadgeRow}>
                         <View style={styles.summaryBadge}>
-                          <Text style={styles.summaryBadgeValue}>{formatDistance(summary.distanceKm)}</Text>
-                          <Text style={styles.summaryBadgeLabel}>거리</Text>
+                          <Text style={styles.summaryBadgeValue}>{formatDistance(summary.distanceKm, lang)}</Text>
+                          <Text style={styles.summaryBadgeLabel}>{t(lang, myPathCopy.distance)}</Text>
                         </View>
                         <View style={styles.summaryBadge}>
                           <Text style={styles.summaryBadgeValue}>
-                            {formatTrackDuration(summary.durationSeconds)}
+                            {formatTrackDuration(summary.durationSeconds, lang)}
                           </Text>
-                          <Text style={styles.summaryBadgeLabel}>시간</Text>
+                          <Text style={styles.summaryBadgeLabel}>{t(lang, myPathCopy.time)}</Text>
                         </View>
                         <View style={[styles.summaryBadge, hasTrack && styles.summaryBadgeReady]}>
                           <Text style={styles.summaryBadgeValue}>
-                            {summary.pointCount.toLocaleString('ko-KR')}개
+                            {summary.pointCount.toLocaleString(lang === 'en' ? 'en-US' : lang === 'ja' ? 'ja-JP' : 'ko-KR')}
                           </Text>
                           <Text style={styles.summaryBadgeLabel}>GPS</Text>
                         </View>
@@ -382,29 +394,29 @@ export default function MyPathScreen() {
 
                       <View style={styles.metaGrid}>
                         <View style={styles.metaItem}>
-                          <Text style={styles.metaLabel}>생성일</Text>
-                          <Text style={styles.metaValue}>{formatDate(journey.created_at)}</Text>
+                          <Text style={styles.metaLabel}>{t(lang, myPathCopy.createdAt)}</Text>
+                          <Text style={styles.metaValue}>{formatDate(journey.created_at, lang)}</Text>
                         </View>
                         <View style={styles.metaItem}>
-                          <Text style={styles.metaLabel}>완료일</Text>
-                          <Text style={styles.metaValue}>{formatDate(journey.completed_at)}</Text>
+                          <Text style={styles.metaLabel}>{t(lang, myPathCopy.completedAt)}</Text>
+                          <Text style={styles.metaValue}>{formatDate(journey.completed_at, lang)}</Text>
                         </View>
                         <View style={styles.metaItem}>
-                          <Text style={styles.metaLabel}>일지</Text>
-                          <Text style={styles.metaValue}>{diaries.length}개</Text>
+                          <Text style={styles.metaLabel}>{t(lang, myPathCopy.diaries)}</Text>
+                          <Text style={styles.metaValue}>{diaries.length.toLocaleString(lang === 'en' ? 'en-US' : lang === 'ja' ? 'ja-JP' : 'ko-KR')}</Text>
                         </View>
                       </View>
 
                       {summary.offRouteCount > 0 && (
                         <Text style={styles.offRouteHint}>
-                          루트 이탈 포인트 {summary.offRouteCount.toLocaleString('ko-KR')}개가 기록되었습니다.
+                          {summary.offRouteCount.toLocaleString(lang === 'en' ? 'en-US' : lang === 'ja' ? 'ja-JP' : 'ko-KR')} {t(lang, myPathCopy.offRouteHint)}
                         </Text>
                       )}
 
                       <View style={styles.previewPanel}>
-                        <Text style={styles.previewLabel}>최근 타임라인</Text>
+                        <Text style={styles.previewLabel}>{t(lang, myPathCopy.recentTimeline)}</Text>
                         <Text style={styles.previewText} numberOfLines={2}>
-                          {firstDiary?.title || firstDiary?.diary_text || '아직 기록된 일지가 없습니다.'}
+                          {firstDiary?.title || firstDiary?.diary_text || t(lang, myPathCopy.noDiaryYet)}
                         </Text>
                       </View>
 
@@ -415,7 +427,7 @@ export default function MyPathScreen() {
                             event.stopPropagation();
                             router.push(`/?journeyId=${journey.id}` as never);
                           }}>
-                          <Text style={styles.prepareServerButtonText}>Journey에서 준비</Text>
+                          <Text style={styles.prepareServerButtonText}>{t(lang, myPathCopy.prepareInJourney)}</Text>
                         </TouchableOpacity>
                       )}
                     </TouchableOpacity>
@@ -443,12 +455,31 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 20,
   },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
   eyebrow: {
     color: '#F59E0B',
     fontSize: 12,
     fontWeight: '900',
     marginBottom: 8,
     textTransform: 'uppercase',
+  },
+  langButton: {
+    minWidth: 40,
+    minHeight: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    backgroundColor: '#FEF3C7',
+  },
+  langButtonText: {
+    color: '#B45309',
+    fontSize: 12,
+    fontWeight: '900',
   },
   title: {
     color: '#0F172A',

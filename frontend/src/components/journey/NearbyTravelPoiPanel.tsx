@@ -1,3 +1,4 @@
+import { poiCopy, t } from '@/i18n';
 import type { AppLanguage, TravelPoi } from '@/types/ridekorea';
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -11,13 +12,13 @@ interface NearbyTravelPoiPanelProps {
   onRetry: () => void;
 }
 
-const CATEGORY_META: Record<string, { ko: string; en: string; color: string; background: string }> = {
-  repair: { ko: '수리', en: 'Repair', color: '#B45309', background: '#FEF3C7' },
-  food: { ko: '맛집', en: 'Food', color: '#BE123C', background: '#FFE4E6' },
-  lodging: { ko: '숙소', en: 'Lodging', color: '#6D28D9', background: '#EDE9FE' },
-  scenic: { ko: '경치', en: 'Scenic', color: '#047857', background: '#D1FAE5' },
-  transport: { ko: '교통', en: 'Transport', color: '#1D4ED8', background: '#DBEAFE' },
-  culture: { ko: '문화', en: 'Culture', color: '#0F766E', background: '#CCFBF1' },
+const CATEGORY_META: Record<string, { copyKey: keyof typeof poiCopy; color: string; background: string }> = {
+  repair: { copyKey: 'repair', color: '#B45309', background: '#FEF3C7' },
+  food: { copyKey: 'food', color: '#BE123C', background: '#FFE4E6' },
+  lodging: { copyKey: 'lodging', color: '#6D28D9', background: '#EDE9FE' },
+  scenic: { copyKey: 'scenic', color: '#047857', background: '#D1FAE5' },
+  transport: { copyKey: 'transport', color: '#1D4ED8', background: '#DBEAFE' },
+  culture: { copyKey: 'culture', color: '#0F766E', background: '#CCFBF1' },
 };
 
 function getPoiName(poi: TravelPoi, isKo: boolean) {
@@ -28,9 +29,9 @@ function getPoiDescription(poi: TravelPoi, isKo: boolean) {
   return isKo ? poi.description : poi.description_en || poi.description;
 }
 
-function getCategoryLabel(category: string, isKo: boolean) {
+function getCategoryLabel(category: string, lang: AppLanguage) {
   const meta = CATEGORY_META[category] || CATEGORY_META.scenic;
-  return isKo ? meta.ko : meta.en;
+  return t(lang, poiCopy[meta.copyKey]);
 }
 
 export function NearbyTravelPoiPanel({
@@ -47,9 +48,9 @@ export function NearbyTravelPoiPanel({
     <View style={styles.sheet}>
       <View style={styles.headerRow}>
         <View style={styles.titleBlock}>
-          <Text style={styles.badge}>{isKo ? '주변 여행 정보' : 'Nearby travel info'}</Text>
+          <Text style={styles.badge}>{t(lang, poiCopy.nearbyBadge)}</Text>
           <Text style={styles.title}>
-            {isKo ? '지금 필요한 장소를 빠르게 확인하세요' : 'Find rider-friendly places nearby'}
+            {t(lang, poiCopy.nearbyTitle)}
           </Text>
         </View>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -61,22 +62,20 @@ export function NearbyTravelPoiPanel({
         <View style={styles.stateBox}>
           <ActivityIndicator color="#1D4ED8" />
           <Text style={styles.stateText}>
-            {isKo ? '현재 위치 주변 정보를 불러오는 중입니다.' : 'Loading nearby rider information.'}
+            {t(lang, poiCopy.loadingNearby)}
           </Text>
         </View>
       ) : error ? (
         <View style={styles.stateBox}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
-            <Text style={styles.retryButtonText}>{isKo ? '다시 시도' : 'Retry'}</Text>
+            <Text style={styles.retryButtonText}>{t(lang, poiCopy.retry)}</Text>
           </TouchableOpacity>
         </View>
       ) : pois.length === 0 ? (
         <View style={styles.stateBox}>
           <Text style={styles.stateText}>
-            {isKo
-              ? '아직 이 주변에 등록된 여행 정보가 없습니다.'
-              : 'No travel information has been added around here yet.'}
+            {t(lang, poiCopy.emptyNearby)}
           </Text>
         </View>
       ) : (
@@ -93,7 +92,7 @@ export function NearbyTravelPoiPanel({
                   </Text>
                   <View style={[styles.categoryChip, { backgroundColor: meta.background }]}>
                     <Text style={[styles.categoryText, { color: meta.color }]}>
-                      {getCategoryLabel(poi.category, isKo)}
+                      {getCategoryLabel(poi.category, lang)}
                     </Text>
                   </View>
                 </View>

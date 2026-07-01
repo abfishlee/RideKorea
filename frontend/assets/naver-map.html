@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RideKorea Naver Map</title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f8f9fa;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .custom-overlay {
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            padding: 6px 12px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+        let map = null;
+        let routePolyline = null;
+        let trackPolylines = [];
+        let markers = [];
+        let diaryMarkers = [];
+        let localMomentMarkers = [];
+        let travelPoiMarkers = [];
+        let infoWindows = [];
+        let currentTravelPois = [];
+        let currentTravelPoiLang = 'ko';
+
+        function sendLog(msg) {
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'LOG', message: msg }));
+            }
+        }
+
+        function sendToRN(payload) {
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify(payload));
+            }
+        }
+
+        function clearInfoWindows() {
+            infoWindows.forEach(info => info.close());
+            infoWindows = [];
+        }
+
+        function markerHtml(label, style) {
+            return `
+                <div style="
+                    min-width: ${style.minWidth || 34}px;
+                    height: ${style.height || 28}px;
+                    padding: 0 8px;
+                    border-radius: ${style.radius || 14}px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: ${style.bg};
+                    border: 2px solid ${style.border};
+                    box-shadow: 0 2px 8px rgba(15,23,42,0.24);
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    font-size: 11px;
+                    font-weight: 900;
+                    color: ${style.fg};
+                    white-space: nowrap;
+                ">${label}</div>
+            `;
+        }
+
+        function makeLatLng(point) {
+            return new naver.maps.LatLng(point.lat, point.lng);
+        }
+
+        function clearMarkers(target) {
+            target.forEach(marker => marker.setMap(null));
+            target.length = 0;
+        }
+
+        function clearTrackPolylines() {
+            trackPolylines.forEach(line => line.setMap(null));
+            trackPolylines = [];
+        }
+
+        function drawTrackSegment(segment, isOffRoute) {
+            if (!segment || segment.length < 2) return;
+
+            const line = new naver.maps.Polyline({
+                map,
+                path: segment.map(makeLatLng),
+                strokeWeight: 6,
+                strokeColor: isOffRoute ? '#EC4899' : '#38BDF8',
+                strokeOpacity: 0.88,
+                strokeStyle: 'solid'
+            });
+            trackPolylines.push(line);
+        }
+
+        function drawTrackPoints(points) {
+            clearTrackPolylines();
+            if (!points || points.length < 2) return;
+
+            let segment = [points[0]];
+            let currentState = Boolean(points[0].is_off_route);
+
+            for (let i = 1; i < points.length; i++) {
+                const nextState = Boolean(points[i].is_off_route);
+                if (nextState !== currentState) {
+                    segment.push(points[i]);
+                    drawTrackSegment(segment, currentState);
+                    segment = [points[i]];
+                    currentState = nextState;
+                } else {
+                    segment.push(points[i]);
+                }
+            }
+
+            drawTrackSegment(segment, currentState);
+        }
+
+        function addLocalMomentMarker(moment) {
+            if (!moment || !moment.lat || !moment.lng) return;
+
+            const marker = new naver.maps.Marker({
+                map,
+                position: new naver.maps.LatLng(moment.lat, moment.lng),
+                icon: {
+                    content: `
+                        <div style="width: 34px; height: 34px; border-radius: 17px; overflow: hidden; border: 3px solid #ffffff; box-shadow: 0 2px 8px rgba(15,23,42,0.35); background: #0F172A;">
+                            ${moment.photoUrl
+                                ? `<img src="${moment.photoUrl}" style="width: 100%; height: 100%; object-fit: cover;" />`
+                                : '<div style="width:100%; height:100%; background:#38BDF8;"></div>'}
+                        </div>
+                    `,
+                    anchor: new naver.maps.Point(17, 17)
+                }
+            });
+            localMomentMarkers.push(marker);
+        }
+
+        function getPoiMarkerStyle(category) {
+            const styles = {
+                repair: { label: '수리', bg: '#FEF3C7', fg: '#B45309', border: '#F59E0B' },
+                food: { label: '맛집', bg: '#FFE4E6', fg: '#BE123C', border: '#FB7185' },
+                lodging: { label: '숙소', bg: '#EDE9FE', fg: '#6D28D9', border: '#A78BFA' },
+                scenic: { label: '경치', bg: '#D1FAE5', fg: '#047857', border: '#34D399' },
+                transport: { label: '교통', bg: '#DBEAFE', fg: '#1D4ED8', border: '#60A5FA' },
+                culture: { label: '문화', bg: '#CCFBF1', fg: '#0F766E', border: '#2DD4BF' }
+            };
+            return styles[category] || styles.scenic;
+        }
+
+        function getTravelPoiGridSize() {
+            const zoom = map ? map.getZoom() : 9;
+            if (zoom >= 14) return 0;
+            if (zoom >= 12) return 0.018;
+            if (zoom >= 10) return 0.045;
+            return 0.09;
+        }
+
+        function clusterTravelPois(pois) {
+            const gridSize = getTravelPoiGridSize();
+            if (gridSize === 0) {
+                return pois
+                    .filter(poi => poi.lat && poi.lng)
+                    .map(poi => ({ lat: poi.lat, lng: poi.lng, pois: [poi] }));
+            }
+
+            const clusterMap = new Map();
+            pois.forEach(poi => {
+                if (!poi.lat || !poi.lng) return;
+
+                const key = `${Math.round(poi.lat / gridSize)}:${Math.round(poi.lng / gridSize)}`;
+                const cluster = clusterMap.get(key) || { lat: 0, lng: 0, pois: [] };
+                cluster.lat += poi.lat;
+                cluster.lng += poi.lng;
+                cluster.pois.push(poi);
+                clusterMap.set(key, cluster);
+            });
+
+            return Array.from(clusterMap.values()).map(cluster => ({
+                lat: cluster.lat / cluster.pois.length,
+                lng: cluster.lng / cluster.pois.length,
+                pois: cluster.pois
+            }));
+        }
+
+        function renderTravelPoiMarkers() {
+            clearMarkers(travelPoiMarkers);
+            if (!map || !currentTravelPois || currentTravelPois.length === 0) return;
+
+            clusterTravelPois(currentTravelPois).forEach(cluster => {
+                const position = new naver.maps.LatLng(cluster.lat, cluster.lng);
+
+                if (cluster.pois.length > 1) {
+                    const marker = new naver.maps.Marker({
+                        map,
+                        position,
+                        icon: {
+                            content: markerHtml(cluster.pois.length, {
+                                minWidth: 42,
+                                height: 42,
+                                radius: 21,
+                                bg: '#0F172A',
+                                fg: '#FFFFFF',
+                                border: '#FFFFFF'
+                            }),
+                            anchor: new naver.maps.Point(21, 21)
+                        }
+                    });
+                    travelPoiMarkers.push(marker);
+                    naver.maps.Event.addListener(marker, 'click', function() {
+                        clearInfoWindows();
+                        map.panTo(position);
+                        map.setZoom(Math.min(18, map.getZoom() + 2));
+                    });
+                    return;
+                }
+
+                const poi = cluster.pois[0];
+                const markerStyle = getPoiMarkerStyle(poi.category);
+                const displayName = currentTravelPoiLang === 'en' ? (poi.name_en || poi.name) : poi.name;
+                const marker = new naver.maps.Marker({
+                    map,
+                    position,
+                    icon: {
+                        content: markerHtml(markerStyle.label, markerStyle),
+                        anchor: new naver.maps.Point(19, 14)
+                    }
+                });
+                travelPoiMarkers.push(marker);
+
+                naver.maps.Event.addListener(marker, 'click', function() {
+                    clearInfoWindows();
+                    map.panTo(position);
+                    const info = new naver.maps.InfoWindow({
+                        content: `<div class="custom-overlay">${displayName}</div>`,
+                        borderWidth: 0,
+                        backgroundColor: 'transparent',
+                        disableAnchor: true
+                    });
+                    info.open(map, marker);
+                    infoWindows.push(info);
+                    sendToRN({ type: 'POI_MARKER_CLICKED', poiId: poi.id });
+                });
+            });
+        }
+
+        function setTravelPoiMarkers(pois, lang) {
+            currentTravelPois = Array.isArray(pois) ? pois : [];
+            currentTravelPoiLang = lang || 'ko';
+            renderTravelPoiMarkers();
+        }
+
+        function initMap() {
+            map = new naver.maps.Map('map', {
+                center: new naver.maps.LatLng(37.56682, 126.97865),
+                zoom: 9
+            });
+
+            sendLog('Naver Map instance created.');
+            sendToRN({ type: 'MAP_LOADED' });
+
+            naver.maps.Event.addListener(map, 'click', function() {
+                clearInfoWindows();
+                sendToRN({ type: 'MAP_CLICKED' });
+            });
+
+            naver.maps.Event.addListener(map, 'idle', function() {
+                renderTravelPoiMarkers();
+                const bounds = map.getBounds();
+                const sw = bounds.getSW();
+                const ne = bounds.getNE();
+                sendToRN({
+                    type: 'MAP_BOUNDS_CHANGED',
+                    min_lat: sw.lat(),
+                    min_lng: sw.lng(),
+                    max_lat: ne.lat(),
+                    max_lng: ne.lng()
+                });
+            });
+        }
+
+        function drawRoute(data) {
+            if (routePolyline) {
+                routePolyline.setMap(null);
+            }
+
+            if (!data.path || data.path.length === 0) return;
+
+            const linePath = data.path.map(makeLatLng);
+            routePolyline = new naver.maps.Polyline({
+                map,
+                path: linePath,
+                strokeWeight: data.widthPx || 5,
+                strokeColor: data.color || '#007AFF',
+                strokeOpacity: 0.8,
+                strokeStyle: data.dashed ? 'shortdash' : 'solid'
+            });
+
+            const bounds = new naver.maps.LatLngBounds();
+            linePath.forEach(point => bounds.extend(point));
+            map.fitBounds(bounds);
+        }
+
+        function setSpots(data) {
+            clearMarkers(markers);
+            clearInfoWindows();
+
+            if (!data.spots || data.spots.length === 0) return;
+
+            const currentLang = data.lang || 'ko';
+            data.spots.forEach(spot => {
+                const position = new naver.maps.LatLng(spot.lat, spot.lng);
+                const displayName = currentLang === 'en' ? (spot.name_en || spot.name) : spot.name;
+                const marker = new naver.maps.Marker({
+                    map,
+                    position,
+                    title: displayName
+                });
+                markers.push(marker);
+
+                naver.maps.Event.addListener(marker, 'click', function() {
+                    clearInfoWindows();
+                    map.panTo(position);
+                    const info = new naver.maps.InfoWindow({
+                        content: `<div class="custom-overlay">${displayName}</div>`,
+                        borderWidth: 0,
+                        backgroundColor: 'transparent',
+                        disableAnchor: true
+                    });
+                    info.open(map, marker);
+                    infoWindows.push(info);
+                    sendToRN({
+                        type: 'MARKER_CLICKED',
+                        spotId: spot.id,
+                        name: spot.name,
+                        name_en: spot.name_en,
+                        lat: spot.lat,
+                        lng: spot.lng
+                    });
+                });
+            });
+        }
+
+        function setDiaries(data) {
+            clearMarkers(diaryMarkers);
+
+            if (!data.diaries || data.diaries.length === 0) return;
+
+            data.diaries.forEach(diary => {
+                if (!diary.lat || !diary.lng) return;
+
+                const position = new naver.maps.LatLng(diary.lat, diary.lng);
+                const marker = new naver.maps.Marker({
+                    map,
+                    position,
+                    title: diary.title || diary.diary_text || 'Rider Story',
+                    icon: {
+                        content: markerHtml('★', {
+                            minWidth: 30,
+                            height: 30,
+                            radius: 15,
+                            bg: '#FDE68A',
+                            fg: '#92400E',
+                            border: '#F59E0B'
+                        }),
+                        anchor: new naver.maps.Point(15, 15)
+                    }
+                });
+                diaryMarkers.push(marker);
+                naver.maps.Event.addListener(marker, 'click', function() {
+                    map.panTo(position);
+                    sendToRN({
+                        type: 'DIARY_MARKER_CLICKED',
+                        diaryId: diary.id,
+                        spotId: diary.spot_id
+                    });
+                });
+            });
+        }
+
+        window.addEventListener('message', function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                sendLog('Received message from RN: ' + data.type);
+
+                if (!map) return;
+
+                switch (data.type) {
+                    case 'INIT_MAP':
+                        if (data.center) map.setCenter(makeLatLng(data.center));
+                        if (data.level) map.setZoom(data.level);
+                        break;
+                    case 'DRAW_ROUTE':
+                        drawRoute(data);
+                        break;
+                    case 'SET_TRACK_POINTS':
+                        drawTrackPoints(data.points);
+                        break;
+                    case 'CLEAR_TRACK_POINTS':
+                        clearTrackPolylines();
+                        break;
+                    case 'ADD_LOCAL_MOMENT_MARKER':
+                        addLocalMomentMarker(data.marker);
+                        break;
+                    case 'SET_SPOTS':
+                        setSpots(data);
+                        break;
+                    case 'SET_DIARIES':
+                        setDiaries(data);
+                        break;
+                    case 'SET_TRAVEL_POIS':
+                        setTravelPoiMarkers(data.pois, data.lang || 'ko');
+                        break;
+                    case 'UPDATE_MY_LOCATION':
+                        if (data.lat && data.lng) {
+                            const myPos = new naver.maps.LatLng(data.lat, data.lng);
+                            if (!window.myLocationMarker) {
+                                window.myLocationMarker = new naver.maps.Marker({
+                                    map,
+                                    position: myPos,
+                                    icon: {
+                                        content: '<div style="width: 16px; height: 16px; border-radius: 8px; background-color: #007AFF; border: 2px solid #ffffff; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
+                                        anchor: new naver.maps.Point(8, 8)
+                                    }
+                                });
+                            } else {
+                                window.myLocationMarker.setPosition(myPos);
+                            }
+                        }
+                        break;
+                    case 'PAN_TO_LOCATION':
+                        if (data.lat && data.lng) {
+                            map.panTo(new naver.maps.LatLng(data.lat, data.lng));
+                        }
+                        break;
+                    case 'MOVE_CAMERA':
+                        if (data.center) map.panTo(makeLatLng(data.center));
+                        if (data.level) map.setZoom(data.level);
+                        break;
+                    case 'FIT_BOUNDS':
+                        if (data.bounds) {
+                            const bounds = new naver.maps.LatLngBounds(
+                                new naver.maps.LatLng(data.bounds.minLat, data.bounds.minLng),
+                                new naver.maps.LatLng(data.bounds.maxLat, data.bounds.maxLng)
+                            );
+                            map.fitBounds(bounds);
+                        }
+                        break;
+                    case 'SET_LANGUAGE':
+                        break;
+                }
+            } catch (err) {
+                sendLog('Error parsing message: ' + err.message);
+            }
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const clientId = urlParams.get('clientId') || urlParams.get('ncpKeyId') || '';
+
+        if (!clientId) {
+            sendToRN({
+                type: 'MAP_ERROR',
+                message: 'Naver Map Client ID is missing. Set EXPO_PUBLIC_NAVER_CLIENT_ID or use provider=kakao.'
+            });
+        } else {
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(clientId)}`;
+            script.onload = () => {
+                sendLog('Naver Map script loaded.');
+                initMap();
+            };
+            script.onerror = () => {
+                sendToRN({
+                    type: 'MAP_ERROR',
+                    message: 'Naver Map SDK failed to load. Please check network and NCP settings.'
+                });
+            };
+            document.head.appendChild(script);
+        }
+    </script>
+</body>
+</html>

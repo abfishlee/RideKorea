@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse
@@ -83,10 +83,12 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         }
 
 @app.get("/map", response_class=HTMLResponse, tags=["Map"])
-async def get_map_page():
+async def get_map_page(request: Request):
     """Serve the map HTML page dynamically from frontend assets."""
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    map_html_path = os.path.abspath(os.path.join(current_dir, "..", "..", "frontend", "assets", "map.html"))
+    provider = request.query_params.get("provider", "kakao")
+    map_filename = "naver-map.html" if provider == "naver" else "map.html"
+    map_html_path = os.path.abspath(os.path.join(current_dir, "..", "..", "frontend", "assets", map_filename))
 
     if not os.path.exists(map_html_path):
         return HTMLResponse(content="<h1>Map HTML file not found</h1>", status_code=404)

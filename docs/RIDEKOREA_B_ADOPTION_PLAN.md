@@ -481,3 +481,72 @@ npm.cmd run test:utils
 
 - P4 Naver Map incremental update adapter 정리
 - 또는 P3 보강: ride photo pin queue SQLite 확장
+
+### 완료: P4 Naver Map incremental update adapter 1차
+
+적용 파일:
+
+- `backend/app/main.py`
+- `frontend/src/config/env.ts`
+- `frontend/assets/naver-map.html`
+
+완료 내용:
+
+- `/map?provider=naver` 요청 시 `frontend/assets/naver-map.html`을 서빙하도록 백엔드를 확장했다.
+- `EXPO_PUBLIC_NAVER_CLIENT_ID`가 설정되면 프론트 기본 `MAP_URL`이 자동으로 `provider=naver&clientId=...` 쿼리를 붙인다.
+- Naver Client ID가 없으면 기존 Kakao 기반 `map.html` fallback을 계속 사용한다.
+- Naver WebView HTML에서 기존 앱 메시지 계약을 유지했다.
+  - `DRAW_ROUTE`
+  - `SET_TRACK_POINTS`
+  - `CLEAR_TRACK_POINTS`
+  - `UPDATE_MY_LOCATION`
+  - `PAN_TO_LOCATION`
+  - `SET_SPOTS`
+  - `SET_DIARIES`
+  - `SET_TRAVEL_POIS`
+  - `ADD_LOCAL_MOMENT_MARKER`
+  - `MAP_BOUNDS_CHANGED`
+- track point update는 기존과 같이 전체 HTML reload 없이 WebView message로 갱신된다.
+- 정상 구간/이탈 구간은 기존 `is_off_route` 기준으로 파란색/분홍색을 유지한다.
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+```
+
+```powershell
+$env:PYTHONPATH='backend'; venv\Scripts\python.exe -m unittest discover -s backend\tests
+venv\Scripts\python.exe -m compileall -f backend/app backend/alembic
+```
+
+결과:
+
+- frontend typecheck 통과
+- frontend lint 통과
+- backend unittest 31개 통과
+- backend compileall 통과
+
+사용자 준비 필요:
+
+- Naver Cloud Platform Maps Client ID 발급
+- Web Dynamic Map 사용 설정
+- 로컬/개발 서버 도메인 등록
+- Android package, iOS bundle 등록
+- `frontend/.env`에 아래 값 추가
+
+```env
+EXPO_PUBLIC_NAVER_CLIENT_ID=발급받은_CLIENT_ID
+EXPO_PUBLIC_MAP_PROVIDER=naver
+```
+
+주의:
+
+- 실제 Naver 지도 렌더링은 Client ID와 NCP 콘솔 도메인/앱 등록이 필요하므로, 현재는 정적 검증과 기존 fallback 보존까지 완료된 상태다.
+
+다음 작업:
+
+- Naver Client ID 입력 후 실기기/WebView 렌더링 QA
+- 또는 P3 보강: ride photo pin queue SQLite 확장

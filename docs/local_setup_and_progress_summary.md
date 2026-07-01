@@ -99,7 +99,9 @@ EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:8000/api/v1
 EXPO_PUBLIC_MAP_URL=http://127.0.0.1:8000/map
 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=
 EXPO_PUBLIC_GOOGLE_AUTH_PROXY_URI=https://auth.expo.io/@abfishlee/frontend
+EXPO_PUBLIC_MAP_PROVIDER=kakao
 EXPO_PUBLIC_NAVER_CLIENT_ID=
+EXPO_PUBLIC_KAKAO_APP_KEY=
 EXPO_PUBLIC_MAPBOX_TOKEN=
 ```
 
@@ -108,6 +110,13 @@ Android 에뮬레이터에서는 API 주소를 다음처럼 잡는 것이 보통
 ```env
 EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:8000/api/v1
 EXPO_PUBLIC_MAP_URL=http://10.0.2.2:8000/map
+```
+
+Naver Map Client ID를 발급받은 뒤에는 다음처럼 설정할 수 있다.
+
+```env
+EXPO_PUBLIC_MAP_PROVIDER=naver
+EXPO_PUBLIC_NAVER_CLIENT_ID=발급받은_CLIENT_ID
 ```
 
 Expo 실행:

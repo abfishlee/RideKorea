@@ -229,6 +229,17 @@ export default function HomeScreen() {
   const selectedServerDraft = selectedServerJourney && selectedServerRoute
     ? toImportedDraft(selectedServerJourney, selectedServerRoute)
     : null;
+  const isJourneyBottomPanelOpen = (
+    isNearbyPoiOpen ||
+    Boolean(
+      selectedTravelPoi ||
+      selectedPublicDiary ||
+      selectedSharedRouteStop ||
+      selectedServerDraft ||
+      selectedDraft ||
+      selectedSpot,
+    )
+  );
   const voucherGeofenceTargets = useMemo(() => (
     voucherSpots.map((spot) => ({
       id: spot.id,
@@ -741,7 +752,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       )}
 
-      {activeJourney && (
+      {activeJourney && !isJourneyBottomPanelOpen && (
         <View style={[NeoOutdoorStyles.glassHud, styles.rideHud]}>
           <View style={styles.rideHudItem}>
             <Text style={styles.rideHudLabel}>
@@ -890,8 +901,8 @@ const styles = StyleSheet.create({
   },
   sharedStopToggle: {
     position: 'absolute',
-    top: 164,
-    right: 14,
+    top: 198,
+    left: 14,
     minHeight: 38,
     maxWidth: 190,
     alignItems: 'center',

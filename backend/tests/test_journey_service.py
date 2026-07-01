@@ -136,5 +136,72 @@ class AddTrackPointsTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(db.added_track_points[0].is_off_route)
 
 
+class JourneyTrackSummaryTest(unittest.TestCase):
+    def test_summary_counts_points_duration_distance_and_off_route(self):
+        journey_id = uuid4()
+        summary = journey_service._summarize_track_points(
+            journey_id,
+            [
+                {
+                    "location": {"lat": 37.000, "lng": 127.000},
+                    "recorded_at": datetime(2026, 6, 30, 9, 0, tzinfo=timezone.utc),
+                    "is_off_route": False,
+                },
+                {
+                    "location": {"lat": 37.001, "lng": 127.001},
+                    "recorded_at": datetime(2026, 6, 30, 9, 10, tzinfo=timezone.utc),
+                    "is_off_route": True,
+                },
+            ],
+        )
+
+        self.assertEqual(journey_id, summary.journey_id)
+        self.assertEqual(2, summary.point_count)
+        self.assertEqual(1, summary.off_route_count)
+        self.assertEqual(600, summary.duration_seconds)
+        self.assertGreater(summary.distance_km, 0)
+
+    def test_summary_ignores_large_gps_jump(self):
+        journey_id = uuid4()
+        summary = journey_service._summarize_track_points(
+            journey_id,
+            [
+                {
+                    "location": {"lat": 37.000, "lng": 127.000},
+                    "recorded_at": datetime(2026, 6, 30, 9, 0, tzinfo=timezone.utc),
+                    "is_off_route": False,
+                },
+                {
+                    "location": {"lat": 37.001, "lng": 127.001},
+                    "recorded_at": datetime(2026, 6, 30, 9, 10, tzinfo=timezone.utc),
+                    "is_off_route": False,
+                },
+                {
+                    "location": {"lat": 38.000, "lng": 128.000},
+                    "recorded_at": datetime(2026, 6, 30, 9, 20, tzinfo=timezone.utc),
+                    "is_off_route": False,
+                },
+            ],
+        )
+        without_jump = journey_service._summarize_track_points(
+            journey_id,
+            [
+                {
+                    "location": {"lat": 37.000, "lng": 127.000},
+                    "recorded_at": datetime(2026, 6, 30, 9, 0, tzinfo=timezone.utc),
+                    "is_off_route": False,
+                },
+                {
+                    "location": {"lat": 37.001, "lng": 127.001},
+                    "recorded_at": datetime(2026, 6, 30, 9, 10, tzinfo=timezone.utc),
+                    "is_off_route": False,
+                },
+            ],
+        )
+
+        self.assertAlmostEqual(without_jump.distance_km, summary.distance_km, places=4)
+        self.assertEqual(3, summary.point_count)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -27,8 +27,6 @@ git pull origin master
 
 ## 3. 데이터베이스 실행
 
-프로젝트 루트에서 PostGIS 컨테이너를 실행한다.
-
 ```powershell
 docker compose up -d
 ```
@@ -43,15 +41,13 @@ docker compose up -d
 
 ## 4. 백엔드 세팅
 
-프로젝트 루트에서 가상환경을 만든다.
-
 ```powershell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r backend\requirements.txt
 ```
 
-필요하면 루트 또는 `backend` 폴더에 `.env`를 만들고 값을 덮어쓴다.
+필요하면 루트 또는 `backend` 폴더에 `.env`를 만든다.
 
 ```env
 POSTGRES_USER=postgres
@@ -90,8 +86,6 @@ cd backend
 - Map HTML: `http://127.0.0.1:8000/map`
 
 ## 5. 프론트엔드 세팅
-
-새 터미널에서:
 
 ```powershell
 cd frontend
@@ -156,6 +150,7 @@ npm.cmd run test:utils
 - 가져온 공유 루트의 원본 스팟 표시/숨김 토글
 - 라이딩 시작, 위치 추적, 속도/거리/시간 HUD
 - Journey track point 저장 API와 주행 요약 카드
+- My Path 서버 집계 API 기반 요약 배지
 - 오프라인 위치 큐와 재시도 메타데이터
 - 사진 일지, 공개 일지, 지도 마커 연동
 - Travel POI 모델/API/UI, 피드백/신고, 관리자 검수 구조
@@ -168,20 +163,24 @@ npm.cmd run test:utils
 
 ## 8. 이번 푸시에 포함되는 최신 보강
 
-- `frontend/src/i18n/index.ts`
-  - `momentsCopy`, `myPathCopy`, `poiCopy` 추가
-  - Moments, My Path, 주변 POI에서 공통 `t(lang, copy)` 패턴을 재사용
-- `frontend/src/app/moments.tsx`
-  - 화면 내 언어 토글 추가
-  - 피드 제목, 설명, 탭, 로딩/오류/빈 상태, Alert, 일지 기본 문구를 `ko/en/ja`로 확장
+- `backend/app/schemas.py`
+  - `JourneyTrackSummaryResponse` 추가
+- `backend/app/services/journey_service.py`
+  - Journey별 track point 요약 집계 로직 추가
+  - 거리, 소요 시간, GPS 포인트 수, 이탈 포인트 수 계산
+  - 1km 이상 GPS 점프 구간은 거리 계산에서 제외
+- `backend/app/routers/journeys.py`
+  - `GET /api/v1/journeys/summaries` 추가
+- `backend/tests/test_journey_service.py`
+  - Journey track summary 테스트 추가
+- `frontend/src/services/api.ts`
+  - `getMyJourneyTrackSummaries()` 추가
 - `frontend/src/app/my-path.tsx`
-  - 화면 내 언어 토글 추가
-  - 통계 카드, 가져온 루트, Journey 기록, 삭제 확인 Alert, 날짜/거리/시간 포맷을 언어별로 표시
-- `frontend/src/components/journey/NearbyTravelPoiPanel.tsx`
-  - 주변 POI 패널 제목, 상태 문구, 카테고리 라벨을 `ko/en/ja` dictionary로 연결
+  - Journey별 `/track-points` 반복 호출 제거
+  - 서버 집계 API 기반으로 My Path 요약 배지 표시
 - `docs/ridekorea_sasaki_scenario_qa_checklist.md`
-  - 사사키 시나리오 기준 완성도 96%로 갱신
-  - 다음 우선순위를 My Path 서버 집계 API로 정리
+  - 사사키 시나리오 기준 완성도 97%로 갱신
+  - 남은 작업 목록 갱신
 
 ## 9. 아직 사용자가 준비해야 하는 외부 의존 작업
 
@@ -195,6 +194,6 @@ npm.cmd run test:utils
 
 ## 10. 다음 추천 작업
 
-외부 키 없이 바로 이어갈 수 있는 다음 작업은 My Path 요약을 서버 집계 API로 최적화하는 것이다.
+외부 키 없이 바로 이어갈 수 있는 다음 작업은 상세 루트, 공유 루트 상세, Admin 화면까지 i18n dictionary를 확장하는 것이다.
 
-현재 My Path는 각 Journey의 track point를 화면에서 여러 번 가져와 요약한다. 기록이 늘어나면 API 호출 수와 모바일 계산량이 커지므로, 서버에서 거리, 시간, 포인트 수, 이탈 포인트 수를 집계해 내려주는 방식으로 바꾸는 것이 좋다.
+이 작업을 진행하면 외국인 라이더가 루트 상세, 공개 루트, 운영 화면까지 더 일관된 언어 경험으로 사용할 수 있다.

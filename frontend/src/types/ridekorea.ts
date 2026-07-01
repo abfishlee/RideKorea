@@ -245,6 +245,14 @@ export interface JourneyTrackPoint extends JourneyTrackPointInput {
   created_at: string;
 }
 
+export interface JourneyTrackSummary {
+  journey_id: string;
+  distance_km: number;
+  duration_seconds: number;
+  point_count: number;
+  off_route_count: number;
+}
+
 export interface PublishedSharedRouteStop {
   id: string;
   shared_route_id: string;

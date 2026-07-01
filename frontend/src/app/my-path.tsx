@@ -1,8 +1,8 @@
 import { useAuthSession } from '@/context/AuthSessionContext';
 import { LANGUAGE_LABELS, myPathCopy, nextLanguage, t } from '@/i18n';
-import { getJourneyTrackPoints, getMyJourneys } from '@/services/api';
+import { getMyJourneyTrackSummaries, getMyJourneys } from '@/services/api';
 import { getImportedRouteDrafts, removeImportedRouteDraft } from '@/services/imported-routes';
-import type { AppLanguage, ImportedRouteDraft, Journey, JourneyTrackPoint } from '@/types/ridekorea';
+import type { AppLanguage, ImportedRouteDraft, Journey } from '@/types/ridekorea';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -63,48 +63,12 @@ function formatDistance(distanceKm: number, lang: AppLanguage) {
   return `${distanceKm.toFixed(1)} km`;
 }
 
-function toRadians(value: number) {
-  return (value * Math.PI) / 180;
-}
-
-function distanceKmBetween(from: JourneyTrackPoint, to: JourneyTrackPoint) {
-  const earthRadiusKm = 6371;
-  const dLat = toRadians(to.location.lat - from.location.lat);
-  const dLng = toRadians(to.location.lng - from.location.lng);
-  const lat1 = toRadians(from.location.lat);
-  const lat2 = toRadians(to.location.lat);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function summarizeTrack(points: JourneyTrackPoint[]): JourneyListSummary {
-  if (points.length === 0) {
-    return {
-      distanceKm: 0,
-      durationSeconds: 0,
-      pointCount: 0,
-      offRouteCount: 0,
-    };
-  }
-
-  const sortedPoints = [...points].sort((a, b) => (
-    new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()
-  ));
-  const distanceKm = sortedPoints.reduce((sum, point, index) => {
-    if (index === 0) return sum;
-    const segmentKm = distanceKmBetween(sortedPoints[index - 1], point);
-    return segmentKm < 1 ? sum + segmentKm : sum;
-  }, 0);
-  const firstTime = new Date(sortedPoints[0].recorded_at).getTime();
-  const lastTime = new Date(sortedPoints[sortedPoints.length - 1].recorded_at).getTime();
-
+function emptyTrackSummary(): JourneyListSummary {
   return {
-    distanceKm,
-    durationSeconds: Math.max(0, Math.floor((lastTime - firstTime) / 1000)),
-    pointCount: sortedPoints.length,
-    offRouteCount: sortedPoints.filter((point) => point.is_off_route).length,
+    distanceKm: 0,
+    durationSeconds: 0,
+    pointCount: 0,
+    offRouteCount: 0,
   };
 }
 
@@ -174,20 +138,22 @@ export default function MyPathScreen() {
         return;
       }
 
-      const data = await getMyJourneys(token);
+      const [data, summaries] = await Promise.all([
+        getMyJourneys(token),
+        getMyJourneyTrackSummaries(token),
+      ]);
       setJourneys(data);
-
-      const summaries = await Promise.all(
-        data.map(async (journey) => {
-          try {
-            const points = await getJourneyTrackPoints(token, journey.id);
-            return [journey.id, summarizeTrack(points)] as const;
-          } catch {
-            return [journey.id, summarizeTrack([])] as const;
-          }
-        }),
-      );
-      setJourneySummaries(Object.fromEntries(summaries));
+      setJourneySummaries(Object.fromEntries(
+        summaries.map((summary) => [
+          summary.journey_id,
+          {
+            distanceKm: summary.distance_km,
+            durationSeconds: summary.duration_seconds,
+            pointCount: summary.point_count,
+            offRouteCount: summary.off_route_count,
+          },
+        ]),
+      ));
     } catch (err: any) {
       setError(err.message || t(lang, myPathCopy.loadFailedBody));
     } finally {
@@ -355,7 +321,7 @@ export default function MyPathScreen() {
                 {journeys.map((journey) => {
                   const diaries = journey.diaries || [];
                   const firstDiary = diaries[0];
-                  const summary = journeySummaries[journey.id] || summarizeTrack([]);
+                  const summary = journeySummaries[journey.id] || emptyTrackSummary();
                   const hasTrack = summary.pointCount > 0;
 
                   return (

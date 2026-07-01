@@ -310,6 +310,14 @@ class JourneyTrackPointResponse(JourneyTrackPointBase):
         from_attributes = True
 
 
+class JourneyTrackSummaryResponse(BaseModel):
+    journey_id: UUID
+    distance_km: float = 0
+    duration_seconds: int = 0
+    point_count: int = 0
+    off_route_count: int = 0
+
+
 # --- Shared Route Schemas ---
 class SharedRouteStopResponse(BaseModel):
     id: UUID

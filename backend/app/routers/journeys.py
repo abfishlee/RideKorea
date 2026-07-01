@@ -11,6 +11,7 @@ from ..schemas import (
     JourneyCreate,
     JourneyTrackBatchCreate,
     JourneyTrackPointResponse,
+    JourneyTrackSummaryResponse,
     JourneyUpdate,
 )
 from ..api.deps import get_current_user
@@ -36,6 +37,15 @@ async def list_my_journeys(
 ):
     """List all journeys belonging to the authenticated user."""
     return await journey_service.list_my_journeys(db, current_user)
+
+
+@router.get("/summaries", response_model=List[JourneyTrackSummaryResponse])
+async def list_my_journey_summaries(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return lightweight track summaries for all journeys belonging to the user."""
+    return await journey_service.list_my_journey_summaries(db, current_user)
 
 
 @router.get("/{journey_id}", response_model=JourneyResponse)

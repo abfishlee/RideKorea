@@ -7,6 +7,7 @@ import type {
   Journey,
   JourneyTrackPoint,
   JourneyTrackPointInput,
+  JourneyTrackSummary,
   PublishedSharedRoute,
   SharedRouteComment,
   SharedRouteLikeResult,
@@ -299,6 +300,10 @@ export function getJourneyTrackPoints(
   journeyId: string,
 ): Promise<JourneyTrackPoint[]> {
   return apiFetch<JourneyTrackPoint[]>(`/journeys/${journeyId}/track-points`, { token });
+}
+
+export function getMyJourneyTrackSummaries(token: string): Promise<JourneyTrackSummary[]> {
+  return apiFetch<JourneyTrackSummary[]>('/journeys/summaries', { token });
 }
 
 export function publishJourneyAsSharedRoute(

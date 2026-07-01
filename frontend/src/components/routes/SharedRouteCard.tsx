@@ -1,3 +1,4 @@
+import { NeoOutdoors, NeoOutdoorStyles } from '@/constants/neo-outdoors';
 import { momentsCopy, t } from '@/i18n';
 import type { AppLanguage, SharedRoute } from '@/types/ridekorea';
 import React from 'react';
@@ -31,12 +32,23 @@ export function SharedRouteCard({ lang, route, onImport, onOpen }: SharedRouteCa
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      style={styles.card}
+      style={[NeoOutdoorStyles.editorialCard, styles.card]}
       onPress={() => onOpen?.(route)}
       disabled={!onOpen}>
-      {route.coverImageUrl && (
-        <Image source={{ uri: route.coverImageUrl }} style={styles.coverImage} />
-      )}
+      <View style={styles.coverWrap}>
+        {route.coverImageUrl ? (
+          <Image source={{ uri: route.coverImageUrl }} style={styles.coverImage} />
+        ) : (
+          <View style={styles.coverFallback} />
+        )}
+        <View style={styles.coverScrim} />
+        <View style={styles.coverMeta}>
+          <Text style={styles.coverKicker}>{copy(momentsCopy.sharedRoutes)}</Text>
+          <Text style={styles.coverTitle} numberOfLines={2}>
+            {route.title}
+          </Text>
+        </View>
+      </View>
 
       <View style={styles.body}>
         <View style={styles.titleRow}>
@@ -125,15 +137,47 @@ export function SharedRouteCard({ lang, route, onImport, onOpen }: SharedRouteCa
 const styles = StyleSheet.create({
   card: {
     overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#DCE4EC',
+  },
+  coverWrap: {
+    height: 214,
+    backgroundColor: NeoOutdoors.color.line,
   },
   coverImage: {
     width: '100%',
-    height: 188,
-    backgroundColor: '#E2E8F0',
+    height: '100%',
+    backgroundColor: NeoOutdoors.color.line,
+  },
+  coverFallback: {
+    flex: 1,
+    backgroundColor: NeoOutdoors.color.cyanWash,
+  },
+  coverScrim: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    backgroundColor: 'rgba(11,18,32,0.22)',
+  },
+  coverMeta: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 14,
+  },
+  coverKicker: {
+    color: NeoOutdoors.color.electricCyan,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0,
+    marginBottom: 5,
+    textTransform: 'uppercase',
+  },
+  coverTitle: {
+    color: NeoOutdoors.color.white,
+    fontSize: 23,
+    fontWeight: '900',
+    lineHeight: 28,
   },
   body: {
     padding: 16,
@@ -149,20 +193,22 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   title: {
-    color: '#0F172A',
-    fontSize: 20,
+    color: NeoOutdoors.color.inkSoft,
+    fontSize: 18,
     fontWeight: '900',
-    lineHeight: 25,
+    lineHeight: 23,
   },
   author: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 13,
     fontWeight: '800',
     marginTop: 5,
   },
   statPill: {
     borderRadius: 999,
-    backgroundColor: '#E0F2FE',
+    backgroundColor: NeoOutdoors.color.cyanWash,
+    borderColor: NeoOutdoors.color.electricCyan,
+    borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
@@ -170,7 +216,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#DCFCE7',
   },
   statPillText: {
-    color: '#0369A1',
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 12,
     fontWeight: '900',
   },
@@ -178,7 +224,7 @@ const styles = StyleSheet.create({
     color: '#047857',
   },
   summary: {
-    color: '#475569',
+    color: NeoOutdoors.color.slate,
     fontSize: 14,
     lineHeight: 21,
     marginBottom: 14,
@@ -191,7 +237,7 @@ const styles = StyleSheet.create({
   },
   routePoint: {
     flex: 1,
-    color: '#0F172A',
+    color: NeoOutdoors.color.inkSoft,
     fontSize: 13,
     fontWeight: '900',
   },
@@ -211,7 +257,7 @@ const styles = StyleSheet.create({
     minHeight: 58,
     justifyContent: 'center',
     borderRadius: 8,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: NeoOutdoors.color.paper,
     paddingHorizontal: 10,
   },
   metricLabel: {
@@ -221,25 +267,23 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   metricValue: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.inkSoft,
     fontSize: 13,
     fontWeight: '900',
   },
   highlightBox: {
-    borderLeftWidth: 3,
-    borderLeftColor: '#0EA5E9',
-    backgroundColor: '#F8FAFC',
+    ...NeoOutdoorStyles.editorialSurface,
     padding: 12,
     marginBottom: 12,
   },
   highlightLabel: {
-    color: '#0EA5E9',
+    color: NeoOutdoors.color.sunsetAmber,
     fontSize: 11,
     fontWeight: '900',
     marginBottom: 5,
   },
   highlightTitle: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.inkSoft,
     fontSize: 14,
     fontWeight: '900',
     marginBottom: 4,
@@ -256,13 +300,13 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   tag: {
-    borderRadius: 999,
-    backgroundColor: '#ECFDF5',
+    ...NeoOutdoorStyles.routeBadge,
+    minHeight: 26,
     paddingHorizontal: 9,
-    paddingVertical: 5,
+    paddingVertical: 4,
   },
   tagText: {
-    color: '#047857',
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 12,
     fontWeight: '800',
   },
@@ -283,7 +327,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
-    backgroundColor: '#0F172A',
+    backgroundColor: NeoOutdoors.color.ink,
     paddingHorizontal: 14,
   },
   importButtonText: {

@@ -104,7 +104,7 @@ Priority: low.
 
 ### Phase 3: Moments Editorial Refresh
 
-- [ ] Refresh shared route cards with stronger photography and story hierarchy.
+- [x] Refresh shared route cards with stronger photography and story hierarchy.
 - [ ] Refresh diary cards with magazine-like spacing and photo emphasis.
 - [ ] Keep import/open/comment/share flows unchanged.
 

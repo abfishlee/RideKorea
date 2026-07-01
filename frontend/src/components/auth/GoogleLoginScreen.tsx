@@ -13,7 +13,9 @@ import {
 interface GoogleLoginScreenProps {
   lang: AppLanguage;
   isLoading: boolean;
+  isDevLoginLoading?: boolean;
   onLoginPress: () => void;
+  onDevLoginPress?: () => void;
   onChangeLanguage: (lang: AppLanguage) => void;
 }
 
@@ -22,9 +24,13 @@ const LANGUAGES: AppLanguage[] = ['ko', 'en', 'ja'];
 export function GoogleLoginScreen({
   lang,
   isLoading,
+  isDevLoginLoading = false,
   onLoginPress,
+  onDevLoginPress,
   onChangeLanguage,
 }: GoogleLoginScreenProps) {
+  const isAnyLoginLoading = isLoading || isDevLoginLoading;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -58,7 +64,7 @@ export function GoogleLoginScreen({
           <TouchableOpacity
             style={[styles.googleButton, isLoading && styles.disabledButton]}
             onPress={onLoginPress}
-            disabled={isLoading}
+            disabled={isAnyLoginLoading}
             activeOpacity={0.85}>
             {isLoading ? (
               <ActivityIndicator color="#1E3A8A" />
@@ -69,6 +75,20 @@ export function GoogleLoginScreen({
               </>
             )}
           </TouchableOpacity>
+
+          {onDevLoginPress ? (
+            <TouchableOpacity
+              style={styles.devLoginButton}
+              onPress={onDevLoginPress}
+              disabled={isAnyLoginLoading}
+              activeOpacity={0.72}>
+              {isDevLoginLoading ? (
+                <ActivityIndicator color="#64748B" size="small" />
+              ) : (
+                <Text style={styles.devLoginText}>dev_로그인</Text>
+              )}
+            </TouchableOpacity>
+          ) : null}
 
           <Text style={styles.legalText}>{t(lang, authCopy.legal)}</Text>
         </View>
@@ -180,6 +200,19 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     fontSize: 15,
     fontWeight: '800',
+  },
+  devLoginButton: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    minHeight: 28,
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  devLoginText: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   legalText: {
     color: '#94A3B8',

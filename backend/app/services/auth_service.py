@@ -42,3 +42,43 @@ async def authenticate_social(db: AsyncSession, id_token: str, provider: str) ->
     await db.commit()
     await db.refresh(user)
     return user
+
+
+async def authenticate_dev_user(db: AsyncSession) -> User:
+    """Create or update a stable local-development user.
+
+    This is intentionally separate from social auth so production OAuth behavior
+    remains untouched while local UI work can bypass external providers.
+    """
+    dev_social_id = "ridekorea-dev-user"
+    dev_email = "dev@ridekorea.local"
+
+    user = (
+        await db.execute(select(User).where(User.social_id == dev_social_id))
+    ).scalars().first()
+
+    if not user:
+        user = (
+            await db.execute(select(User).where(User.email == dev_email))
+        ).scalars().first()
+
+    if not user:
+        user = User(
+            social_id=dev_social_id,
+            provider="dev",
+            email=dev_email,
+            display_name="Dev Rider",
+            profile_photo_url=None,
+            preferred_language="ko",
+        )
+        db.add(user)
+    else:
+        user.social_id = dev_social_id
+        user.provider = "dev"
+        user.email = dev_email
+        user.display_name = user.display_name or "Dev Rider"
+        user.preferred_language = user.preferred_language or "ko"
+
+    await db.commit()
+    await db.refresh(user)
+    return user

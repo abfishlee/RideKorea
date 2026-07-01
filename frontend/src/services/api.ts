@@ -67,6 +67,12 @@ export function socialLogin(provider: 'google', idToken: string): Promise<AuthRe
   });
 }
 
+export function devLogin(): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>('/auth/dev-login', {
+    method: 'POST',
+  });
+}
+
 export async function getCurrentUser(token: string): Promise<UserProfile> {
   const data = await apiFetch<any>('/auth/me', { token });
   return {

@@ -6,6 +6,13 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "RideKorea API"
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    ALLOW_DEV_LOGIN: bool = (
+        os.getenv(
+            "ALLOW_DEV_LOGIN",
+            "false" if os.getenv("ENVIRONMENT", "development") == "production" else "true",
+        ).lower()
+        == "true"
+    )
 
     # Database Settings
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")

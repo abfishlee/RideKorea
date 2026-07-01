@@ -20,6 +20,7 @@ import { authCopy, journeyCopy, t } from '@/i18n';
 import {
   claimVoucher,
   createTravelPoiReport,
+  devLogin,
   getJourney,
   getJourneyTrackPoints,
   getNearbyTravelPois,
@@ -125,6 +126,7 @@ export default function HomeScreen() {
   const { token, userProfile, isAuthChecked, signIn, signOut } = useAuthSession();
   const [lang, setLang] = useState<AppLanguage>('ko');
   const [isGoogleLoginLoading, setIsGoogleLoginLoading] = useState(false);
+  const [isDevLoginLoading, setIsDevLoginLoading] = useState(false);
   const [importedDrafts, setImportedDrafts] = useState<ImportedRouteDraft[]>([]);
   const [selectedDraft, setSelectedDraft] = useState<ImportedRouteDraft | null>(null);
   const [selectedServerJourney, setSelectedServerJourney] = useState<Journey | null>(null);
@@ -547,6 +549,21 @@ export default function HomeScreen() {
     }
   };
 
+  const handleDevLogin = async () => {
+    try {
+      setIsDevLoginLoading(true);
+      const data = await devLogin();
+      await signIn(data.access_token);
+    } catch (err: any) {
+      Alert.alert(
+        t(lang, authCopy.loginFailedTitle),
+        err.message || 'Development login failed',
+      );
+    } finally {
+      setIsDevLoginLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     await signOut();
     setHasCheckedRideRecovery(false);
@@ -672,7 +689,9 @@ export default function HomeScreen() {
       <GoogleLoginScreen
         lang={lang}
         isLoading={isGoogleLoginLoading}
+        isDevLoginLoading={isDevLoginLoading}
         onLoginPress={handleGoogleLogin}
+        onDevLoginPress={handleDevLogin}
         onChangeLanguage={setLang}
       />
     );

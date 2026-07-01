@@ -375,3 +375,45 @@ $env:PYTHONPATH='backend'; .\venv\Scripts\python.exe -m unittest discover -s bac
 - merchant 계정별 정산 구분
 - CSV export
 - 월별/기간별 필터 UI
+
+## 완료: 정산 기간 필터 UI 1차
+
+적용 파일:
+
+- `frontend/src/app/compass.tsx`
+
+완료 내용:
+
+- Compass 관리자 코드 처리 패널의 정산 요약을 30일 고정에서 7일/30일/90일 선택형으로 변경했다.
+- 선택한 기간에 맞춰 `GET /admin/voucher-settlement-summary?days=...`를 다시 호출한다.
+- 정산 요약 제목을 선택 기간에 맞춰 동적으로 표시한다.
+- 정산 안내 문구를 현재 설정 금액 기준에서 발급 시점 금액 기준으로 수정했다.
+- 정산 기간 선택은 작은 segmented control 형태로 추가했다.
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:utils
+```
+
+```powershell
+$env:PYTHONPATH='backend'; .\venv\Scripts\python.exe -m unittest discover -s backend\tests
+.\venv\Scripts\python.exe -m compileall -f backend\app backend\alembic
+```
+
+검증 결과:
+
+- frontend typecheck 통과
+- frontend lint 통과
+- frontend test:utils 통과
+- backend unittest 31개 통과
+- backend compileall 통과
+
+남은 보완:
+
+- 임의 기간 date range picker
+- 월별 preset
+- CSV export

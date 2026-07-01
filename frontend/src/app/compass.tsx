@@ -61,6 +61,7 @@ export default function CompassScreen() {
   const [redemptionPreview, setRedemptionPreview] = useState<Voucher | null>(null);
   const [redemptionHistory, setRedemptionHistory] = useState<VoucherRedemption[]>([]);
   const [settlementSummary, setSettlementSummary] = useState<VoucherSettlementSummary | null>(null);
+  const [settlementDays, setSettlementDays] = useState<7 | 30 | 90>(30);
   const [isLookingUpRedemption, setIsLookingUpRedemption] = useState(false);
   const [isRedeemingByCode, setIsRedeemingByCode] = useState(false);
   const [isLoadingRedemptionHistory, setIsLoadingRedemptionHistory] = useState(false);
@@ -185,12 +186,12 @@ export default function CompassScreen() {
     }
   };
 
-  const fetchSettlementSummary = async () => {
+  const fetchSettlementSummary = async (days = settlementDays) => {
     if (!token) return;
 
     setIsLoadingSettlementSummary(true);
     try {
-      const summary = await getAdminVoucherSettlementSummary(token, 30);
+      const summary = await getAdminVoucherSettlementSummary(token, days);
       setSettlementSummary(summary);
     } catch (err) {
       console.log('Error fetching voucher settlement summary', err);
@@ -509,19 +510,45 @@ export default function CompassScreen() {
             <View style={styles.settlementSummary}>
               <View style={styles.settlementSummaryTop}>
                 <View>
-                  <Text style={styles.historyTitle}>{isKo ? '30일 정산 요약' : '30-day settlement'}</Text>
+                  <Text style={styles.historyTitle}>
+                    {isKo ? `${settlementDays}일 정산 요약` : `${settlementDays}-day settlement`}
+                  </Text>
                   <Text style={styles.settlementCaption}>
-                    {isKo ? '현재 바우처 설정 금액 기준' : 'Estimated from current voucher amounts'}
+                    {isKo ? '발급 시점 금액 기준' : 'Based on issued voucher amounts'}
                   </Text>
                 </View>
                 <TouchableOpacity
                   style={[styles.historyRefreshButton, (!token || isLoadingSettlementSummary) && styles.disabledButton]}
-                  onPress={fetchSettlementSummary}
+                  onPress={() => {
+                    void fetchSettlementSummary();
+                  }}
                   disabled={!token || isLoadingSettlementSummary}>
                   <Text style={styles.historyRefreshText}>
                     {isLoadingSettlementSummary ? '...' : isKo ? '갱신' : 'Reload'}
                   </Text>
                 </TouchableOpacity>
+              </View>
+              <View style={styles.settlementRangeRow}>
+                {([7, 30, 90] as const).map((days) => (
+                  <TouchableOpacity
+                    key={days}
+                    style={[
+                      styles.settlementRangeButton,
+                      settlementDays === days && styles.settlementRangeButtonActive,
+                    ]}
+                    onPress={() => {
+                      setSettlementDays(days);
+                      void fetchSettlementSummary(days);
+                    }}>
+                    <Text
+                      style={[
+                        styles.settlementRangeText,
+                        settlementDays === days && styles.settlementRangeTextActive,
+                      ]}>
+                      {isKo ? `${days}일` : `${days}d`}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
               <View style={styles.settlementMetricRow}>
                 <View style={styles.settlementMetric}>
@@ -845,6 +872,29 @@ const styles = StyleSheet.create({
   settlementMetricRow: {
     flexDirection: 'row',
     gap: 8,
+  },
+  settlementRangeRow: {
+    backgroundColor: '#E2E8F0',
+    borderRadius: 8,
+    flexDirection: 'row',
+    padding: 3,
+  },
+  settlementRangeButton: {
+    alignItems: 'center',
+    borderRadius: 6,
+    flex: 1,
+    paddingVertical: 7,
+  },
+  settlementRangeButtonActive: {
+    backgroundColor: '#0F172A',
+  },
+  settlementRangeText: {
+    color: '#475569',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  settlementRangeTextActive: {
+    color: '#FFFFFF',
   },
   settlementMetric: {
     backgroundColor: '#FFFFFF',

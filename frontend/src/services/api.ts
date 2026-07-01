@@ -22,6 +22,7 @@ import type {
   Voucher,
   VoucherConfig,
   VoucherRedemption,
+  VoucherSettlementSummary,
 } from '@/types/ridekorea';
 
 type RequestOptions = RequestInit & {
@@ -206,6 +207,10 @@ export function redeemAdminVoucherByCode(token: string, code: string): Promise<V
 
 export function getAdminVoucherRedemptions(token: string, limit = 20): Promise<VoucherRedemption[]> {
   return apiFetch<VoucherRedemption[]>(`/admin/voucher-redemptions?limit=${limit}`, { token });
+}
+
+export function getAdminVoucherSettlementSummary(token: string, days = 30): Promise<VoucherSettlementSummary> {
+  return apiFetch<VoucherSettlementSummary>(`/admin/voucher-settlement-summary?days=${days}`, { token });
 }
 
 export function getAdminTravelPoiReports(

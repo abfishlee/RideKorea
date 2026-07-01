@@ -7,6 +7,7 @@ import {
   getAdminTravelPoiReports,
   getAdminTravelPois,
   getAdminVoucherRedemptions,
+  getAdminVoucherSettlementSummary,
   getMyVouchers,
   lookupAdminVoucherByCode,
   redeemAdminVoucherByCode,
@@ -23,6 +24,7 @@ import type {
   Voucher,
   VoucherConfig,
   VoucherRedemption,
+  VoucherSettlementSummary,
 } from '@/types/ridekorea';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -58,9 +60,11 @@ export default function CompassScreen() {
   const [redemptionCode, setRedemptionCode] = useState('');
   const [redemptionPreview, setRedemptionPreview] = useState<Voucher | null>(null);
   const [redemptionHistory, setRedemptionHistory] = useState<VoucherRedemption[]>([]);
+  const [settlementSummary, setSettlementSummary] = useState<VoucherSettlementSummary | null>(null);
   const [isLookingUpRedemption, setIsLookingUpRedemption] = useState(false);
   const [isRedeemingByCode, setIsRedeemingByCode] = useState(false);
   const [isLoadingRedemptionHistory, setIsLoadingRedemptionHistory] = useState(false);
+  const [isLoadingSettlementSummary, setIsLoadingSettlementSummary] = useState(false);
 
   const [editingSpotId, setEditingSpotId] = useState<string | null>(null);
   const [editIsActive, setEditIsActive] = useState(false);
@@ -181,6 +185,20 @@ export default function CompassScreen() {
     }
   };
 
+  const fetchSettlementSummary = async () => {
+    if (!token) return;
+
+    setIsLoadingSettlementSummary(true);
+    try {
+      const summary = await getAdminVoucherSettlementSummary(token, 30);
+      setSettlementSummary(summary);
+    } catch (err) {
+      console.log('Error fetching voucher settlement summary', err);
+    } finally {
+      setIsLoadingSettlementSummary(false);
+    }
+  };
+
   const handleRedeemByCode = () => {
     if (!token || !normalizedRedemptionCode) return;
 
@@ -204,6 +222,7 @@ export default function CompassScreen() {
                   item.id === voucher.id ? voucher : item
                 )));
                 await fetchRedemptionHistory();
+                await fetchSettlementSummary();
                 Alert.alert(
                   isKo ? '처리 완료' : 'Redeemed',
                   isKo ? '바우처 코드가 사용 완료 처리되었습니다.' : 'The voucher code has been redeemed.',
@@ -245,6 +264,7 @@ export default function CompassScreen() {
     setIsAdminModalOpen(true);
     fetchAdminConfigs();
     fetchRedemptionHistory();
+    fetchSettlementSummary();
   };
 
   const fetchAdminPois = async (reviewStatus = adminPoiFilter) => {
@@ -486,6 +506,48 @@ export default function CompassScreen() {
                 ? '매장에서 받은 코드를 조회하고 사용 완료 처리합니다.'
                 : 'Look up and redeem a voucher code from a partner shop.'}
             </Text>
+            <View style={styles.settlementSummary}>
+              <View style={styles.settlementSummaryTop}>
+                <View>
+                  <Text style={styles.historyTitle}>{isKo ? '30일 정산 요약' : '30-day settlement'}</Text>
+                  <Text style={styles.settlementCaption}>
+                    {isKo ? '현재 바우처 설정 금액 기준' : 'Estimated from current voucher amounts'}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.historyRefreshButton, (!token || isLoadingSettlementSummary) && styles.disabledButton]}
+                  onPress={fetchSettlementSummary}
+                  disabled={!token || isLoadingSettlementSummary}>
+                  <Text style={styles.historyRefreshText}>
+                    {isLoadingSettlementSummary ? '...' : isKo ? '갱신' : 'Reload'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.settlementMetricRow}>
+                <View style={styles.settlementMetric}>
+                  <Text style={styles.settlementMetricValue}>
+                    {(settlementSummary?.redeemed_count || 0).toLocaleString()}
+                  </Text>
+                  <Text style={styles.settlementMetricLabel}>{isKo ? '사용 건수' : 'Redeemed'}</Text>
+                </View>
+                <View style={styles.settlementMetric}>
+                  <Text style={styles.settlementMetricValue}>
+                    {(settlementSummary?.total_amount || 0).toLocaleString()} KRW
+                  </Text>
+                  <Text style={styles.settlementMetricLabel}>{isKo ? '예상 정산액' : 'Estimated payout'}</Text>
+                </View>
+              </View>
+              {(settlementSummary?.spots || []).slice(0, 3).map((spot) => (
+                <View key={spot.spot_id} style={styles.settlementSpotRow}>
+                  <Text style={styles.settlementSpotName}>
+                    {(isKo ? spot.spot_name : spot.spot_name_en) || spot.spot_name}
+                  </Text>
+                  <Text style={styles.settlementSpotAmount}>
+                    {spot.redeemed_count.toLocaleString()} · {spot.total_amount.toLocaleString()} KRW
+                  </Text>
+                </View>
+              ))}
+            </View>
             <TextInput
               style={styles.codeInput}
               placeholder={isKo ? '바우처 코드 입력' : 'Voucher code'}
@@ -759,6 +821,66 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     marginTop: 3,
+  },
+  settlementSummary: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 9,
+    padding: 10,
+  },
+  settlementSummaryTop: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  settlementCaption: {
+    color: '#64748B',
+    fontSize: 10,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  settlementMetricRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  settlementMetric: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    padding: 10,
+  },
+  settlementMetricValue: {
+    color: '#0F172A',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  settlementMetricLabel: {
+    color: '#64748B',
+    fontSize: 10,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  settlementSpotRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  settlementSpotName: {
+    color: '#334155',
+    flex: 1,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  settlementSpotAmount: {
+    color: '#2563EB',
+    fontSize: 11,
+    fontWeight: '900',
   },
   historyHeader: {
     alignItems: 'center',

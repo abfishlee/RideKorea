@@ -265,3 +265,58 @@ $env:PYTHONPATH='backend'; .\venv\Scripts\python.exe -m unittest discover -s bac
 - 기간별 정산 집계 API
 - merchant 계정별 이력 분리
 - CSV export 또는 관리자 다운로드
+
+## 완료: 기간별 바우처 정산 집계 API 1차
+
+적용 파일:
+
+- `backend/app/schemas.py`
+- `backend/app/routers/admin_vouchers.py`
+- `backend/app/services/voucher_service.py`
+- `frontend/src/services/api.ts`
+- `frontend/src/types/ridekorea.ts`
+- `frontend/src/app/compass.tsx`
+
+완료 내용:
+
+- 관리자/제휴처용 `GET /admin/voucher-settlement-summary?days=30` API를 추가했다.
+- 최근 N일의 사용 완료 바우처 건수와 예상 정산액을 집계한다.
+- spot별 사용 건수, 현재 reward amount, spot별 예상 정산액을 함께 반환한다.
+- Compass 관리자 코드 처리 패널에 30일 정산 요약 카드를 추가했다.
+- 전체 사용 건수, 전체 예상 정산액, 상위 spot 3개를 표시한다.
+- 코드 사용 처리 성공 후 최근 이력과 정산 요약을 함께 갱신한다.
+- 관리자 패널을 열 때 바우처 설정, 최근 사용 이력, 정산 요약을 함께 불러온다.
+
+주의:
+
+- 이번 1차 정산액은 현재 `voucher_configs.reward_amount` 기준이다.
+- 운영 회계 정확도를 높이려면 바우처 발급 시점의 금액 스냅샷을 `vouchers` 또는 별도 ledger 테이블에 저장해야 한다.
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:utils
+```
+
+```powershell
+$env:PYTHONPATH='backend'; .\venv\Scripts\python.exe -m unittest discover -s backend\tests
+.\venv\Scripts\python.exe -m compileall -f backend\app backend\alembic
+```
+
+검증 결과:
+
+- frontend typecheck 통과
+- frontend lint 통과
+- frontend test:utils 통과
+- backend unittest 31개 통과
+- backend compileall 통과
+
+남은 보완:
+
+- 발급 시점 금액 스냅샷 저장
+- 월별/기간별 필터 UI
+- CSV export
+- merchant 계정별 정산 분리

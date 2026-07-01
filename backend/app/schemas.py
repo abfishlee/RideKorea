@@ -427,6 +427,22 @@ class VoucherRedemptionAdminResponse(BaseModel):
     spot_name_en: Optional[str] = None
 
 
+class VoucherSettlementSpotSummary(BaseModel):
+    spot_id: UUID
+    spot_name: str
+    spot_name_en: str
+    redeemed_count: int
+    reward_amount: int
+    total_amount: int
+
+
+class VoucherSettlementSummaryResponse(BaseModel):
+    days: int
+    redeemed_count: int
+    total_amount: int
+    spots: list[VoucherSettlementSpotSummary]
+
+
 # --- Voucher Config Schemas ---
 class VoucherConfigResponse(BaseModel):
     id: UUID

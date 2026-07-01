@@ -13,6 +13,7 @@ from ..schemas import (
     VoucherConfigUpsert,
     VoucherRedemptionAdminResponse,
     VoucherResponse,
+    VoucherSettlementSummaryResponse,
 )
 from ..api.deps import get_current_admin
 from ..services import voucher_service
@@ -69,3 +70,14 @@ async def list_voucher_redemptions(
     """List recent voucher redemptions for admin/merchant settlement checks."""
     safe_limit = min(max(limit, 1), 100)
     return await voucher_service.admin_list_redemptions(db, safe_limit)
+
+
+@router.get("/voucher-settlement-summary", response_model=VoucherSettlementSummaryResponse)
+async def get_voucher_settlement_summary(
+    days: int = 30,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
+    """Summarize redeemed voucher counts and estimated settlement amounts."""
+    safe_days = min(max(days, 1), 366)
+    return await voucher_service.admin_get_settlement_summary(db, safe_days)

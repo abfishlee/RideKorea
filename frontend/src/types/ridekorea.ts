@@ -173,6 +173,22 @@ export interface VoucherRedemption {
   spot_name_en?: string | null;
 }
 
+export interface VoucherSettlementSpotSummary {
+  spot_id: string;
+  spot_name: string;
+  spot_name_en: string;
+  redeemed_count: number;
+  reward_amount: number;
+  total_amount: number;
+}
+
+export interface VoucherSettlementSummary {
+  days: number;
+  redeemed_count: number;
+  total_amount: number;
+  spots: VoucherSettlementSpotSummary[];
+}
+
 export interface Journey {
   id: string;
   course_id?: string;

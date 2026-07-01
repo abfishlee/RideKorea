@@ -21,6 +21,8 @@ from ..schemas import (
     VoucherConfigAdminResponse,
     VoucherConfigUpsert,
     VoucherRedemptionAdminResponse,
+    VoucherSettlementSpotSummary,
+    VoucherSettlementSummaryResponse,
 )
 from ..core.exceptions import NotFoundError, ValidationError
 from ..core.geo import latlng_to_point_wkt
@@ -271,6 +273,55 @@ async def admin_list_redemptions(
         )
         for row in rows
     ]
+
+
+async def admin_get_settlement_summary(
+    db: AsyncSession,
+    days: int = 30,
+) -> VoucherSettlementSummaryResponse:
+    """Summarize recent redeemed vouchers for first-pass settlement reporting."""
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    reward_amount = func.coalesce(VoucherConfig.reward_amount, DEFAULT_REWARD_AMOUNT)
+    redeemed_count = func.count(Voucher.id)
+    total_amount = func.coalesce(func.sum(reward_amount), 0)
+
+    query = (
+        select(
+            Spot.id.label("spot_id"),
+            Spot.name.label("spot_name"),
+            Spot.name_en.label("spot_name_en"),
+            redeemed_count.label("redeemed_count"),
+            reward_amount.label("reward_amount"),
+            total_amount.label("total_amount"),
+        )
+        .join(Spot, Voucher.spot_id == Spot.id)
+        .outerjoin(VoucherConfig, Voucher.spot_id == VoucherConfig.spot_id)
+        .where(
+            Voucher.is_redeemed.is_(True),
+            Voucher.redeemed_at >= since,
+        )
+        .group_by(Spot.id, Spot.name, Spot.name_en, reward_amount)
+        .order_by(total_amount.desc(), redeemed_count.desc())
+    )
+    rows = (await db.execute(query)).all()
+    spots = [
+        VoucherSettlementSpotSummary(
+            spot_id=row.spot_id,
+            spot_name=row.spot_name,
+            spot_name_en=row.spot_name_en,
+            redeemed_count=int(row.redeemed_count or 0),
+            reward_amount=int(row.reward_amount or DEFAULT_REWARD_AMOUNT),
+            total_amount=int(row.total_amount or 0),
+        )
+        for row in rows
+    ]
+
+    return VoucherSettlementSummaryResponse(
+        days=days,
+        redeemed_count=sum(item.redeemed_count for item in spots),
+        total_amount=sum(item.total_amount for item in spots),
+        spots=spots,
+    )
 
 
 # --- Admin configuration -----------------------------------------------------

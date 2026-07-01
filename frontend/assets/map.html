@@ -139,6 +139,15 @@
             trackPolylines = [];
         }
 
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         function drawTrackSegment(segment, isOffRoute) {
             if (!segment || segment.length < 2) return;
 
@@ -178,20 +187,26 @@
 
         function addLocalMomentMarker(moment) {
             if (!moment || !moment.lat || !moment.lng) return;
+            const caption = escapeHtml(moment.title || 'Ride moment');
 
             const markerPosition = new kakao.maps.LatLng(moment.lat, moment.lng);
             const content = `
-                <div style="width: 34px; height: 34px; border-radius: 17px; overflow: hidden; border: 3px solid #ffffff; box-shadow: 0 2px 8px rgba(15,23,42,0.35); background: #0F172A;">
-                    ${moment.photoUrl
-                        ? `<img src="${moment.photoUrl}" style="width: 100%; height: 100%; object-fit: cover;" />`
-                        : '<div style="width:100%; height:100%; background:#22F3FF;"></div>'}
+                <div style="width: 58px; min-height: 70px; transform: rotate(-5deg); background: #FFFFFF; border: 1px solid rgba(216,226,234,0.95); border-radius: 4px; box-shadow: 0 10px 22px rgba(15,23,42,0.28); padding: 5px 5px 12px 5px;">
+                    <div style="width: 48px; height: 42px; overflow: hidden; border-radius: 3px; background: #D8E2EA;">
+                        ${moment.photoUrl
+                            ? `<img src="${moment.photoUrl}" style="width: 100%; height: 100%; object-fit: cover;" />`
+                            : '<div style="width:100%; height:100%; background:linear-gradient(135deg,#22F3FF,#0891B2);"></div>'}
+                    </div>
+                    <div style="max-width: 48px; margin-top: 4px; color: #0B1220; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 8px; font-weight: 800; line-height: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        ${caption}
+                    </div>
                 </div>
             `;
             const marker = new kakao.maps.CustomOverlay({
                 position: markerPosition,
                 content: content,
                 xAnchor: 0.5,
-                yAnchor: 0.5
+                yAnchor: 1
             });
             marker.setMap(map);
             localMomentMarkers.push(marker);

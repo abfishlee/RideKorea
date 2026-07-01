@@ -99,7 +99,7 @@ Priority: low.
 
 - [x] Apply sports HUD styling to live ride status.
 - [x] Update route/off-route colors to Electric Cyan and Adventure Pink.
-- [ ] Add Polaroid-style diary spot marker component styling.
+- [x] Add Polaroid-style diary spot marker component styling.
 - [ ] Verify ride controls remain stable on mobile and web.
 
 ### Phase 3: Moments Editorial Refresh

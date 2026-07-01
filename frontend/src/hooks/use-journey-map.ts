@@ -1,4 +1,5 @@
 import { getCourseDetail, getCourses, getPublicDiariesInBounds, getSpots, getTravelPoisInBounds } from '@/services/api';
+import { NeoRouteColors } from '@/constants/neo-outdoors';
 import type { AppLanguage, Course, Diary, SharedRoute, SharedRouteStop, Spot, TravelPoi, TravelPoiCategory } from '@/types/ridekorea';
 import { useCallback, useEffect, useState, type RefObject } from 'react';
 import { Alert } from 'react-native';
@@ -95,6 +96,7 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
           type: 'DRAW_ROUTE',
           routeId: course.id,
           path: pathCoords,
+          color: NeoRouteColors.planned,
         });
 
         const spotCoords = spotsData.map((spot) => ({
@@ -171,6 +173,7 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
       type: 'DRAW_ROUTE',
       routeId: route.id,
       path: pathCoords,
+      color: NeoRouteColors.completed,
     });
 
     const spotCoords = route.stops.map((stop) => ({
@@ -295,6 +298,7 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
               type: 'DRAW_ROUTE',
               routeId: selectedCourse?.id,
               path: cachedPath,
+              color: cachedSpotLayer === 'shared-route' ? NeoRouteColors.completed : NeoRouteColors.planned,
             });
           }
           if (cachedSpots.length > 0) {

@@ -98,7 +98,7 @@ Priority: low.
 ### Phase 2: Journey Visual Refresh
 
 - [x] Apply sports HUD styling to live ride status.
-- [ ] Update route/off-route colors to Electric Cyan and Adventure Pink.
+- [x] Update route/off-route colors to Electric Cyan and Adventure Pink.
 - [ ] Add Polaroid-style diary spot marker component styling.
 - [ ] Verify ride controls remain stable on mobile and web.
 

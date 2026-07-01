@@ -18,6 +18,7 @@ Updated: 2026-07-02
   - Provider: `dev`
 - The frontend receives a normal JWT and stores it through the existing auth session flow.
 - This means authenticated app features can be tested without Google or Apple OAuth.
+- When the development user has no journeys yet, the backend creates one preview journey with GPS track points and one diary entry so `My Path` has real cards to render.
 
 ## Safety
 
@@ -35,3 +36,4 @@ ALLOW_DEV_LOGIN=false
 2. Start or refresh the web preview on `http://localhost:8081`.
 3. On the login screen, press `dev_로그인`.
 4. The app should enter the main RideKorea map screen without Google OAuth.
+5. Open `My Path`; a `Dev Preview: Geumgang riverside ride` record should appear for visual QA.

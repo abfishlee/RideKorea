@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from app.services import auth_service
 
@@ -42,7 +43,8 @@ class FakeDb:
 
 
 class DevLoginTest(unittest.IsolatedAsyncioTestCase):
-    async def test_dev_login_creates_stable_local_user(self):
+    @patch("app.services.auth_service._ensure_dev_preview_data")
+    async def test_dev_login_creates_stable_local_user(self, ensure_preview_data):
         db = FakeDb(FakeExecuteResult(), FakeExecuteResult())
 
         user = await auth_service.authenticate_dev_user(db)
@@ -55,6 +57,7 @@ class DevLoginTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(db.added, [user])
         self.assertTrue(db.committed)
         self.assertEqual(db.refreshed, [user])
+        ensure_preview_data.assert_awaited_once_with(db, user)
 
 
 if __name__ == "__main__":

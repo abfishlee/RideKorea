@@ -10,6 +10,7 @@ import { TravelPoiCategoryFilter } from '@/components/journey/TravelPoiCategoryF
 import { TravelPoiSheet } from '@/components/journey/TravelPoiSheet';
 import { MapPanel } from '@/components/map/MapPanel';
 import { GOOGLE_AUTH_PROXY_URI, GOOGLE_WEB_CLIENT_ID, MAP_URL } from '@/config/env';
+import { NeoOutdoors, NeoOutdoorStyles } from '@/constants/neo-outdoors';
 import { useAuthSession } from '@/context/AuthSessionContext';
 import { findSharedRouteById } from '@/data/shared-routes';
 import { useJourneyMap } from '@/hooks/use-journey-map';
@@ -741,7 +742,7 @@ export default function HomeScreen() {
       )}
 
       {activeJourney && (
-        <View style={styles.rideHud}>
+        <View style={[NeoOutdoorStyles.glassHud, styles.rideHud]}>
           <View style={styles.rideHudItem}>
             <Text style={styles.rideHudLabel}>
               {t(lang, { ko: '속도', en: 'Speed', ja: '速度' })}
@@ -934,21 +935,12 @@ const styles = StyleSheet.create({
     left: 14,
     right: 14,
     bottom: 112,
-    minHeight: 68,
+    minHeight: 76,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: 12,
-    backgroundColor: 'rgba(15, 23, 42, 0.92)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
+    paddingHorizontal: NeoOutdoors.space.lg,
+    paddingVertical: NeoOutdoors.space.md,
   },
   rideHudItem: {
     flex: 1,
@@ -957,25 +949,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rideHudLabel: {
-    color: '#CBD5E1',
+    color: NeoOutdoors.color.electricCyan,
     fontSize: 10,
-    fontWeight: '800',
-    marginBottom: 2,
+    fontWeight: '900',
+    letterSpacing: 0,
+    marginBottom: 3,
+    textTransform: 'uppercase',
   },
   rideHudValue: {
-    color: '#FFFFFF',
-    fontSize: 19,
-    fontWeight: '900',
+    ...NeoOutdoors.type.sportNumber,
+    color: NeoOutdoors.color.white,
+    fontSize: 22,
+    lineHeight: 27,
   },
   rideHudUnit: {
-    color: '#93C5FD',
+    color: NeoOutdoors.color.glassBorder,
     fontSize: 10,
-    fontWeight: '800',
-    marginTop: 1,
+    fontWeight: '900',
+    letterSpacing: 0,
+    marginTop: 2,
   },
   rideHudDivider: {
     width: 1,
-    height: 38,
-    backgroundColor: 'rgba(226, 232, 240, 0.25)',
+    height: 42,
+    backgroundColor: NeoOutdoors.color.glassBorder,
   },
 });

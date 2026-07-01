@@ -7,6 +7,7 @@ import {
   getAdminTravelPoiReports,
   getAdminTravelPois,
   getMyVouchers,
+  redeemVoucher,
   saveVoucherConfig,
   updateAdminTravelPoi,
   updateAdminTravelPoiReport,
@@ -36,6 +37,7 @@ export default function CompassScreen() {
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshingVouchers, setIsRefreshingVouchers] = useState(false);
+  const [redeemingVoucherId, setRedeemingVoucherId] = useState<string | null>(null);
 
   const [isVouchersModalOpen, setIsVouchersModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
@@ -98,6 +100,43 @@ export default function CompassScreen() {
     if (!token) return;
     setIsVouchersModalOpen(true);
     void refreshVouchers();
+  };
+
+  const handleRedeemVoucher = (voucher: Voucher) => {
+    if (!token || !voucher.id) return;
+
+    Alert.alert(
+      isKo ? '바우처 사용 완료' : 'Redeem voucher',
+      isKo
+        ? '제휴 매장에서 사용한 뒤에만 완료 처리해주세요. 이 작업은 되돌릴 수 없습니다.'
+        : 'Only mark this voucher after it has been used at a partner shop. This cannot be undone.',
+      [
+        { text: isKo ? '취소' : 'Cancel', style: 'cancel' },
+        {
+          text: isKo ? '사용 완료' : 'Redeem',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              setRedeemingVoucherId(voucher.id || null);
+              try {
+                const redeemed = await redeemVoucher(token, voucher.id as string);
+                setVouchers((current) => current.map((item) => (
+                  item.id === redeemed.id ? redeemed : item
+                )));
+                Alert.alert(
+                  isKo ? '처리 완료' : 'Redeemed',
+                  isKo ? '바우처가 사용 완료 처리되었습니다.' : 'The voucher has been marked as redeemed.',
+                );
+              } catch (err: any) {
+                Alert.alert(isKo ? '오류' : 'Error', err.message || 'Failed to redeem voucher');
+              } finally {
+                setRedeemingVoucherId(null);
+              }
+            })();
+          },
+        },
+      ],
+    );
   };
 
   useEffect(() => {
@@ -364,7 +403,9 @@ export default function CompassScreen() {
         lang={lang}
         vouchers={vouchers}
         isRefreshing={isRefreshingVouchers}
+        redeemingVoucherId={redeemingVoucherId}
         onRefresh={refreshVouchers}
+        onRedeem={handleRedeemVoucher}
         onClose={() => setIsVouchersModalOpen(false)}
       />
 

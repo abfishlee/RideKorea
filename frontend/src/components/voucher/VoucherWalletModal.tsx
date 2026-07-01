@@ -7,7 +7,9 @@ interface VoucherWalletModalProps {
   lang: AppLanguage;
   vouchers: Voucher[];
   isRefreshing?: boolean;
+  redeemingVoucherId?: string | null;
   onRefresh?: () => void;
+  onRedeem?: (voucher: Voucher) => void;
   onClose: () => void;
 }
 
@@ -40,7 +42,9 @@ export function VoucherWalletModal({
   lang,
   vouchers,
   isRefreshing = false,
+  redeemingVoucherId,
   onRefresh,
+  onRedeem,
   onClose,
 }: VoucherWalletModalProps) {
   const isKo = lang === 'ko';
@@ -153,6 +157,22 @@ export function VoucherWalletModal({
                         : '-'}
                       {daysUntilExpiry !== null ? ` · D-${Math.max(daysUntilExpiry, 0)}` : ''}
                     </Text>
+
+                    {!voucher.is_redeemed && (
+                      <TouchableOpacity
+                        style={[
+                          styles.redeemButton,
+                          redeemingVoucherId === voucher.id && styles.redeemButtonDisabled,
+                        ]}
+                        onPress={() => onRedeem?.(voucher)}
+                        disabled={!onRedeem || redeemingVoucherId === voucher.id}>
+                        <Text style={styles.redeemButtonText}>
+                          {redeemingVoucherId === voucher.id
+                            ? isKo ? '처리 중...' : 'Redeeming...'
+                            : isKo ? '사용 완료 처리' : 'Mark as redeemed'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 );
               })
@@ -347,6 +367,21 @@ const styles = StyleSheet.create({
   voucherExpiry: {
     color: '#2563EB',
     fontSize: 10,
+    fontWeight: '900',
+  },
+  redeemButton: {
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+    borderRadius: 8,
+    marginTop: 10,
+    paddingVertical: 10,
+  },
+  redeemButtonDisabled: {
+    opacity: 0.55,
+  },
+  redeemButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
     fontWeight: '900',
   },
   emptyWalletContainer: {

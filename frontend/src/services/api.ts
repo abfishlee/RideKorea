@@ -94,6 +94,13 @@ export function claimVoucher(
   });
 }
 
+export function redeemVoucher(token: string, voucherId: string): Promise<Voucher> {
+  return apiFetch<Voucher>(`/vouchers/${voucherId}/redeem`, {
+    method: 'POST',
+    token,
+  });
+}
+
 export function getCourses(): Promise<Course[]> {
   return apiFetch<Course[]>('/courses/');
 }

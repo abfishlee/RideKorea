@@ -154,6 +154,36 @@ async def list_my_vouchers(db: AsyncSession, user: User) -> list[Voucher]:
     return result.scalars().all()
 
 
+async def redeem_voucher(db: AsyncSession, user: User, voucher_id: UUID) -> Voucher:
+    """Mark a user's voucher as redeemed after basic ownership and expiry checks."""
+    voucher = (
+        await db.execute(
+            select(Voucher).where(
+                Voucher.id == voucher_id,
+                Voucher.user_id == user.id,
+            )
+        )
+    ).scalars().first()
+
+    if not voucher:
+        raise NotFoundError("Voucher not found")
+
+    if voucher.is_redeemed:
+        return voucher
+
+    now = datetime.now(timezone.utc)
+    expires_at = voucher.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < now:
+        raise ValidationError("Voucher has expired")
+
+    voucher.is_redeemed = True
+    await db.commit()
+    await db.refresh(voucher)
+    return voucher
+
+
 # --- Admin configuration -----------------------------------------------------
 async def admin_list_configs(
     db: AsyncSession, course_id: Optional[UUID] = None

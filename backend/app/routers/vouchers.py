@@ -1,4 +1,5 @@
 from typing import List
+from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,3 +30,13 @@ async def claim_voucher(
 ):
     """Claim a voucher after server-side proximity verification."""
     return await voucher_service.claim_for_location(db, current_user, payload)
+
+
+@router.post("/{voucher_id}/redeem", response_model=VoucherResponse)
+async def redeem_voucher(
+    voucher_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Mark a user's voucher as redeemed after ownership and expiry checks."""
+    return await voucher_service.redeem_voucher(db, current_user, voucher_id)

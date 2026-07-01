@@ -21,6 +21,10 @@ interface SpotMarker extends RoutePoint {
   name_en: string;
 }
 
+interface TrackPoint extends RoutePoint {
+  is_off_route?: boolean;
+}
+
 interface MapBounds {
   minLat: number;
   minLng: number;
@@ -46,10 +50,24 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
   const [cachedPath, setCachedPath] = useState<RoutePoint[]>([]);
   const [cachedSpots, setCachedSpots] = useState<SpotMarker[]>([]);
   const [cachedSpotLayer, setCachedSpotLayer] = useState<'course' | 'shared-route' | null>(null);
+  const [cachedTrackPoints, setCachedTrackPoints] = useState<TrackPoint[]>([]);
 
   const postToMap = useCallback((payload: unknown) => {
     webViewRef.current?.postMessage(JSON.stringify(payload));
   }, [webViewRef]);
+
+  const handleSetTrackPoints = useCallback((points: TrackPoint[]) => {
+    setCachedTrackPoints(points);
+    postToMap({
+      type: 'SET_TRACK_POINTS',
+      points,
+    });
+  }, [postToMap]);
+
+  const clearTrackPoints = useCallback(() => {
+    setCachedTrackPoints([]);
+    postToMap({ type: 'CLEAR_TRACK_POINTS' });
+  }, [postToMap]);
 
   const handleSelectCourse = useCallback(async (course: Course) => {
     setSelectedCourse(course);
@@ -60,7 +78,7 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
     setAreSharedRouteStopsVisible(true);
     setCachedSpotLayer(null);
     setIsMapLoading(true);
-    postToMap({ type: 'CLEAR_TRACK_POINTS' });
+    clearTrackPoints();
 
     try {
       const courseDetail = await getCourseDetail(course.id);
@@ -99,7 +117,7 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
     } finally {
       setIsMapLoading(false);
     }
-  }, [lang, postToMap]);
+  }, [clearTrackPoints, lang, postToMap]);
 
   const fetchCourses = useCallback(async () => {
     try {
@@ -132,8 +150,8 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
     setCachedSpotLayer(null);
     setAreSharedRouteStopsVisible(true);
     setIsMapLoading(true);
-    postToMap({ type: 'CLEAR_TRACK_POINTS' });
-  }, [postToMap]);
+    clearTrackPoints();
+  }, [clearTrackPoints]);
 
   const handleSelectSharedRoute = useCallback((route: SharedRoute) => {
     setSelectedCourse(null);
@@ -144,7 +162,7 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
     setSharedRouteStops(route.stops);
     setAreSharedRouteStopsVisible(true);
     setIsMapLoading(false);
-    postToMap({ type: 'CLEAR_TRACK_POINTS' });
+    clearTrackPoints();
 
     const pathCoords = route.stops.map((stop) => stop.location);
     setCachedPath(pathCoords);
@@ -169,7 +187,7 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
       spots: spotCoords,
       lang,
     });
-  }, [lang, postToMap]);
+  }, [clearTrackPoints, lang, postToMap]);
 
   const handleToggleSharedRouteStopsVisible = useCallback(() => {
     setAreSharedRouteStopsVisible((previous) => {
@@ -286,6 +304,12 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
               lang,
             });
           }
+          if (cachedTrackPoints.length > 0) {
+            postToMap({
+              type: 'SET_TRACK_POINTS',
+              points: cachedTrackPoints,
+            });
+          }
           break;
 
         case 'MAP_ERROR':
@@ -364,6 +388,7 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
     cachedPath,
     cachedSpotLayer,
     cachedSpots,
+    cachedTrackPoints,
     areSharedRouteStopsVisible,
     fetchPublicDiariesInBounds,
     fetchTravelPoisInBounds,
@@ -392,6 +417,7 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
     fetchCourses,
     handleSelectCourse,
     handleSelectSharedRoute,
+    setTrackPoints: handleSetTrackPoints,
     toggleSharedRouteStopsVisible: handleToggleSharedRouteStopsVisible,
     handleWebViewMessage,
     resetMapState,

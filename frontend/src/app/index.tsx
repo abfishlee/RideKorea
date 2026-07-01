@@ -19,6 +19,7 @@ import { nextLanguage, t } from '@/i18n';
 import {
   createTravelPoiReport,
   getJourney,
+  getJourneyTrackPoints,
   getNearbyTravelPois,
   getPublicDiary,
   getPublicSharedRoute,
@@ -41,7 +42,7 @@ import { makeRedirectUri } from 'expo-auth-session';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
@@ -151,6 +152,7 @@ export default function HomeScreen() {
     fetchCourses,
     handleSelectCourse,
     handleSelectSharedRoute,
+    setTrackPoints,
     toggleSharedRouteStopsVisible,
     handleWebViewMessage,
     resetMapState,
@@ -209,6 +211,7 @@ export default function HomeScreen() {
     activeRoutePath,
     lang,
     onLocationChange: setRiderLocation,
+    onTrackPointsChange: setTrackPoints,
     token,
     webViewRef,
   });
@@ -219,6 +222,21 @@ export default function HomeScreen() {
   const selectedServerDraft = selectedServerJourney && selectedServerRoute
     ? toImportedDraft(selectedServerJourney, selectedServerRoute)
     : null;
+
+  const restoreJourneyTrackPoints = useCallback(async (journeyId: string) => {
+    if (!token) return;
+
+    try {
+      const trackPoints = await getJourneyTrackPoints(token, journeyId);
+      setTrackPoints(trackPoints.map((point) => ({
+        lat: point.location.lat,
+        lng: point.location.lng,
+        is_off_route: point.is_off_route,
+      })));
+    } catch (err) {
+      console.log('Failed to restore journey track points', err);
+    }
+  }, [setTrackPoints, token]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -289,6 +307,7 @@ export default function HomeScreen() {
                     }
                   }
                   await handleRecoverJourney(recoverableJourney);
+                  await restoreJourneyTrackPoints(recoverableJourney.id);
                 })();
               },
             },
@@ -304,6 +323,7 @@ export default function HomeScreen() {
     handleSelectSharedRoute,
     hasCheckedRideRecovery,
     lang,
+    restoreJourneyTrackPoints,
     token,
   ]);
 

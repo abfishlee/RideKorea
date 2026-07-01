@@ -20,6 +20,7 @@ interface UseRiderLocationParams {
   token: string | null;
   activeJourneyId?: string | null;
   onLocationChange?: (location: RiderLocation) => void;
+  onTrackPointsChange?: (points: { lat: number; lng: number; is_off_route?: boolean }[]) => void;
   webViewRef: RefObject<WebView | null>;
 }
 
@@ -44,6 +45,7 @@ export function useRiderLocation({
   activeJourneyId,
   lang,
   onLocationChange,
+  onTrackPointsChange,
   token,
   webViewRef,
 }: UseRiderLocationParams) {
@@ -202,14 +204,11 @@ export function useRiderLocation({
                     ...previous,
                     pendingTrackPointCount,
                   }));
-                  webViewRef.current?.postMessage(JSON.stringify({
-                    type: 'SET_TRACK_POINTS',
-                    points: trackPoints.map((point) => ({
-                      lat: point.location.lat,
-                      lng: point.location.lng,
-                      is_off_route: point.is_off_route,
-                    })),
-                  }));
+                  onTrackPointsChange?.(trackPoints.map((point) => ({
+                    lat: point.location.lat,
+                    lng: point.location.lng,
+                    is_off_route: point.is_off_route,
+                  })));
                 })
                 .catch((err) => {
                   console.log('Error saving track point', err);
@@ -237,7 +236,7 @@ export function useRiderLocation({
     return () => {
       subscription?.remove();
     };
-  }, [activeJourneyId, activeRoutePath, onLocationChange, token, webViewRef]);
+  }, [activeJourneyId, activeRoutePath, onLocationChange, onTrackPointsChange, token, webViewRef]);
 
   const handlePanToMyLocation = useCallback(() => {
     if (userLocation) {

@@ -397,7 +397,6 @@ npm.cmd run test:utils
 
 남은 보완:
 
-- 복구 시 이미 서버에 저장된 track point를 지도에 다시 그리는 흐름
 - ride photo pin queue를 SQLite에 저장하는 확장
 - 완료 직전 pending queue가 남아 있을 때 flush/finalize를 보장하는 흐름
 
@@ -405,3 +404,39 @@ npm.cmd run test:utils
 
 - P4 Naver Map incremental update adapter 정리
 - 또는 P3 보강으로 복구 시 track point redraw와 finalize flush 강화
+
+### 완료: P3 보강 - 복구 시 track point redraw
+
+적용 파일:
+
+- `frontend/src/hooks/use-journey-map.ts`
+- `frontend/src/hooks/use-rider-location.ts`
+- `frontend/src/app/index.tsx`
+
+완료 내용:
+
+- 지도 훅에 `setTrackPoints` API와 cached track point 상태를 추가했다.
+- WebView가 `MAP_LOADED`를 다시 보내도 cached route, spots와 함께 track points를 다시 그린다.
+- 주행 중 서버 저장에 성공한 track points를 직접 WebView에 보내는 대신 지도 훅을 통해 저장/전송한다.
+- 라이딩 복구 시 `GET /journeys/{id}/track-points`를 호출해 기존 서버 track points를 지도에 다시 표시한다.
+- off-route point는 기존 `is_off_route` 값을 유지하므로 정상 구간/이탈 구간 색상 구분도 복구된다.
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:utils
+```
+
+결과:
+
+- `tsc --noEmit` 통과
+- `lint` 통과
+- `test:utils` 통과
+
+다음 작업:
+
+- P3 보강: 완료 직전 pending queue flush/finalize 강화
+- 또는 P4 Naver Map incremental update adapter 정리

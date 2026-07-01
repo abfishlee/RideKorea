@@ -93,7 +93,7 @@ Priority: low.
 - [x] Add V3 design system document.
 - [x] Add shared Neo-Outdoors design tokens.
 - [x] Connect tab bar colors to shared tokens.
-- [ ] Add low-risk shared style helpers for glass HUD, editorial cards, and route badges.
+- [x] Add low-risk shared style helpers for glass HUD, editorial cards, and route badges.
 
 ### Phase 2: Journey Visual Refresh
 

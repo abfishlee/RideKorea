@@ -1,3 +1,5 @@
+import { StyleSheet } from 'react-native';
+
 export const NeoOutdoors = {
   color: {
     electricCyan: '#22F3FF',
@@ -76,3 +78,104 @@ export const NeoRouteColors = {
   offRoute: NeoOutdoors.color.adventurePink,
   diarySpot: NeoOutdoors.color.sunsetAmber,
 } as const;
+
+export const NeoOutdoorStyles = StyleSheet.create({
+  glassHud: {
+    ...NeoOutdoors.shadow.glass,
+    backgroundColor: NeoOutdoors.color.glassDark,
+    borderColor: NeoOutdoors.color.glassBorder,
+    borderRadius: NeoOutdoors.radius.hud,
+    borderWidth: 1,
+  },
+  sunsetGlassHud: {
+    ...NeoOutdoors.shadow.glass,
+    backgroundColor: 'rgba(255,248,237,0.78)',
+    borderColor: 'rgba(245,158,11,0.34)',
+    borderRadius: NeoOutdoors.radius.hud,
+    borderWidth: 1,
+  },
+  editorialCard: {
+    ...NeoOutdoors.shadow.editorial,
+    backgroundColor: NeoOutdoors.color.white,
+    borderColor: 'rgba(216,226,234,0.82)',
+    borderRadius: NeoOutdoors.radius.card,
+    borderWidth: 1,
+  },
+  editorialSurface: {
+    backgroundColor: NeoOutdoors.color.warmPaper,
+    borderColor: 'rgba(245,158,11,0.18)',
+    borderRadius: NeoOutdoors.radius.card,
+    borderWidth: 1,
+  },
+  routeBadge: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: NeoOutdoors.color.cyanWash,
+    borderColor: NeoOutdoors.color.electricCyan,
+    borderRadius: NeoOutdoors.radius.chip,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: NeoOutdoors.space.xs,
+    minHeight: 28,
+    paddingHorizontal: NeoOutdoors.space.md,
+    paddingVertical: NeoOutdoors.space.xs,
+  },
+  routeBadgeText: {
+    color: NeoOutdoors.color.deepCyan,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0,
+  },
+  detourBadge: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: NeoOutdoors.color.pinkWash,
+    borderColor: NeoOutdoors.color.adventurePink,
+    borderRadius: NeoOutdoors.radius.chip,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: NeoOutdoors.space.xs,
+    minHeight: 28,
+    paddingHorizontal: NeoOutdoors.space.md,
+    paddingVertical: NeoOutdoors.space.xs,
+  },
+  detourBadgeText: {
+    color: NeoOutdoors.color.adventurePink,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0,
+  },
+  polaroidFrame: {
+    ...NeoOutdoors.shadow.editorial,
+    backgroundColor: NeoOutdoors.color.white,
+    borderColor: 'rgba(216,226,234,0.9)',
+    borderRadius: NeoOutdoors.radius.polaroid,
+    borderWidth: 1,
+    padding: NeoOutdoors.space.xs,
+    paddingBottom: NeoOutdoors.space.lg,
+  },
+  polaroidImage: {
+    backgroundColor: NeoOutdoors.color.line,
+    borderRadius: NeoOutdoors.radius.polaroid,
+    overflow: 'hidden',
+  },
+  polaroidCaption: {
+    color: NeoOutdoors.color.ink,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0,
+    lineHeight: 15,
+    marginTop: NeoOutdoors.space.xs,
+  },
+  floatingControl: {
+    ...NeoOutdoors.shadow.glass,
+    alignItems: 'center',
+    backgroundColor: NeoOutdoors.color.glassDark,
+    borderColor: NeoOutdoors.color.glassBorder,
+    borderRadius: NeoOutdoors.radius.control,
+    borderWidth: 1,
+    justifyContent: 'center',
+    minHeight: 42,
+    minWidth: 42,
+  },
+});

@@ -52,12 +52,16 @@
         function sendLog(msg) {
             if (window.ReactNativeWebView) {
                 window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'LOG', message: msg }));
+            } else if (window.parent && window.parent !== window) {
+                window.parent.postMessage(JSON.stringify({ type: 'LOG', message: msg }), '*');
             }
         }
 
         function sendToRN(payload) {
             if (window.ReactNativeWebView) {
                 window.ReactNativeWebView.postMessage(JSON.stringify(payload));
+            } else if (window.parent && window.parent !== window) {
+                window.parent.postMessage(JSON.stringify(payload), '*');
             }
         }
 

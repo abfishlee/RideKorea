@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
@@ -26,14 +26,40 @@ export const MapPanel = forwardRef<WebView, MapPanelProps>(function MapPanel(
   },
   ref,
 ) {
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    postMessage: (message: string) => {
+      iframeRef.current?.contentWindow?.postMessage(message, '*');
+    },
+  }) as WebView, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const handleIframeMessage = (event: MessageEvent) => {
+      if (event.source !== iframeRef.current?.contentWindow) return;
+      onMessage({
+        nativeEvent: {
+          data: typeof event.data === 'string' ? event.data : JSON.stringify(event.data),
+        },
+      } as WebViewMessageEvent);
+    };
+
+    window.addEventListener('message', handleIframeMessage);
+    return () => window.removeEventListener('message', handleIframeMessage);
+  }, [onMessage]);
+
   return (
     <View style={styles.mapContainer}>
       {Platform.OS === 'web' ? (
-        <View style={styles.webPlaceholder}>
-          <Text style={styles.webPlaceholderText}>
-            Web platform placeholder. The map WebView operates on iOS and Android.
-          </Text>
-        </View>
+        React.createElement('iframe', {
+          ref: iframeRef,
+          src: mapUrl,
+          style: styles.webIframe,
+          title: 'RideKorea map',
+          allow: 'geolocation',
+        })
       ) : (
         <WebView
           ref={ref}
@@ -94,6 +120,12 @@ const styles = StyleSheet.create({
   webPlaceholderText: {
     color: '#6b7280',
     textAlign: 'center',
+  },
+  webIframe: {
+    borderWidth: 0,
+    flex: 1,
+    height: '100%',
+    width: '100%',
   },
   loaderOverlay: {
     position: 'absolute',

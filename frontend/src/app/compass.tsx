@@ -2,6 +2,7 @@ import { AdminVoucherModal } from '@/components/admin/AdminVoucherModal';
 import { AdminTravelPoiModal } from '@/components/admin/AdminTravelPoiModal';
 import { VoucherWalletModal } from '@/components/voucher/VoucherWalletModal';
 import { useAuthSession } from '@/context/AuthSessionContext';
+import { LANGUAGE_LABELS, compassScreenCopy as compassCopy, t } from '@/i18n';
 import {
   getAdminVoucherConfigs,
   getAdminTravelPoiReports,
@@ -37,6 +38,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
+const LANGUAGES: AppLanguage[] = ['ko', 'en', 'ja'];
 
 export default function CompassScreen() {
   const [lang, setLang] = useState<AppLanguage>('ko');
@@ -75,7 +78,15 @@ export default function CompassScreen() {
   const [editValidDays, setEditValidDays] = useState('90');
   const [isSavingConfig, setIsSavingConfig] = useState(false);
 
-  const isKo = lang === 'ko';
+  const locale = lang === 'ko' ? 'ko-KR' : lang === 'ja' ? 'ja-JP' : 'en-US';
+  const copy = (item: Record<AppLanguage, string>) => t(lang, item);
+  const localizedPair = (koValue?: string | null, enValue?: string | null) => {
+    if (lang === 'ko') return koValue || enValue || '';
+    return enValue || koValue || '';
+  };
+  const voucherCountLabel = lang === 'en'
+    ? vouchers.length + ' ' + copy(compassCopy.walletCount)
+    : vouchers.length + copy(compassCopy.walletCount);
 
   const loadAccount = useCallback(async () => {
     if (!isAuthChecked) return;
@@ -122,14 +133,12 @@ export default function CompassScreen() {
     if (!token || !voucher.id) return;
 
     Alert.alert(
-      isKo ? '바우처 사용 완료' : 'Redeem voucher',
-      isKo
-        ? '제휴 매장에서 사용한 뒤에만 완료 처리해주세요. 이 작업은 되돌릴 수 없습니다.'
-        : 'Only mark this voucher after it has been used at a partner shop. This cannot be undone.',
+      copy(compassCopy.redeemVoucherTitle),
+      copy(compassCopy.redeemVoucherBody),
       [
-        { text: isKo ? '취소' : 'Cancel', style: 'cancel' },
+        { text: copy(compassCopy.cancel), style: 'cancel' },
         {
-          text: isKo ? '사용 완료' : 'Redeem',
+          text: copy(compassCopy.redeem),
           style: 'destructive',
           onPress: () => {
             void (async () => {
@@ -139,12 +148,9 @@ export default function CompassScreen() {
                 setVouchers((current) => current.map((item) => (
                   item.id === redeemed.id ? redeemed : item
                 )));
-                Alert.alert(
-                  isKo ? '처리 완료' : 'Redeemed',
-                  isKo ? '바우처가 사용 완료 처리되었습니다.' : 'The voucher has been marked as redeemed.',
-                );
+                Alert.alert(copy(compassCopy.done), copy(compassCopy.redeemVoucherDone));
               } catch (err: any) {
-                Alert.alert(isKo ? '오류' : 'Error', err.message || 'Failed to redeem voucher');
+                Alert.alert(copy(compassCopy.error), err.message || 'Failed to redeem voucher');
               } finally {
                 setRedeemingVoucherId(null);
               }
@@ -166,7 +172,7 @@ export default function CompassScreen() {
       setRedemptionPreview(voucher);
     } catch (err: any) {
       setRedemptionPreview(null);
-      Alert.alert(isKo ? '조회 실패' : 'Lookup failed', err.message || 'Voucher not found');
+      Alert.alert(copy(compassCopy.lookupFailed), err.message || 'Voucher not found');
     } finally {
       setIsLookingUpRedemption(false);
     }
@@ -204,14 +210,12 @@ export default function CompassScreen() {
     if (!token || !normalizedRedemptionCode) return;
 
     Alert.alert(
-      isKo ? '코드 사용 처리' : 'Redeem by code',
-      isKo
-        ? '제휴 매장에서 실제 사용 확인 후 처리해주세요. 사용 완료 후에는 되돌릴 수 없습니다.'
-        : 'Confirm the voucher was used at a partner shop. This cannot be undone.',
+      copy(compassCopy.redeemByCodeTitle),
+      copy(compassCopy.redeemByCodeBody),
       [
-        { text: isKo ? '취소' : 'Cancel', style: 'cancel' },
+        { text: copy(compassCopy.cancel), style: 'cancel' },
         {
-          text: isKo ? '사용 처리' : 'Redeem',
+          text: copy(compassCopy.redeemAction),
           style: 'destructive',
           onPress: () => {
             void (async () => {
@@ -224,12 +228,9 @@ export default function CompassScreen() {
                 )));
                 await fetchRedemptionHistory();
                 await fetchSettlementSummary();
-                Alert.alert(
-                  isKo ? '처리 완료' : 'Redeemed',
-                  isKo ? '바우처 코드가 사용 완료 처리되었습니다.' : 'The voucher code has been redeemed.',
-                );
+                Alert.alert(copy(compassCopy.done), copy(compassCopy.redeemCodeDone));
               } catch (err: any) {
-                Alert.alert(isKo ? '처리 실패' : 'Redeem failed', err.message || 'Failed to redeem code');
+                Alert.alert(copy(compassCopy.redeemFailed), err.message || 'Failed to redeem code');
               } finally {
                 setIsRedeemingByCode(false);
               }
@@ -308,7 +309,7 @@ export default function CompassScreen() {
       });
       await fetchAdminPois();
     } catch (err: any) {
-      Alert.alert(isKo ? '오류' : 'Error', err.message);
+      Alert.alert(copy(compassCopy.error), err.message);
     } finally {
       setSavingPoiId(null);
     }
@@ -324,7 +325,7 @@ export default function CompassScreen() {
       await updateAdminTravelPoiReport(token, report.id, status);
       await fetchAdminPois();
     } catch (err: any) {
-      Alert.alert(isKo ? '오류' : 'Error', err.message);
+      Alert.alert(copy(compassCopy.error), err.message);
     } finally {
       setSavingPoiReportId(null);
     }
@@ -339,7 +340,7 @@ export default function CompassScreen() {
       });
       await fetchAdminPois();
     } catch (err: any) {
-      Alert.alert(isKo ? '오류' : 'Error', err.message);
+      Alert.alert(copy(compassCopy.error), err.message);
     } finally {
       setSavingPoiId(null);
     }
@@ -367,14 +368,11 @@ export default function CompassScreen() {
         valid_days: parseInt(editValidDays, 10) || 90,
       });
 
-      Alert.alert(
-        isKo ? '설정 저장 완료' : 'Settings Saved',
-        isKo ? '바우처 제휴 설정이 갱신되었습니다.' : 'Voucher settings updated successfully.',
-      );
+      Alert.alert(copy(compassCopy.settingsSavedTitle), copy(compassCopy.settingsSavedBody));
       setEditingSpotId(null);
       fetchAdminConfigs();
     } catch (err: any) {
-      Alert.alert(isKo ? '오류' : 'Error', err.message);
+      Alert.alert(copy(compassCopy.error), err.message);
     } finally {
       setIsSavingConfig(false);
     }
@@ -383,7 +381,7 @@ export default function CompassScreen() {
   const handleLogout = async () => {
     await signOut();
     setVouchers([]);
-    Alert.alert(isKo ? '로그아웃' : 'Logout', isKo ? '정상적으로 로그아웃되었습니다.' : 'Logged out.');
+    Alert.alert(copy(compassCopy.logoutTitle), copy(compassCopy.logoutBody));
   };
 
   if (!isAuthChecked || isLoading) {
@@ -399,123 +397,91 @@ export default function CompassScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.eyebrow}>Compass</Text>
-          <Text style={styles.title}>{isKo ? '설정과 관리자 도구' : 'Settings and admin tools'}</Text>
-          <Text style={styles.copy}>
-            {isKo
-              ? '언어, 계정, 바우처 지갑, 지자체 제휴 설정을 이곳에서 관리합니다.'
-              : 'Manage language, account, voucher wallet, and local partnership settings here.'}
-          </Text>
+          <Text style={styles.title}>{copy(compassCopy.title)}</Text>
+          <Text style={styles.copy}>{copy(compassCopy.intro)}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{isKo ? '계정' : 'Account'}</Text>
+          <Text style={styles.sectionTitle}>{copy(compassCopy.account)}</Text>
           <View style={styles.listCard}>
             <View>
               <Text style={styles.primaryText}>
-                {userProfile?.displayName || (isKo ? '로그인이 필요합니다' : 'Sign in required')}
+                {userProfile?.displayName || copy(compassCopy.signInRequired)}
               </Text>
               <Text style={styles.secondaryText}>
-                {token
-                  ? isKo
-                    ? 'Google 계정으로 로그인됨'
-                    : 'Signed in with Google'
-                  : isKo
-                    ? 'Journey 탭에서 Google 로그인 후 사용할 수 있습니다.'
-                    : 'Sign in with Google from the Journey tab.'}
+                {token ? copy(compassCopy.signedInGoogle) : copy(compassCopy.signInFromJourney)}
               </Text>
             </View>
             {token && (
               <TouchableOpacity style={styles.smallButton} onPress={handleLogout}>
-                <Text style={styles.smallButtonText}>{isKo ? '로그아웃' : 'Logout'}</Text>
+                <Text style={styles.smallButtonText}>{copy(compassCopy.logoutTitle)}</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{isKo ? '언어' : 'Language'}</Text>
+          <Text style={styles.sectionTitle}>{copy(compassCopy.language)}</Text>
           <View style={styles.segmented}>
-            <TouchableOpacity
-              style={[styles.segment, lang === 'ko' && styles.segmentActive]}
-              onPress={() => setLang('ko')}>
-              <Text style={[styles.segmentText, lang === 'ko' && styles.segmentTextActive]}>KO</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.segment, lang === 'en' && styles.segmentActive]}
-              onPress={() => setLang('en')}>
-              <Text style={[styles.segmentText, lang === 'en' && styles.segmentTextActive]}>EN</Text>
-            </TouchableOpacity>
+            {LANGUAGES.map((language) => (
+              <TouchableOpacity
+                key={language}
+                style={[styles.segment, lang === language && styles.segmentActive]}
+                onPress={() => setLang(language)}>
+                <Text style={[styles.segmentText, lang === language && styles.segmentTextActive]}>
+                  {LANGUAGE_LABELS[language]}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{isKo ? '바우처' : 'Vouchers'}</Text>
+          <Text style={styles.sectionTitle}>{copy(compassCopy.vouchers)}</Text>
           <TouchableOpacity
             style={[styles.actionCard, !token && styles.disabledCard]}
             onPress={handleOpenVoucherWallet}
             disabled={!token}>
             <View>
-              <Text style={styles.primaryText}>{isKo ? '내 상생 바우처 지갑' : 'My voucher wallet'}</Text>
-              <Text style={styles.secondaryText}>
-                {isKo ? `${vouchers.length}개 보유 중` : `${vouchers.length} available`}
-              </Text>
+              <Text style={styles.primaryText}>{copy(compassCopy.wallet)}</Text>
+              <Text style={styles.secondaryText}>{voucherCountLabel}</Text>
             </View>
-            <Text style={styles.chevron}>›</Text>
+            <Text style={styles.chevron}>{'>'}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{isKo ? '관리자' : 'Admin'}</Text>
+          <Text style={styles.sectionTitle}>{copy(compassCopy.admin)}</Text>
           <TouchableOpacity
             style={[styles.actionCard, !token && styles.disabledCard]}
             onPress={handleOpenAdminPanel}
             disabled={!token}>
             <View>
-              <Text style={styles.primaryText}>
-                {isKo ? '지자체 바우처 제휴 설정' : 'Local voucher partnership settings'}
-              </Text>
-              <Text style={styles.secondaryText}>
-                {isKo
-                  ? '인증센터별 바우처 발급 정책을 관리합니다.'
-                  : 'Manage voucher policy by certification spot.'}
-              </Text>
+              <Text style={styles.primaryText}>{copy(compassCopy.voucherSettings)}</Text>
+              <Text style={styles.secondaryText}>{copy(compassCopy.voucherSettingsBody)}</Text>
             </View>
-            <Text style={styles.chevron}>›</Text>
+            <Text style={styles.chevron}>{'>'}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionCard, !token && styles.disabledCard]}
             onPress={handleOpenPoiAdminPanel}
             disabled={!token}>
             <View>
-              <Text style={styles.primaryText}>
-                {isKo ? 'POI 데이터 검수' : 'POI data review'}
-              </Text>
-              <Text style={styles.secondaryText}>
-                {isKo
-                  ? '출처, 라이선스, 노출 상태를 확인하고 지도 표시 여부를 관리합니다.'
-                  : 'Review source, license, and map visibility for travel POIs.'}
-              </Text>
+              <Text style={styles.primaryText}>{copy(compassCopy.poiReview)}</Text>
+              <Text style={styles.secondaryText}>{copy(compassCopy.poiReviewBody)}</Text>
             </View>
-            <Text style={styles.chevron}>›</Text>
+            <Text style={styles.chevron}>{'>'}</Text>
           </TouchableOpacity>
           <View style={[styles.redemptionPanel, !token && styles.disabledCard]}>
-            <Text style={styles.primaryText}>
-              {isKo ? '제휴처 바우처 코드 처리' : 'Partner voucher redemption'}
-            </Text>
-            <Text style={styles.secondaryText}>
-              {isKo
-                ? '매장에서 받은 코드를 조회하고 사용 완료 처리합니다.'
-                : 'Look up and redeem a voucher code from a partner shop.'}
-            </Text>
+            <Text style={styles.primaryText}>{copy(compassCopy.partnerRedemption)}</Text>
+            <Text style={styles.secondaryText}>{copy(compassCopy.partnerRedemptionBody)}</Text>
             <View style={styles.settlementSummary}>
               <View style={styles.settlementSummaryTop}>
                 <View>
                   <Text style={styles.historyTitle}>
-                    {isKo ? `${settlementDays}일 정산 요약` : `${settlementDays}-day settlement`}
+                    {settlementDays + copy(compassCopy.settlementTitleSuffix)}
                   </Text>
-                  <Text style={styles.settlementCaption}>
-                    {isKo ? '발급 시점 금액 기준' : 'Based on issued voucher amounts'}
-                  </Text>
+                  <Text style={styles.settlementCaption}>{copy(compassCopy.issuedAmountBasis)}</Text>
                 </View>
                 <TouchableOpacity
                   style={[styles.historyRefreshButton, (!token || isLoadingSettlementSummary) && styles.disabledButton]}
@@ -524,7 +490,7 @@ export default function CompassScreen() {
                   }}
                   disabled={!token || isLoadingSettlementSummary}>
                   <Text style={styles.historyRefreshText}>
-                    {isLoadingSettlementSummary ? '...' : isKo ? '갱신' : 'Reload'}
+                    {isLoadingSettlementSummary ? '...' : copy(compassCopy.reload)}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -545,7 +511,7 @@ export default function CompassScreen() {
                         styles.settlementRangeText,
                         settlementDays === days && styles.settlementRangeTextActive,
                       ]}>
-                      {isKo ? `${days}일` : `${days}d`}
+                      {lang === 'ko' ? days + '일' : lang === 'ja' ? days + '日' : days + 'd'}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -553,31 +519,31 @@ export default function CompassScreen() {
               <View style={styles.settlementMetricRow}>
                 <View style={styles.settlementMetric}>
                   <Text style={styles.settlementMetricValue}>
-                    {(settlementSummary?.redeemed_count || 0).toLocaleString()}
+                    {(settlementSummary?.redeemed_count || 0).toLocaleString(locale)}
                   </Text>
-                  <Text style={styles.settlementMetricLabel}>{isKo ? '사용 건수' : 'Redeemed'}</Text>
+                  <Text style={styles.settlementMetricLabel}>{copy(compassCopy.redeemedCount)}</Text>
                 </View>
                 <View style={styles.settlementMetric}>
                   <Text style={styles.settlementMetricValue}>
-                    {(settlementSummary?.total_amount || 0).toLocaleString()} KRW
+                    {(settlementSummary?.total_amount || 0).toLocaleString(locale)} KRW
                   </Text>
-                  <Text style={styles.settlementMetricLabel}>{isKo ? '예상 정산액' : 'Estimated payout'}</Text>
+                  <Text style={styles.settlementMetricLabel}>{copy(compassCopy.estimatedPayout)}</Text>
                 </View>
               </View>
               {(settlementSummary?.spots || []).slice(0, 3).map((spot) => (
                 <View key={spot.spot_id} style={styles.settlementSpotRow}>
                   <Text style={styles.settlementSpotName}>
-                    {(isKo ? spot.spot_name : spot.spot_name_en) || spot.spot_name}
+                    {localizedPair(spot.spot_name, spot.spot_name_en) || spot.spot_name}
                   </Text>
                   <Text style={styles.settlementSpotAmount}>
-                    {spot.redeemed_count.toLocaleString()} · {spot.total_amount.toLocaleString()} KRW
+                    {spot.redeemed_count.toLocaleString(locale)} / {spot.total_amount.toLocaleString(locale)} KRW
                   </Text>
                 </View>
               ))}
             </View>
             <TextInput
               style={styles.codeInput}
-              placeholder={isKo ? '바우처 코드 입력' : 'Voucher code'}
+              placeholder={copy(compassCopy.voucherCodePlaceholder)}
               autoCapitalize="characters"
               value={redemptionCode}
               onChangeText={(value) => {
@@ -592,7 +558,7 @@ export default function CompassScreen() {
                 onPress={handleLookupRedemptionCode}
                 disabled={!token || !normalizedRedemptionCode || isLookingUpRedemption}>
                 <Text style={styles.lookupButtonText}>
-                  {isLookingUpRedemption ? '...' : isKo ? '조회' : 'Lookup'}
+                  {isLookingUpRedemption ? '...' : copy(compassCopy.lookup)}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -603,33 +569,33 @@ export default function CompassScreen() {
                 onPress={handleRedeemByCode}
                 disabled={!token || !normalizedRedemptionCode || !redemptionPreview || redemptionPreview.is_redeemed || isRedeemingByCode}>
                 <Text style={styles.redeemCodeButtonText}>
-                  {isRedeemingByCode ? '...' : isKo ? '사용 처리' : 'Redeem'}
+                  {isRedeemingByCode ? '...' : copy(compassCopy.redeemAction)}
                 </Text>
               </TouchableOpacity>
             </View>
             {redemptionPreview && (
               <View style={styles.redemptionPreview}>
                 <Text style={styles.previewTitle}>
-                  {(isKo ? redemptionPreview.title : redemptionPreview.title_en)
+                  {localizedPair(redemptionPreview.title, redemptionPreview.title_en)
                     || redemptionPreview.title
                     || redemptionPreview.title_en
                     || 'Voucher'}
                 </Text>
                 <Text style={styles.previewMeta}>
                   {redemptionPreview.is_redeemed
-                    ? isKo ? '이미 사용 완료됨' : 'Already redeemed'
-                    : isKo ? '사용 가능' : 'Ready to redeem'}
+                    ? copy(compassCopy.alreadyRedeemed)
+                    : copy(compassCopy.readyToRedeem)}
                 </Text>
               </View>
             )}
             <View style={styles.historyHeader}>
-              <Text style={styles.historyTitle}>{isKo ? '최근 사용 처리' : 'Recent redemptions'}</Text>
+              <Text style={styles.historyTitle}>{copy(compassCopy.recentRedemptions)}</Text>
               <TouchableOpacity
                 style={[styles.historyRefreshButton, (!token || isLoadingRedemptionHistory) && styles.disabledButton]}
                 onPress={fetchRedemptionHistory}
                 disabled={!token || isLoadingRedemptionHistory}>
                 <Text style={styles.historyRefreshText}>
-                  {isLoadingRedemptionHistory ? '...' : isKo ? '갱신' : 'Reload'}
+                  {isLoadingRedemptionHistory ? '...' : copy(compassCopy.reload)}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -637,25 +603,21 @@ export default function CompassScreen() {
               redemptionHistory.map((item) => (
                 <View key={item.id} style={styles.historyItem}>
                   <Text style={styles.historyItemTitle}>
-                    {(isKo ? item.title : item.title_en) || item.title}
+                    {localizedPair(item.title, item.title_en) || item.title}
                   </Text>
                   <Text style={styles.historyItemMeta}>
-                    {item.code} · {(isKo ? item.spot_name : item.spot_name_en) || item.spot_name || '-'}
+                    {item.code} / {localizedPair(item.spot_name, item.spot_name_en) || item.spot_name || '-'}
                   </Text>
                   <Text style={styles.historyItemMeta}>
-                    {(item.rider_display_name || item.rider_email || '-')} · {item.redemption_source || '-'}
+                    {(item.rider_display_name || item.rider_email || '-')} / {item.redemption_source || '-'}
                   </Text>
                   <Text style={styles.historyItemTime}>
-                    {item.redeemed_at
-                      ? new Date(item.redeemed_at).toLocaleString(isKo ? 'ko-KR' : 'en-US')
-                      : '-'}
+                    {item.redeemed_at ? new Date(item.redeemed_at).toLocaleString(locale) : '-'}
                   </Text>
                 </View>
               ))
             ) : (
-              <Text style={styles.historyEmpty}>
-                {isKo ? '아직 사용 처리 이력이 없습니다.' : 'No redemption history yet.'}
-              </Text>
+              <Text style={styles.historyEmpty}>{copy(compassCopy.emptyRedemptions)}</Text>
             )}
           </View>
         </View>

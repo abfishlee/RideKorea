@@ -16,6 +16,234 @@ export function t(lang: AppLanguage, copy: Record<AppLanguage, string>): string 
   return copy[lang] || copy.en || copy.ko;
 }
 
+export const compassScreenCopy = {
+  redeemVoucherTitle: {
+    ko: '바우처 사용 완료',
+    en: 'Redeem voucher',
+    ja: 'バウチャー利用完了',
+  },
+  redeemVoucherBody: {
+    ko: '제휴 매장에서 사용한 뒤에만 완료 처리해주세요. 이 작업은 되돌릴 수 없습니다.',
+    en: 'Only mark this voucher after it has been used at a partner shop. This cannot be undone.',
+    ja: '提携店舗で利用した後にのみ完了処理してください。この操作は元に戻せません。',
+  },
+  cancel: {
+    ko: '취소',
+    en: 'Cancel',
+    ja: 'キャンセル',
+  },
+  redeem: {
+    ko: '사용 완료',
+    en: 'Redeem',
+    ja: '利用完了',
+  },
+  redeemAction: {
+    ko: '사용 처리',
+    en: 'Redeem',
+    ja: '利用処理',
+  },
+  done: {
+    ko: '처리 완료',
+    en: 'Redeemed',
+    ja: '処理完了',
+  },
+  redeemVoucherDone: {
+    ko: '바우처가 사용 완료 처리되었습니다.',
+    en: 'The voucher has been marked as redeemed.',
+    ja: 'バウチャーを利用完了にしました。',
+  },
+  error: {
+    ko: '오류',
+    en: 'Error',
+    ja: 'エラー',
+  },
+  lookupFailed: {
+    ko: '조회 실패',
+    en: 'Lookup failed',
+    ja: '照会失敗',
+  },
+  redeemByCodeTitle: {
+    ko: '코드 사용 처리',
+    en: 'Redeem by code',
+    ja: 'コード利用処理',
+  },
+  redeemByCodeBody: {
+    ko: '제휴 매장에서 실제 사용 확인 후 처리해주세요. 사용 완료 후에는 되돌릴 수 없습니다.',
+    en: 'Confirm the voucher was used at a partner shop. This cannot be undone.',
+    ja: '提携店舗で実際の利用を確認してから処理してください。完了後は元に戻せません。',
+  },
+  redeemCodeDone: {
+    ko: '바우처 코드가 사용 완료 처리되었습니다.',
+    en: 'The voucher code has been redeemed.',
+    ja: 'バウチャーコードを利用完了にしました。',
+  },
+  redeemFailed: {
+    ko: '처리 실패',
+    en: 'Redeem failed',
+    ja: '処理失敗',
+  },
+  settingsSavedTitle: {
+    ko: '설정 저장 완료',
+    en: 'Settings saved',
+    ja: '設定を保存しました',
+  },
+  settingsSavedBody: {
+    ko: '바우처 제휴 설정이 갱신되었습니다.',
+    en: 'Voucher settings updated successfully.',
+    ja: 'バウチャー提携設定を更新しました。',
+  },
+  logoutTitle: {
+    ko: '로그아웃',
+    en: 'Logout',
+    ja: 'ログアウト',
+  },
+  logoutBody: {
+    ko: '정상적으로 로그아웃되었습니다.',
+    en: 'Logged out.',
+    ja: 'ログアウトしました。',
+  },
+  title: {
+    ko: '설정과 관리자 도구',
+    en: 'Settings and admin tools',
+    ja: '設定と管理ツール',
+  },
+  intro: {
+    ko: '언어, 계정, 바우처 지갑, 지자체 제휴 설정을 이곳에서 관리합니다.',
+    en: 'Manage language, account, voucher wallet, and local partnership settings here.',
+    ja: '言語、アカウント、バウチャーウォレット、地域提携設定をここで管理します。',
+  },
+  account: {
+    ko: '계정',
+    en: 'Account',
+    ja: 'アカウント',
+  },
+  signInRequired: {
+    ko: '로그인이 필요합니다',
+    en: 'Sign in required',
+    ja: 'ログインが必要です',
+  },
+  signedInGoogle: {
+    ko: 'Google 계정으로 로그인됨',
+    en: 'Signed in with Google',
+    ja: 'Googleアカウントでログイン中',
+  },
+  signInFromJourney: {
+    ko: 'Journey 탭에서 Google 로그인 후 사용할 수 있습니다.',
+    en: 'Sign in with Google from the Journey tab.',
+    ja: 'JourneyタブでGoogleログイン後に利用できます。',
+  },
+  language: {
+    ko: '언어',
+    en: 'Language',
+    ja: '言語',
+  },
+  vouchers: {
+    ko: '바우처',
+    en: 'Vouchers',
+    ja: 'バウチャー',
+  },
+  wallet: {
+    ko: '내 상생 바우처 지갑',
+    en: 'My voucher wallet',
+    ja: 'マイ地域バウチャーウォレット',
+  },
+  walletCount: {
+    ko: '개 보유 중',
+    en: 'available',
+    ja: '件保有中',
+  },
+  admin: {
+    ko: '관리자',
+    en: 'Admin',
+    ja: '管理者',
+  },
+  voucherSettings: {
+    ko: '지자체 바우처 제휴 설정',
+    en: 'Local voucher partnership settings',
+    ja: '自治体バウチャー提携設定',
+  },
+  voucherSettingsBody: {
+    ko: '인증센터별 바우처 발급 정책을 관리합니다.',
+    en: 'Manage voucher policy by certification spot.',
+    ja: '認証スポット別のバウチャー発行ポリシーを管理します。',
+  },
+  poiReview: {
+    ko: 'POI 데이터 검수',
+    en: 'POI data review',
+    ja: 'POIデータ確認',
+  },
+  poiReviewBody: {
+    ko: '출처, 라이선스, 노출 상태를 확인하고 지도 표시 여부를 관리합니다.',
+    en: 'Review source, license, and map visibility for travel POIs.',
+    ja: '出典、ライセンス、表示状態を確認し、地図表示を管理します。',
+  },
+  partnerRedemption: {
+    ko: '제휴처 바우처 코드 처리',
+    en: 'Partner voucher redemption',
+    ja: '提携店バウチャーコード処理',
+  },
+  partnerRedemptionBody: {
+    ko: '매장에서 받은 코드를 조회하고 사용 완료 처리합니다.',
+    en: 'Look up and redeem a voucher code from a partner shop.',
+    ja: '店舗で受け取ったコードを照会し、利用完了処理を行います。',
+  },
+  settlementTitleSuffix: {
+    ko: '일 정산 요약',
+    en: '-day settlement',
+    ja: '日精算サマリー',
+  },
+  issuedAmountBasis: {
+    ko: '발급 시점 금액 기준',
+    en: 'Based on issued voucher amounts',
+    ja: '発行時点の金額基準',
+  },
+  reload: {
+    ko: '갱신',
+    en: 'Reload',
+    ja: '更新',
+  },
+  redeemedCount: {
+    ko: '사용 건수',
+    en: 'Redeemed',
+    ja: '利用件数',
+  },
+  estimatedPayout: {
+    ko: '예상 정산액',
+    en: 'Estimated payout',
+    ja: '精算見込額',
+  },
+  voucherCodePlaceholder: {
+    ko: '바우처 코드 입력',
+    en: 'Voucher code',
+    ja: 'バウチャーコード入力',
+  },
+  lookup: {
+    ko: '조회',
+    en: 'Lookup',
+    ja: '照会',
+  },
+  alreadyRedeemed: {
+    ko: '이미 사용 완료됨',
+    en: 'Already redeemed',
+    ja: '利用済み',
+  },
+  readyToRedeem: {
+    ko: '사용 가능',
+    en: 'Ready to redeem',
+    ja: '利用可能',
+  },
+  recentRedemptions: {
+    ko: '최근 사용 처리',
+    en: 'Recent redemptions',
+    ja: '最近の利用処理',
+  },
+  emptyRedemptions: {
+    ko: '아직 사용 처리 이력이 없습니다.',
+    en: 'No redemption history yet.',
+    ja: '利用処理履歴はまだありません。',
+  },
+} satisfies Record<string, Record<AppLanguage, string>>;
+
 export const authCopy = {
   subtitle: {
     ko: '외국인 라이더를 위한 한국 자전거 종주 동반자',

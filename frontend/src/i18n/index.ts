@@ -1359,6 +1359,16 @@ export const myPathCopy = {
     en: 'Imported routes',
     ja: '取り込んだルート',
   },
+  authorLine: {
+    ko: '{author}의 공유 루트',
+    en: 'from {author}',
+    ja: '{author}さんの共有ルート',
+  },
+  routeLine: {
+    ko: '{start}에서 {end}까지',
+    en: '{start} to {end}',
+    ja: '{start}から{end}まで',
+  },
   startPlan: {
     ko: '출발 전 계획',
     en: 'Pre-ride plans',
@@ -1488,6 +1498,16 @@ export const myPathCopy = {
     ko: '기록 없음',
     en: 'No record',
     ja: '記録なし',
+  },
+  hours: {
+    ko: '시간',
+    en: 'h',
+    ja: '時間',
+  },
+  minutes: {
+    ko: '분',
+    en: 'm',
+    ja: '分',
   },
   completed: {
     ko: '완료',

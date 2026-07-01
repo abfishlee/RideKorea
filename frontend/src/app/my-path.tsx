@@ -1,5 +1,5 @@
 import { useAuthSession } from '@/context/AuthSessionContext';
-import { LANGUAGE_LABELS, myPathCopy, nextLanguage, t } from '@/i18n';
+import { LANGUAGE_LABELS, myPathCopy, t } from '@/i18n';
 import { getMyJourneyTrackSummaries, getMyJourneys } from '@/services/api';
 import { getImportedRouteDrafts, removeImportedRouteDraft } from '@/services/imported-routes';
 import type { AppLanguage, ImportedRouteDraft, Journey } from '@/types/ridekorea';
@@ -23,10 +23,15 @@ interface JourneyListSummary {
   offRouteCount: number;
 }
 
+const LANGUAGES: AppLanguage[] = ['ko', 'en', 'ja'];
+
+function localeFor(lang: AppLanguage) {
+  return lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'ko-KR';
+}
+
 function formatDate(value: string | null | undefined, lang: AppLanguage) {
   if (!value) return t(lang, myPathCopy.noDate);
-  const locale = lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'ko-KR';
-  return new Date(value).toLocaleDateString(locale, {
+  return new Date(value).toLocaleDateString(localeFor(lang), {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -38,8 +43,8 @@ function formatPlannedDuration(hours: number, lang: AppLanguage) {
 
   const roundedHours = Math.floor(hours);
   const minutes = Math.round((hours - roundedHours) * 60);
-  const hourLabel = lang === 'ko' ? '시간' : lang === 'ja' ? '時間' : 'h';
-  const minuteLabel = lang === 'ko' ? '분' : lang === 'ja' ? '分' : 'm';
+  const hourLabel = t(lang, myPathCopy.hours);
+  const minuteLabel = t(lang, myPathCopy.minutes);
 
   if (roundedHours <= 0) return `${minutes}${minuteLabel}`;
   if (minutes === 0) return `${roundedHours}${hourLabel}`;
@@ -50,8 +55,8 @@ function formatTrackDuration(totalSeconds: number, lang: AppLanguage) {
   if (totalSeconds <= 0) return t(lang, myPathCopy.noRecord);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const hourLabel = lang === 'ko' ? '시간' : lang === 'ja' ? '時間' : 'h';
-  const minuteLabel = lang === 'ko' ? '분' : lang === 'ja' ? '分' : 'm';
+  const hourLabel = t(lang, myPathCopy.hours);
+  const minuteLabel = t(lang, myPathCopy.minutes);
   if (hours <= 0) return `${minutes}${minuteLabel}`;
   if (minutes <= 0) return `${hours}${hourLabel}`;
   return `${hours}${hourLabel} ${minutes}${minuteLabel}`;
@@ -89,6 +94,16 @@ function statusLabel(status: string | undefined, lang: AppLanguage) {
 
 function journeySourceLabel(journey: Journey, lang: AppLanguage) {
   return journey.source_shared_route_id ? t(lang, myPathCopy.importedRoutes) : statusLabel(journey.status, lang);
+}
+
+function routeLine(draft: ImportedRouteDraft, lang: AppLanguage) {
+  return t(lang, myPathCopy.routeLine)
+    .replace('{start}', draft.startName)
+    .replace('{end}', draft.endName);
+}
+
+function authorLine(draft: ImportedRouteDraft, lang: AppLanguage) {
+  return t(lang, myPathCopy.authorLine).replace('{author}', draft.authorName);
 }
 
 export default function MyPathScreen() {
@@ -194,9 +209,22 @@ export default function MyPathScreen() {
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
           <Text style={styles.eyebrow}>My Path</Text>
-          <TouchableOpacity style={styles.langButton} onPress={() => setLang(prev => nextLanguage(prev))}>
-            <Text style={styles.langButtonText}>{LANGUAGE_LABELS[nextLanguage(lang)]}</Text>
-          </TouchableOpacity>
+          <View style={styles.languageSegmented}>
+            {LANGUAGES.map((language) => (
+              <TouchableOpacity
+                key={language}
+                style={[styles.languageSegment, lang === language && styles.languageSegmentActive]}
+                onPress={() => setLang(language)}>
+                <Text
+                  style={[
+                    styles.languageSegmentText,
+                    lang === language && styles.languageSegmentTextActive,
+                  ]}>
+                  {LANGUAGE_LABELS[language]}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
         <Text style={styles.title}>{t(lang, myPathCopy.title)}</Text>
         <Text style={styles.copy}>
@@ -249,7 +277,7 @@ export default function MyPathScreen() {
                         <Text style={styles.journeyTitle} numberOfLines={2}>
                           {draft.title}
                         </Text>
-                        <Text style={styles.draftAuthor}>from {draft.authorName}</Text>
+                        <Text style={styles.draftAuthor}>{authorLine(draft, lang)}</Text>
                       </View>
                       <View style={styles.planBadge}>
                         <Text style={styles.planBadgeText}>{t(lang, myPathCopy.plan)}</Text>
@@ -257,7 +285,7 @@ export default function MyPathScreen() {
                     </View>
 
                     <Text style={styles.routeLine} numberOfLines={1}>
-                      {draft.startName} to {draft.endName}
+                      {routeLine(draft, lang)}
                     </Text>
 
                     <View style={styles.metaGrid}>
@@ -271,7 +299,7 @@ export default function MyPathScreen() {
                       </View>
                       <View style={styles.metaItem}>
                         <Text style={styles.metaLabel}>{t(lang, myPathCopy.stops)}</Text>
-                        <Text style={styles.metaValue}>{draft.stopCount.toLocaleString(lang === 'en' ? 'en-US' : lang === 'ja' ? 'ja-JP' : 'ko-KR')}</Text>
+                        <Text style={styles.metaValue}>{draft.stopCount.toLocaleString(localeFor(lang))}</Text>
                       </View>
                     </View>
 
@@ -352,7 +380,7 @@ export default function MyPathScreen() {
                         </View>
                         <View style={[styles.summaryBadge, hasTrack && styles.summaryBadgeReady]}>
                           <Text style={styles.summaryBadgeValue}>
-                            {summary.pointCount.toLocaleString(lang === 'en' ? 'en-US' : lang === 'ja' ? 'ja-JP' : 'ko-KR')}
+                            {summary.pointCount.toLocaleString(localeFor(lang))}
                           </Text>
                           <Text style={styles.summaryBadgeLabel}>GPS</Text>
                         </View>
@@ -369,13 +397,13 @@ export default function MyPathScreen() {
                         </View>
                         <View style={styles.metaItem}>
                           <Text style={styles.metaLabel}>{t(lang, myPathCopy.diaries)}</Text>
-                          <Text style={styles.metaValue}>{diaries.length.toLocaleString(lang === 'en' ? 'en-US' : lang === 'ja' ? 'ja-JP' : 'ko-KR')}</Text>
+                          <Text style={styles.metaValue}>{diaries.length.toLocaleString(localeFor(lang))}</Text>
                         </View>
                       </View>
 
                       {summary.offRouteCount > 0 && (
                         <Text style={styles.offRouteHint}>
-                          {summary.offRouteCount.toLocaleString(lang === 'en' ? 'en-US' : lang === 'ja' ? 'ja-JP' : 'ko-KR')} {t(lang, myPathCopy.offRouteHint)}
+                          {summary.offRouteCount.toLocaleString(localeFor(lang))} {t(lang, myPathCopy.offRouteHint)}
                         </Text>
                       )}
 
@@ -434,18 +462,31 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textTransform: 'uppercase',
   },
-  langButton: {
-    minWidth: 40,
-    minHeight: 32,
+  languageSegmented: {
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#E2E8F0',
     borderRadius: 8,
-    backgroundColor: '#FEF3C7',
+    flexDirection: 'row',
+    padding: 3,
   },
-  langButtonText: {
-    color: '#B45309',
-    fontSize: 12,
+  languageSegment: {
+    alignItems: 'center',
+    borderRadius: 6,
+    justifyContent: 'center',
+    minWidth: 34,
+    paddingHorizontal: 7,
+    paddingVertical: 6,
+  },
+  languageSegmentActive: {
+    backgroundColor: '#0F172A',
+  },
+  languageSegmentText: {
+    color: '#475569',
+    fontSize: 11,
     fontWeight: '900',
+  },
+  languageSegmentTextActive: {
+    color: '#FFFFFF',
   },
   title: {
     color: '#0F172A',

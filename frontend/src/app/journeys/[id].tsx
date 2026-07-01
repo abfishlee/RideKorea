@@ -1,3 +1,4 @@
+import { NeoOutdoors, NeoOutdoorStyles } from '@/constants/neo-outdoors';
 import { useAuthSession } from '@/context/AuthSessionContext';
 import {
   getJourney,
@@ -428,7 +429,7 @@ export default function JourneyDetailScreen() {
           </View>
 
           {sourceRoute && (
-            <View style={styles.sourceRoutePanel}>
+            <View style={[NeoOutdoorStyles.editorialCard, styles.sourceRoutePanel]}>
               <View style={styles.sourceRouteHeader}>
                 <View style={styles.sourceRouteTitleBlock}>
                   <Text style={styles.sourceRouteEyebrow}>가져온 공유 루트</Text>
@@ -447,7 +448,9 @@ export default function JourneyDetailScreen() {
               </View>
 
               {sourceRouteCover && (
-                <Image source={{ uri: sourceRouteCover }} style={styles.sourceRouteImage} />
+                <View style={styles.sourceRouteImageFrame}>
+                  <Image source={{ uri: sourceRouteCover }} style={styles.sourceRouteImage} />
+                </View>
               )}
 
               <Text style={styles.sourceRouteSummary} numberOfLines={3}>
@@ -467,7 +470,7 @@ export default function JourneyDetailScreen() {
           )}
 
           {sourceRouteStops.length > 0 && (
-            <View style={styles.sourceRoutePanel}>
+            <View style={[NeoOutdoorStyles.editorialCard, styles.sourceRoutePanel]}>
               <View style={styles.matchedHeader}>
                 <View>
                   <Text style={styles.sourceRouteEyebrow}>원본 스팟별 내 기록</Text>
@@ -495,7 +498,9 @@ export default function JourneyDetailScreen() {
                           </Text>
                         )}
                         {stopPhoto && (
-                          <Image source={{ uri: mediaUrl(stopPhoto) }} style={styles.stopThumb} />
+                          <View style={styles.stopThumbFrame}>
+                            <Image source={{ uri: mediaUrl(stopPhoto) }} style={styles.stopThumb} />
+                          </View>
                         )}
                         {diaries.length > 0 ? (
                           <View style={styles.myDiaryStack}>
@@ -574,7 +579,7 @@ export default function JourneyDetailScreen() {
                         <View style={styles.timelineDot} />
                         {index < timeline.length - 1 && <View style={styles.timelineLine} />}
                       </View>
-                      <View style={styles.timelineCard}>
+                      <View style={[NeoOutdoorStyles.editorialCard, styles.timelineCard]}>
                         <Text style={styles.timelineTime}>{formatDateTime(diary.created_at)}</Text>
                         {sourceStop && (
                           <Text style={styles.sourceStopBadge}>
@@ -611,7 +616,9 @@ export default function JourneyDetailScreen() {
                           <Text style={styles.timelineBody}>{diary.diary_text}</Text>
                         )}
                         {photoUrl && (
-                          <Image source={{ uri: mediaUrl(photoUrl) }} style={styles.timelineImage} />
+                          <View style={styles.timelineImageFrame}>
+                            <Image source={{ uri: mediaUrl(photoUrl) }} style={styles.timelineImage} />
+                          </View>
                         )}
                         {diary.lat && diary.lng && (
                           <Text style={styles.locationText}>
@@ -639,7 +646,7 @@ export default function JourneyDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: NeoOutdoors.color.paper,
   },
   content: {
     padding: 20,
@@ -650,11 +657,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: NeoOutdoors.color.paper,
     padding: 24,
   },
   loadingText: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 13,
     fontWeight: '800',
     marginTop: 12,
@@ -663,13 +670,15 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     minHeight: 36,
     justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#E2E8F0',
+    borderRadius: NeoOutdoors.radius.control,
+    backgroundColor: NeoOutdoors.color.white,
+    borderWidth: 1,
+    borderColor: NeoOutdoors.color.line,
     paddingHorizontal: 12,
     marginBottom: 18,
   },
   backButtonText: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.inkSoft,
     fontSize: 13,
     fontWeight: '900',
   },
@@ -677,14 +686,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   eyebrow: {
-    color: '#1E3A8A',
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 12,
     fontWeight: '900',
     marginBottom: 8,
     textTransform: 'uppercase',
   },
   title: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 27,
     fontWeight: '900',
     lineHeight: 34,
@@ -692,13 +701,15 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     alignSelf: 'flex-start',
-    borderRadius: 999,
-    backgroundColor: '#E0F2FE',
+    borderRadius: NeoOutdoors.radius.chip,
+    backgroundColor: NeoOutdoors.color.cyanWash,
+    borderWidth: 1,
+    borderColor: NeoOutdoors.color.electricCyan,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   statusText: {
-    color: '#0369A1',
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 12,
     fontWeight: '900',
   },
@@ -711,29 +722,27 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 72,
     justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    borderRadius: NeoOutdoors.radius.card,
+    backgroundColor: NeoOutdoors.color.white,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: NeoOutdoors.color.line,
     paddingHorizontal: 12,
   },
   statValue: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 22,
     fontWeight: '900',
     marginBottom: 4,
   },
   statLabel: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 12,
     fontWeight: '800',
   },
   rideSummaryPanel: {
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    ...NeoOutdoorStyles.editorialCard,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
-    padding: 14,
+    padding: 16,
     marginBottom: 14,
   },
   rideSummaryHeader: {
@@ -744,28 +753,28 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   rideSummaryEyebrow: {
-    color: '#1E3A8A',
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 11,
     fontWeight: '900',
     marginBottom: 4,
     textTransform: 'uppercase',
   },
   rideSummaryTitle: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 17,
     fontWeight: '900',
   },
   syncBadge: {
     minHeight: 30,
     justifyContent: 'center',
-    borderRadius: 999,
+    borderRadius: NeoOutdoors.radius.chip,
     paddingHorizontal: 10,
   },
   syncBadgeReady: {
     backgroundColor: '#DCFCE7',
   },
   syncBadgeMuted: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: NeoOutdoors.color.paper,
   },
   syncBadgeText: {
     fontSize: 11,
@@ -775,7 +784,7 @@ const styles = StyleSheet.create({
     color: '#166534',
   },
   syncBadgeTextMuted: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
   },
   rideSummaryGrid: {
     flexDirection: 'row',
@@ -786,26 +795,26 @@ const styles = StyleSheet.create({
     width: '48%',
     minHeight: 72,
     justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#F8FAFC',
+    borderRadius: NeoOutdoors.radius.card,
+    backgroundColor: NeoOutdoors.color.cyanWash,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(34,243,255,0.32)',
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   rideSummaryLabel: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 11,
     fontWeight: '800',
     marginBottom: 5,
   },
   rideSummaryValue: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 15,
     fontWeight: '900',
   },
   rideSummaryHint: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 12,
     fontWeight: '700',
     lineHeight: 18,
@@ -815,10 +824,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    borderRadius: NeoOutdoors.radius.card,
+    backgroundColor: NeoOutdoors.color.white,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: NeoOutdoors.color.line,
     padding: 14,
     marginBottom: 14,
   },
@@ -829,16 +838,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   dateValue: {
-    color: '#334155',
+    color: NeoOutdoors.color.slate,
     fontSize: 13,
     fontWeight: '900',
   },
   insightPanel: {
-    borderRadius: 8,
-    backgroundColor: '#F8FAFC',
+    ...NeoOutdoorStyles.editorialSurface,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
-    padding: 14,
+    padding: 16,
     marginBottom: 14,
   },
   insightHeader: {
@@ -849,12 +856,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   insightTitle: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 15,
     fontWeight: '900',
   },
   insightMeta: {
-    color: '#0369A1',
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 12,
     fontWeight: '900',
   },
@@ -868,28 +875,28 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   insightLabel: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 12,
     fontWeight: '800',
   },
   insightValue: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 12,
     fontWeight: '900',
   },
   insightBarTrack: {
     height: 7,
     overflow: 'hidden',
-    borderRadius: 999,
-    backgroundColor: '#E2E8F0',
+    borderRadius: NeoOutdoors.radius.chip,
+    backgroundColor: NeoOutdoors.color.line,
   },
   insightBarFill: {
     height: '100%',
     borderRadius: 999,
-    backgroundColor: '#38BDF8',
+    backgroundColor: NeoOutdoors.color.electricCyan,
   },
   insightHint: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 12,
     fontWeight: '700',
     lineHeight: 18,
@@ -897,11 +904,7 @@ const styles = StyleSheet.create({
   },
   sourceRoutePanel: {
     overflow: 'hidden',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#BAE6FD',
-    padding: 14,
+    padding: 16,
     marginBottom: 14,
   },
   sourceRouteHeader: {
@@ -915,19 +918,19 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   sourceRouteEyebrow: {
-    color: '#0369A1',
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 11,
     fontWeight: '900',
     marginBottom: 5,
   },
   sourceRouteTitle: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 17,
     fontWeight: '900',
     lineHeight: 22,
   },
   sourceRouteAuthor: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 12,
     fontWeight: '800',
     marginTop: 4,
@@ -935,8 +938,8 @@ const styles = StyleSheet.create({
   sourceRouteButton: {
     minHeight: 36,
     justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#0F172A',
+    borderRadius: NeoOutdoors.radius.control,
+    backgroundColor: NeoOutdoors.color.ink,
     paddingHorizontal: 12,
   },
   sourceRouteButtonText: {
@@ -944,16 +947,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
   },
-  sourceRouteImage: {
-    width: '100%',
-    height: 162,
-    borderRadius: 8,
-    backgroundColor: '#E2E8F0',
+  sourceRouteImageFrame: {
+    ...NeoOutdoorStyles.polaroidFrame,
     marginBottom: 12,
   },
+  sourceRouteImage: {
+    width: '100%',
+    height: 174,
+    borderRadius: NeoOutdoors.radius.polaroid,
+    backgroundColor: NeoOutdoors.color.line,
+  },
   sourceRouteSummary: {
-    color: '#475569',
+    color: NeoOutdoors.color.slate,
     fontSize: 13,
+    fontWeight: '700',
     lineHeight: 19,
     marginBottom: 12,
   },
@@ -964,15 +971,15 @@ const styles = StyleSheet.create({
   },
   sourceRoutePoint: {
     flex: 1,
-    color: '#0F172A',
+    color: NeoOutdoors.color.inkSoft,
     fontSize: 12,
     fontWeight: '900',
   },
   sourceRouteDivider: {
     width: 28,
     height: 3,
-    borderRadius: 999,
-    backgroundColor: '#38BDF8',
+    borderRadius: NeoOutdoors.radius.chip,
+    backgroundColor: NeoOutdoors.color.electricCyan,
   },
   matchedHeader: {
     marginBottom: 12,
@@ -984,9 +991,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    borderRadius: 8,
-    backgroundColor: '#F8FAFC',
-    padding: 10,
+    borderRadius: NeoOutdoors.radius.card,
+    backgroundColor: NeoOutdoors.color.warmPaper,
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.2)',
+    padding: 12,
   },
   planStopNumber: {
     width: 24,
@@ -994,10 +1003,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 12,
-    backgroundColor: '#E0F2FE',
+    backgroundColor: NeoOutdoors.color.amberWash,
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.42)',
   },
   planStopNumberText: {
-    color: '#0369A1',
+    color: NeoOutdoors.color.sunsetAmber,
     fontSize: 11,
     fontWeight: '900',
   },
@@ -1006,48 +1017,51 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   planStopTitle: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 13,
     fontWeight: '900',
     marginBottom: 3,
   },
   planStopBody: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slate,
     fontSize: 12,
     lineHeight: 17,
   },
+  stopThumbFrame: {
+    ...NeoOutdoorStyles.polaroidFrame,
+    marginTop: 8,
+  },
   stopThumb: {
     width: '100%',
-    height: 104,
-    borderRadius: 8,
-    backgroundColor: '#E2E8F0',
-    marginTop: 8,
+    height: 116,
+    borderRadius: NeoOutdoors.radius.polaroid,
+    backgroundColor: NeoOutdoors.color.line,
   },
   myDiaryStack: {
     gap: 8,
     marginTop: 10,
   },
   myDiaryCard: {
-    borderRadius: 8,
-    backgroundColor: '#ECFEFF',
+    borderRadius: NeoOutdoors.radius.card,
+    backgroundColor: NeoOutdoors.color.cyanWash,
     borderWidth: 1,
-    borderColor: '#BAE6FD',
+    borderColor: 'rgba(34,243,255,0.42)',
     padding: 10,
   },
   myDiaryLabel: {
-    color: '#0369A1',
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 10,
     fontWeight: '900',
     marginBottom: 4,
   },
   myDiaryTitle: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 13,
     fontWeight: '900',
     marginBottom: 4,
   },
   myDiaryBody: {
-    color: '#475569',
+    color: NeoOutdoors.color.slate,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -1061,10 +1075,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    borderRadius: 8,
-    backgroundColor: '#ECFEFF',
+    borderRadius: NeoOutdoors.radius.card,
+    backgroundColor: NeoOutdoors.color.cyanWash,
     borderWidth: 1,
-    borderColor: '#BAE6FD',
+    borderColor: 'rgba(34,243,255,0.42)',
     padding: 14,
     marginBottom: 22,
   },
@@ -1073,13 +1087,13 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   publishTitle: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 15,
     fontWeight: '900',
     marginBottom: 4,
   },
   publishText: {
-    color: '#475569',
+    color: NeoOutdoors.color.slate,
     fontSize: 12,
     fontWeight: '700',
     lineHeight: 18,
@@ -1087,8 +1101,8 @@ const styles = StyleSheet.create({
   publishButton: {
     minHeight: 38,
     justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#0F172A',
+    borderRadius: NeoOutdoors.radius.control,
+    backgroundColor: NeoOutdoors.color.ink,
     paddingHorizontal: 12,
   },
   publishButtonDisabled: {
@@ -1103,7 +1117,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   sectionTitle: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 19,
     fontWeight: '900',
     marginBottom: 14,
@@ -1122,23 +1136,21 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#1E3A8A',
+    backgroundColor: NeoOutdoors.color.sunsetAmber,
+    borderWidth: 3,
+    borderColor: NeoOutdoors.color.white,
     marginTop: 8,
   },
   timelineLine: {
     width: 2,
     flex: 1,
-    minHeight: 140,
-    backgroundColor: '#BFDBFE',
+    minHeight: 160,
+    backgroundColor: 'rgba(245,158,11,0.34)',
   },
   timelineCard: {
     flex: 1,
     overflow: 'hidden',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    padding: 16,
     marginBottom: 14,
   },
   timelineTime: {
@@ -1151,8 +1163,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     overflow: 'hidden',
     borderRadius: 999,
-    backgroundColor: '#E0F2FE',
-    color: '#0369A1',
+    backgroundColor: NeoOutdoors.color.cyanWash,
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 11,
     fontWeight: '900',
     paddingHorizontal: 8,
@@ -1160,9 +1172,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   timelineTitle: {
-    color: '#0F172A',
-    fontSize: 16,
+    color: NeoOutdoors.color.ink,
+    fontSize: 18,
     fontWeight: '900',
+    lineHeight: 24,
     marginBottom: 7,
   },
   visibilityRow: {
@@ -1191,32 +1204,41 @@ const styles = StyleSheet.create({
   visibilityButton: {
     minHeight: 32,
     justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#E2E8F0',
+    borderRadius: NeoOutdoors.radius.control,
+    backgroundColor: NeoOutdoors.color.line,
     paddingHorizontal: 10,
   },
   visibilityButtonText: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 11,
     fontWeight: '900',
   },
   timelineBody: {
-    color: '#475569',
+    color: NeoOutdoors.color.slate,
     fontSize: 14,
+    fontWeight: '700',
     lineHeight: 21,
+    marginBottom: 10,
+  },
+  timelineImageFrame: {
+    ...NeoOutdoorStyles.polaroidFrame,
     marginBottom: 10,
   },
   timelineImage: {
     width: '100%',
-    height: 170,
-    borderRadius: 8,
-    backgroundColor: '#E2E8F0',
-    marginBottom: 10,
+    height: 190,
+    borderRadius: NeoOutdoors.radius.polaroid,
+    backgroundColor: NeoOutdoors.color.line,
   },
   locationText: {
-    color: '#64748B',
+    alignSelf: 'flex-start',
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '900',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: NeoOutdoors.radius.chip,
+    backgroundColor: NeoOutdoors.color.cyanWash,
   },
   emptyState: {
     minHeight: 210,

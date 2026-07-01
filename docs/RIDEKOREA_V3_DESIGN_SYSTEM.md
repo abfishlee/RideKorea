@@ -111,7 +111,7 @@ Priority: low.
 ### Phase 4: Detail Screens
 
 - [x] Refresh shared route detail timeline.
-- [ ] Refresh journey detail public diary and imported route panels.
+- [x] Refresh journey detail public diary and imported route panels.
 - [ ] Keep all API calls and navigation unchanged.
 
 ### Phase 5: Polish

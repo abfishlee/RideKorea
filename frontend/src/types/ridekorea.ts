@@ -157,6 +157,22 @@ export interface VoucherConfig {
   [key: string]: unknown;
 }
 
+export interface VoucherRedemption {
+  id: string;
+  code: string;
+  title: string;
+  title_en: string;
+  is_redeemed: boolean;
+  redemption_source?: string | null;
+  redeemed_at?: string | null;
+  expires_at: string;
+  rider_email?: string | null;
+  rider_display_name?: string | null;
+  redeemed_by_email?: string | null;
+  spot_name?: string | null;
+  spot_name_en?: string | null;
+}
+
 export interface Journey {
   id: string;
   course_id?: string;

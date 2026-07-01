@@ -11,6 +11,7 @@ from ..schemas import (
     VoucherConfigAdminResponse,
     VoucherConfigResponse,
     VoucherConfigUpsert,
+    VoucherRedemptionAdminResponse,
     VoucherResponse,
 )
 from ..api.deps import get_current_admin
@@ -57,3 +58,14 @@ async def redeem_voucher_by_code(
 ):
     """Redeem a voucher by code through admin/merchant tooling."""
     return await voucher_service.admin_redeem_voucher_by_code(db, admin, payload.code)
+
+
+@router.get("/voucher-redemptions", response_model=List[VoucherRedemptionAdminResponse])
+async def list_voucher_redemptions(
+    limit: int = 20,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
+    """List recent voucher redemptions for admin/merchant settlement checks."""
+    safe_limit = min(max(limit, 1), 100)
+    return await voucher_service.admin_list_redemptions(db, safe_limit)

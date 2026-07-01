@@ -215,3 +215,53 @@ $env:PYTHONPATH='backend'; .\venv\Scripts\python.exe -m unittest discover -s bac
 - QR 카메라 스캔 UI 추가
 - redemption 정산 상태, 사용 매장, 가맹점별 리포트 테이블 추가
 - 사용 완료 취소/분쟁 처리 정책 정의
+
+## 완료: 제휴처 redemption 이력/리포트 1차
+
+적용 파일:
+
+- `backend/app/schemas.py`
+- `backend/app/routers/admin_vouchers.py`
+- `backend/app/services/voucher_service.py`
+- `frontend/src/services/api.ts`
+- `frontend/src/types/ridekorea.ts`
+- `frontend/src/app/compass.tsx`
+
+완료 내용:
+
+- 관리자/제휴처용 최근 바우처 사용 처리 이력 API를 추가했다.
+- `GET /admin/voucher-redemptions?limit=20`로 최근 사용 완료 바우처를 조회할 수 있다.
+- 응답에는 코드, 바우처명, 사용 처리 시각, 사용 처리 출처, 라이더 이메일/이름, 처리자 이메일, spot 이름을 포함한다.
+- Compass 관리자 영역의 코드 처리 패널 아래에 최근 사용 처리 10건 목록을 추가했다.
+- 코드 사용 처리 성공 후 최근 이력을 자동 갱신한다.
+- 관리자 패널을 열 때 바우처 설정과 함께 최근 사용 이력을 가져온다.
+- 최근 이력 수동 갱신 버튼을 추가했다.
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:utils
+```
+
+```powershell
+$env:PYTHONPATH='backend'; .\venv\Scripts\python.exe -m unittest discover -s backend\tests
+.\venv\Scripts\python.exe -m compileall -f backend\app backend\alembic
+```
+
+검증 결과:
+
+- frontend typecheck 통과
+- frontend lint 통과
+- frontend test:utils 통과
+- backend unittest 31개 통과
+- backend compileall 통과
+
+남은 보완:
+
+- redemption 이력 전용 화면/필터/검색
+- 기간별 정산 집계 API
+- merchant 계정별 이력 분리
+- CSV export 또는 관리자 다운로드

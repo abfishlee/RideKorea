@@ -411,6 +411,22 @@ class VoucherCodeRequest(BaseModel):
     code: str = Field(..., min_length=4, max_length=32)
 
 
+class VoucherRedemptionAdminResponse(BaseModel):
+    id: UUID
+    code: str
+    title: str
+    title_en: str
+    is_redeemed: bool
+    redemption_source: Optional[str] = None
+    redeemed_at: Optional[datetime] = None
+    expires_at: datetime
+    rider_email: Optional[str] = None
+    rider_display_name: Optional[str] = None
+    redeemed_by_email: Optional[str] = None
+    spot_name: Optional[str] = None
+    spot_name_en: Optional[str] = None
+
+
 # --- Voucher Config Schemas ---
 class VoucherConfigResponse(BaseModel):
     id: UUID

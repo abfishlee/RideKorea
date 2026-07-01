@@ -6,6 +6,7 @@ import {
   getAdminVoucherConfigs,
   getAdminTravelPoiReports,
   getAdminTravelPois,
+  getAdminVoucherRedemptions,
   getMyVouchers,
   lookupAdminVoucherByCode,
   redeemAdminVoucherByCode,
@@ -21,6 +22,7 @@ import type {
   TravelPoiReportStatus,
   Voucher,
   VoucherConfig,
+  VoucherRedemption,
 } from '@/types/ridekorea';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -55,8 +57,10 @@ export default function CompassScreen() {
   const [savingPoiReportId, setSavingPoiReportId] = useState<string | null>(null);
   const [redemptionCode, setRedemptionCode] = useState('');
   const [redemptionPreview, setRedemptionPreview] = useState<Voucher | null>(null);
+  const [redemptionHistory, setRedemptionHistory] = useState<VoucherRedemption[]>([]);
   const [isLookingUpRedemption, setIsLookingUpRedemption] = useState(false);
   const [isRedeemingByCode, setIsRedeemingByCode] = useState(false);
+  const [isLoadingRedemptionHistory, setIsLoadingRedemptionHistory] = useState(false);
 
   const [editingSpotId, setEditingSpotId] = useState<string | null>(null);
   const [editIsActive, setEditIsActive] = useState(false);
@@ -163,6 +167,20 @@ export default function CompassScreen() {
     }
   };
 
+  const fetchRedemptionHistory = async () => {
+    if (!token) return;
+
+    setIsLoadingRedemptionHistory(true);
+    try {
+      const history = await getAdminVoucherRedemptions(token, 10);
+      setRedemptionHistory(history);
+    } catch (err) {
+      console.log('Error fetching voucher redemption history', err);
+    } finally {
+      setIsLoadingRedemptionHistory(false);
+    }
+  };
+
   const handleRedeemByCode = () => {
     if (!token || !normalizedRedemptionCode) return;
 
@@ -185,6 +203,7 @@ export default function CompassScreen() {
                 setVouchers((current) => current.map((item) => (
                   item.id === voucher.id ? voucher : item
                 )));
+                await fetchRedemptionHistory();
                 Alert.alert(
                   isKo ? '처리 완료' : 'Redeemed',
                   isKo ? '바우처 코드가 사용 완료 처리되었습니다.' : 'The voucher code has been redeemed.',
@@ -225,6 +244,7 @@ export default function CompassScreen() {
   const handleOpenAdminPanel = () => {
     setIsAdminModalOpen(true);
     fetchAdminConfigs();
+    fetchRedemptionHistory();
   };
 
   const fetchAdminPois = async (reviewStatus = adminPoiFilter) => {
@@ -513,6 +533,41 @@ export default function CompassScreen() {
                 </Text>
               </View>
             )}
+            <View style={styles.historyHeader}>
+              <Text style={styles.historyTitle}>{isKo ? '최근 사용 처리' : 'Recent redemptions'}</Text>
+              <TouchableOpacity
+                style={[styles.historyRefreshButton, (!token || isLoadingRedemptionHistory) && styles.disabledButton]}
+                onPress={fetchRedemptionHistory}
+                disabled={!token || isLoadingRedemptionHistory}>
+                <Text style={styles.historyRefreshText}>
+                  {isLoadingRedemptionHistory ? '...' : isKo ? '갱신' : 'Reload'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {redemptionHistory.length > 0 ? (
+              redemptionHistory.map((item) => (
+                <View key={item.id} style={styles.historyItem}>
+                  <Text style={styles.historyItemTitle}>
+                    {(isKo ? item.title : item.title_en) || item.title}
+                  </Text>
+                  <Text style={styles.historyItemMeta}>
+                    {item.code} · {(isKo ? item.spot_name : item.spot_name_en) || item.spot_name || '-'}
+                  </Text>
+                  <Text style={styles.historyItemMeta}>
+                    {(item.rider_display_name || item.rider_email || '-')} · {item.redemption_source || '-'}
+                  </Text>
+                  <Text style={styles.historyItemTime}>
+                    {item.redeemed_at
+                      ? new Date(item.redeemed_at).toLocaleString(isKo ? 'ko-KR' : 'en-US')
+                      : '-'}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.historyEmpty}>
+                {isKo ? '아직 사용 처리 이력이 없습니다.' : 'No redemption history yet.'}
+              </Text>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -704,6 +759,58 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     marginTop: 3,
+  },
+  historyHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  historyTitle: {
+    color: '#334155',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  historyRefreshButton: {
+    backgroundColor: '#E2E8F0',
+    borderRadius: 7,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  historyRefreshText: {
+    color: '#334155',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  historyItem: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 2,
+    padding: 10,
+  },
+  historyItemTitle: {
+    color: '#0F172A',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  historyItemMeta: {
+    color: '#64748B',
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  historyItemTime: {
+    color: '#2563EB',
+    fontSize: 10,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  historyEmpty: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '700',
+    lineHeight: 16,
   },
   primaryText: {
     color: '#0F172A',

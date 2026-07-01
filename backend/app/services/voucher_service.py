@@ -16,7 +16,12 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import Voucher, VoucherConfig, Spot, User
-from ..schemas import VoucherConfigUpsert, VoucherConfigAdminResponse, VoucherClaimRequest
+from ..schemas import (
+    VoucherClaimRequest,
+    VoucherConfigAdminResponse,
+    VoucherConfigUpsert,
+    VoucherRedemptionAdminResponse,
+)
 from ..core.exceptions import NotFoundError, ValidationError
 from ..core.geo import latlng_to_point_wkt
 
@@ -215,6 +220,57 @@ async def admin_redeem_voucher_by_code(db: AsyncSession, admin: User, code: str)
     """Redeem a voucher by code through admin/merchant tooling."""
     voucher = await admin_lookup_voucher_by_code(db, code)
     return await _mark_voucher_redeemed(db, voucher, admin, "merchant")
+
+
+async def admin_list_redemptions(
+    db: AsyncSession,
+    limit: int = 20,
+) -> list[VoucherRedemptionAdminResponse]:
+    """List recent voucher redemptions for settlement and support checks."""
+    rider = User
+    redeemer = User.__table__.alias("redeemer")
+    query = (
+        select(
+            Voucher.id,
+            Voucher.code,
+            Voucher.title,
+            Voucher.title_en,
+            Voucher.is_redeemed,
+            Voucher.redemption_source,
+            Voucher.redeemed_at,
+            Voucher.expires_at,
+            rider.email.label("rider_email"),
+            rider.display_name.label("rider_display_name"),
+            redeemer.c.email.label("redeemed_by_email"),
+            Spot.name.label("spot_name"),
+            Spot.name_en.label("spot_name_en"),
+        )
+        .join(rider, Voucher.user_id == rider.id)
+        .join(Spot, Voucher.spot_id == Spot.id)
+        .outerjoin(redeemer, Voucher.redeemed_by_user_id == redeemer.c.id)
+        .where(Voucher.is_redeemed.is_(True))
+        .order_by(Voucher.redeemed_at.desc().nullslast(), Voucher.created_at.desc())
+        .limit(limit)
+    )
+    rows = (await db.execute(query)).all()
+    return [
+        VoucherRedemptionAdminResponse(
+            id=row.id,
+            code=row.code,
+            title=row.title,
+            title_en=row.title_en,
+            is_redeemed=row.is_redeemed,
+            redemption_source=row.redemption_source,
+            redeemed_at=row.redeemed_at,
+            expires_at=row.expires_at,
+            rider_email=row.rider_email,
+            rider_display_name=row.rider_display_name,
+            redeemed_by_email=row.redeemed_by_email,
+            spot_name=row.spot_name,
+            spot_name_en=row.spot_name_en,
+        )
+        for row in rows
+    ]
 
 
 # --- Admin configuration -----------------------------------------------------

@@ -1,3 +1,4 @@
+import { NeoOutdoors, NeoOutdoorStyles } from '@/constants/neo-outdoors';
 import { useAuthSession } from '@/context/AuthSessionContext';
 import { LANGUAGE_LABELS, myPathCopy, t } from '@/i18n';
 import { getMyJourneyTrackSummaries, getMyJourneys } from '@/services/api';
@@ -248,15 +249,15 @@ export default function MyPathScreen() {
       ) : (
         <>
           <View style={styles.statsRow}>
-            <View style={styles.statCard}>
+            <View style={[NeoOutdoorStyles.editorialCard, styles.statCard]}>
               <Text style={styles.statValue}>{stats.total}</Text>
               <Text style={styles.statLabel}>{t(lang, myPathCopy.totalRoutes)}</Text>
             </View>
-            <View style={styles.statCard}>
+            <View style={[NeoOutdoorStyles.editorialCard, styles.statCard]}>
               <Text style={styles.statValue}>{stats.completed}</Text>
               <Text style={styles.statLabel}>{t(lang, myPathCopy.completedRecords)}</Text>
             </View>
-            <View style={styles.statCard}>
+            <View style={[NeoOutdoorStyles.editorialCard, styles.statCard]}>
               <Text style={styles.statValue}>{formatDistance(stats.recordedDistanceKm, lang)}</Text>
               <Text style={styles.statLabel}>{t(lang, myPathCopy.recordedDistance)}</Text>
             </View>
@@ -271,7 +272,7 @@ export default function MyPathScreen() {
 
               <View style={styles.list}>
                 {drafts.map((draft) => (
-                  <View key={draft.id} style={styles.draftCard}>
+                  <View key={draft.id} style={[NeoOutdoorStyles.editorialCard, styles.draftCard]}>
                     <View style={styles.cardTopRow}>
                       <View style={styles.cardTitleBlock}>
                         <Text style={styles.journeyTitle} numberOfLines={2}>
@@ -355,7 +356,7 @@ export default function MyPathScreen() {
                   return (
                     <TouchableOpacity
                       key={journey.id}
-                      style={styles.journeyCard}
+                      style={[NeoOutdoorStyles.editorialCard, styles.journeyCard]}
                       activeOpacity={0.86}
                       onPress={() => router.push(`/journeys/${journey.id}` as never)}>
                       <View style={styles.cardTopRow}>
@@ -439,7 +440,7 @@ export default function MyPathScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: NeoOutdoors.color.paper,
   },
   content: {
     padding: 20,
@@ -456,7 +457,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   eyebrow: {
-    color: '#F59E0B',
+    color: NeoOutdoors.color.sunsetAmber,
     fontSize: 12,
     fontWeight: '900',
     marginBottom: 8,
@@ -464,8 +465,8 @@ const styles = StyleSheet.create({
   },
   languageSegmented: {
     alignItems: 'center',
-    backgroundColor: '#E2E8F0',
-    borderRadius: 8,
+    backgroundColor: NeoOutdoors.color.line,
+    borderRadius: NeoOutdoors.radius.card,
     flexDirection: 'row',
     padding: 3,
   },
@@ -478,10 +479,10 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   languageSegmentActive: {
-    backgroundColor: '#0F172A',
+    backgroundColor: NeoOutdoors.color.ink,
   },
   languageSegmentText: {
-    color: '#475569',
+    color: NeoOutdoors.color.slate,
     fontSize: 11,
     fontWeight: '900',
   },
@@ -489,14 +490,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   title: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 25,
     fontWeight: '900',
     lineHeight: 32,
     marginBottom: 8,
   },
   copy: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -506,20 +507,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
     marginBottom: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
+    backgroundColor: NeoOutdoors.color.white,
+    borderRadius: NeoOutdoors.radius.card,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: NeoOutdoors.color.line,
   },
   emptyTitle: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 16,
     fontWeight: '900',
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyText: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 13,
     lineHeight: 19,
     marginTop: 10,
@@ -531,8 +532,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 18,
     marginTop: 16,
-    borderRadius: 8,
-    backgroundColor: '#0F172A',
+    borderRadius: NeoOutdoors.radius.control,
+    backgroundColor: NeoOutdoors.color.ink,
   },
   retryButtonText: {
     color: '#FFFFFF',
@@ -548,19 +549,15 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 76,
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     padding: 12,
   },
   statValue: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 20,
     fontWeight: '900',
   },
   statLabel: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 12,
     fontWeight: '800',
     marginTop: 3,
@@ -576,7 +573,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionTitle: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 18,
     fontWeight: '900',
   },
@@ -589,17 +586,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   draftCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#BAE6FD',
     padding: 14,
   },
   journeyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     padding: 14,
   },
   cardTopRow: {
@@ -614,31 +603,35 @@ const styles = StyleSheet.create({
   },
   journeyTitle: {
     flex: 1,
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 16,
     fontWeight: '900',
     lineHeight: 21,
   },
   draftAuthor: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 12,
     fontWeight: '800',
     marginTop: 4,
   },
   planBadge: {
-    backgroundColor: '#E0F2FE',
-    borderRadius: 999,
+    backgroundColor: NeoOutdoors.color.cyanWash,
+    borderRadius: NeoOutdoors.radius.chip,
+    borderWidth: 1,
+    borderColor: NeoOutdoors.color.electricCyan,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
   planBadgeText: {
-    color: '#0369A1',
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 11,
     fontWeight: '900',
   },
   statusBadge: {
-    backgroundColor: '#FEF3C7',
-    borderRadius: 999,
+    backgroundColor: NeoOutdoors.color.amberWash,
+    borderRadius: NeoOutdoors.radius.chip,
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.42)',
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
@@ -648,7 +641,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   routeLine: {
-    color: '#334155',
+    color: NeoOutdoors.color.slate,
     fontSize: 14,
     fontWeight: '900',
     marginBottom: 12,
@@ -662,24 +655,24 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 58,
     justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#F8FAFC',
+    borderRadius: NeoOutdoors.radius.card,
+    backgroundColor: NeoOutdoors.color.paper,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: NeoOutdoors.color.line,
     paddingHorizontal: 10,
   },
   summaryBadgeReady: {
-    borderColor: '#BAE6FD',
-    backgroundColor: '#ECFEFF',
+    borderColor: NeoOutdoors.color.electricCyan,
+    backgroundColor: NeoOutdoors.color.cyanWash,
   },
   summaryBadgeValue: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 13,
     fontWeight: '900',
     marginBottom: 3,
   },
   summaryBadgeLabel: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 10,
     fontWeight: '900',
   },
@@ -700,12 +693,12 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   metaValue: {
-    color: '#334155',
+    color: NeoOutdoors.color.slate,
     fontSize: 13,
     fontWeight: '800',
   },
   offRouteHint: {
-    color: '#B45309',
+    color: NeoOutdoors.color.sunsetAmber,
     fontSize: 12,
     fontWeight: '800',
     lineHeight: 18,
@@ -714,15 +707,15 @@ const styles = StyleSheet.create({
   draftFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
+    flexWrap: 'wrap',
+    gap: 10,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
+    borderTopColor: NeoOutdoors.color.line,
   },
   importedDate: {
-    flex: 1,
-    color: '#64748B',
+    flexBasis: '100%',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 12,
     fontWeight: '800',
   },
@@ -730,8 +723,8 @@ const styles = StyleSheet.create({
     minHeight: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#0F172A',
+    borderRadius: NeoOutdoors.radius.control,
+    backgroundColor: NeoOutdoors.color.ink,
     paddingHorizontal: 12,
   },
   prepareButtonText: {
@@ -743,7 +736,7 @@ const styles = StyleSheet.create({
     minHeight: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: NeoOutdoors.radius.control,
     backgroundColor: '#FEE2E2',
     paddingHorizontal: 12,
   },
@@ -754,7 +747,7 @@ const styles = StyleSheet.create({
   },
   previewPanel: {
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
+    borderTopColor: NeoOutdoors.color.line,
     paddingTop: 12,
   },
   previewLabel: {
@@ -764,7 +757,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   previewText: {
-    color: '#334155',
+    color: NeoOutdoors.color.slate,
     fontSize: 13,
     fontWeight: '800',
     lineHeight: 19,
@@ -773,8 +766,8 @@ const styles = StyleSheet.create({
     minHeight: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#0F172A',
+    borderRadius: NeoOutdoors.radius.control,
+    backgroundColor: NeoOutdoors.color.ink,
     marginTop: 12,
   },
   prepareServerButtonText: {

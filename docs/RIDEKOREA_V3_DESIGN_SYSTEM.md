@@ -116,7 +116,7 @@ Priority: low.
 
 ### Phase 5: Polish
 
-- [ ] Run visual QA across Journey, Moments, My Path, Compass.
+- [x] Run visual QA across Journey, Moments, My Path, Compass.
 - [ ] Add a design QA checklist for color contrast, text fit, and mobile spacing.
 - [ ] Decide whether to keep or simplify high-energy neon accents after real-device review.
 
@@ -148,3 +148,13 @@ Priority: low.
 - Journey publishing still uses `publishJourneyAsSharedRoute` and navigates to `/shared-routes/{route.id}`.
 - Diary visibility updates still use `updateSpotDiaryVisibility`.
 - Back navigation remains `router.back()` on both detail screens.
+
+## Visual QA Notes
+
+### Phase 5 App Surface Pass
+
+- Journey detail: story panels and timeline use shared Neo-Outdoors editorial cards and polaroid photo frames.
+- Moments: route and diary cards keep photo-first hierarchy with stable action rows.
+- My Path: route library cards now use shared editorial cards, tokenized colors, and wrapping draft footer actions for multilingual labels.
+- Compass: operational cards keep restrained styling, 8px card radius, and shrink-safe text blocks beside action indicators.
+- No API calls, route import behavior, diary visibility behavior, voucher actions, or admin actions were changed during this QA pass.

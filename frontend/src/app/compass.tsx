@@ -1,3 +1,4 @@
+import { NeoOutdoors } from '@/constants/neo-outdoors';
 import { AdminVoucherModal } from '@/components/admin/AdminVoucherModal';
 import { AdminTravelPoiModal } from '@/components/admin/AdminTravelPoiModal';
 import { VoucherWalletModal } from '@/components/voucher/VoucherWalletModal';
@@ -404,7 +405,7 @@ export default function CompassScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{copy(compassCopy.account)}</Text>
           <View style={styles.listCard}>
-            <View>
+            <View style={styles.cardTextBlock}>
               <Text style={styles.primaryText}>
                 {userProfile?.displayName || copy(compassCopy.signInRequired)}
               </Text>
@@ -442,7 +443,7 @@ export default function CompassScreen() {
             style={[styles.actionCard, !token && styles.disabledCard]}
             onPress={handleOpenVoucherWallet}
             disabled={!token}>
-            <View>
+            <View style={styles.cardTextBlock}>
               <Text style={styles.primaryText}>{copy(compassCopy.wallet)}</Text>
               <Text style={styles.secondaryText}>{voucherCountLabel}</Text>
             </View>
@@ -456,7 +457,7 @@ export default function CompassScreen() {
             style={[styles.actionCard, !token && styles.disabledCard]}
             onPress={handleOpenAdminPanel}
             disabled={!token}>
-            <View>
+            <View style={styles.cardTextBlock}>
               <Text style={styles.primaryText}>{copy(compassCopy.voucherSettings)}</Text>
               <Text style={styles.secondaryText}>{copy(compassCopy.voucherSettingsBody)}</Text>
             </View>
@@ -466,7 +467,7 @@ export default function CompassScreen() {
             style={[styles.actionCard, !token && styles.disabledCard]}
             onPress={handleOpenPoiAdminPanel}
             disabled={!token}>
-            <View>
+            <View style={styles.cardTextBlock}>
               <Text style={styles.primaryText}>{copy(compassCopy.poiReview)}</Text>
               <Text style={styles.secondaryText}>{copy(compassCopy.poiReviewBody)}</Text>
             </View>
@@ -679,13 +680,13 @@ export default function CompassScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: NeoOutdoors.color.paper,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: NeoOutdoors.color.paper,
   },
   content: {
     padding: 24,
@@ -696,18 +697,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   eyebrow: {
-    color: '#1E3A8A',
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   title: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 26,
     fontWeight: '900',
   },
   copy: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 15,
     lineHeight: 22,
   },
@@ -715,15 +716,15 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   sectionTitle: {
-    color: '#334155',
+    color: NeoOutdoors.color.slate,
     fontSize: 13,
     fontWeight: '900',
   },
   listCard: {
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
+    backgroundColor: NeoOutdoors.color.white,
+    borderColor: NeoOutdoors.color.line,
+    borderRadius: NeoOutdoors.radius.card,
     borderWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -731,9 +732,9 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
+    backgroundColor: NeoOutdoors.color.white,
+    borderColor: NeoOutdoors.color.line,
+    borderRadius: NeoOutdoors.radius.card,
     borderWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -743,19 +744,19 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   redemptionPanel: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
+    backgroundColor: NeoOutdoors.color.white,
+    borderColor: NeoOutdoors.color.line,
+    borderRadius: NeoOutdoors.radius.card,
     borderWidth: 1,
     gap: 10,
     padding: 14,
   },
   codeInput: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: NeoOutdoors.color.paper,
     borderColor: '#CBD5E1',
-    borderRadius: 8,
+    borderRadius: NeoOutdoors.radius.card,
     borderWidth: 1,
-    color: '#0F172A',
+    color: NeoOutdoors.color.inkSoft,
     fontSize: 15,
     fontWeight: '800',
     letterSpacing: 1,
@@ -768,8 +769,8 @@ const styles = StyleSheet.create({
   },
   lookupButton: {
     alignItems: 'center',
-    backgroundColor: '#334155',
-    borderRadius: 8,
+    backgroundColor: NeoOutdoors.color.slate,
+    borderRadius: NeoOutdoors.radius.card,
     flex: 1,
     paddingVertical: 10,
   },
@@ -780,8 +781,8 @@ const styles = StyleSheet.create({
   },
   redeemCodeButton: {
     alignItems: 'center',
-    backgroundColor: '#0F172A',
-    borderRadius: 8,
+    backgroundColor: NeoOutdoors.color.ink,
+    borderRadius: NeoOutdoors.radius.card,
     flex: 1,
     paddingVertical: 10,
   },
@@ -796,7 +797,7 @@ const styles = StyleSheet.create({
   redemptionPreview: {
     backgroundColor: '#EFF6FF',
     borderColor: '#BFDBFE',
-    borderRadius: 8,
+    borderRadius: NeoOutdoors.radius.card,
     borderWidth: 1,
     padding: 10,
   },
@@ -812,9 +813,9 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   settlementSummary: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: NeoOutdoors.color.paper,
     borderColor: '#CBD5E1',
-    borderRadius: 8,
+    borderRadius: NeoOutdoors.radius.card,
     borderWidth: 1,
     gap: 9,
     padding: 10,
@@ -826,7 +827,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   settlementCaption: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 10,
     fontWeight: '700',
     marginTop: 2,
@@ -836,8 +837,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   settlementRangeRow: {
-    backgroundColor: '#E2E8F0',
-    borderRadius: 8,
+    backgroundColor: NeoOutdoors.color.line,
+    borderRadius: NeoOutdoors.radius.card,
     flexDirection: 'row',
     padding: 3,
   },
@@ -848,7 +849,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   settlementRangeButtonActive: {
-    backgroundColor: '#0F172A',
+    backgroundColor: NeoOutdoors.color.ink,
   },
   settlementRangeText: {
     color: '#475569',
@@ -859,20 +860,20 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   settlementMetric: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
+    backgroundColor: NeoOutdoors.color.white,
+    borderColor: NeoOutdoors.color.line,
+    borderRadius: NeoOutdoors.radius.card,
     borderWidth: 1,
     flex: 1,
     padding: 10,
   },
   settlementMetricValue: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 14,
     fontWeight: '900',
   },
   settlementMetricLabel: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 10,
     fontWeight: '800',
     marginTop: 2,
@@ -884,8 +885,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   settlementSpotName: {
-    color: '#334155',
+    color: NeoOutdoors.color.slate,
     flex: 1,
+    minWidth: 0,
     fontSize: 11,
     fontWeight: '800',
   },
@@ -893,6 +895,8 @@ const styles = StyleSheet.create({
     color: '#2563EB',
     fontSize: 11,
     fontWeight: '900',
+    flexShrink: 0,
+    textAlign: 'right',
   },
   historyHeader: {
     alignItems: 'center',
@@ -901,36 +905,36 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   historyTitle: {
-    color: '#334155',
+    color: NeoOutdoors.color.slate,
     fontSize: 12,
     fontWeight: '900',
   },
   historyRefreshButton: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: NeoOutdoors.color.line,
     borderRadius: 7,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   historyRefreshText: {
-    color: '#334155',
+    color: NeoOutdoors.color.slate,
     fontSize: 11,
     fontWeight: '900',
   },
   historyItem: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
+    backgroundColor: NeoOutdoors.color.paper,
+    borderColor: NeoOutdoors.color.line,
+    borderRadius: NeoOutdoors.radius.card,
     borderWidth: 1,
     gap: 2,
     padding: 10,
   },
   historyItemTitle: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 12,
     fontWeight: '900',
   },
   historyItemMeta: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 11,
     lineHeight: 15,
   },
@@ -947,19 +951,25 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   primaryText: {
-    color: '#0F172A',
+    color: NeoOutdoors.color.inkSoft,
     fontSize: 15,
     fontWeight: '800',
+    flexShrink: 1,
   },
   secondaryText: {
-    color: '#64748B',
+    color: NeoOutdoors.color.slateMuted,
     fontSize: 12,
     lineHeight: 18,
     marginTop: 3,
+    flexShrink: 1,
+  },
+  cardTextBlock: {
+    flex: 1,
+    minWidth: 0,
   },
   smallButton: {
-    backgroundColor: '#334155',
-    borderRadius: 8,
+    backgroundColor: NeoOutdoors.color.slate,
+    borderRadius: NeoOutdoors.radius.card,
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
@@ -969,22 +979,22 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   segmented: {
-    backgroundColor: '#E2E8F0',
-    borderRadius: 10,
+    backgroundColor: NeoOutdoors.color.line,
+    borderRadius: NeoOutdoors.radius.card,
     flexDirection: 'row',
     padding: 4,
   },
   segment: {
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 6,
     flex: 1,
     paddingVertical: 10,
   },
   segmentActive: {
-    backgroundColor: '#1E3A8A',
+    backgroundColor: NeoOutdoors.color.ink,
   },
   segmentText: {
-    color: '#475569',
+    color: NeoOutdoors.color.slate,
     fontSize: 13,
     fontWeight: '900',
   },

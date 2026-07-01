@@ -1,4 +1,5 @@
 import { useAuthSession } from '@/context/AuthSessionContext';
+import { LANGUAGE_LABELS, momentsCopy, t } from '@/i18n';
 import {
   createPublicSharedRouteComment,
   getPublicSharedRoute,
@@ -11,6 +12,7 @@ import {
   updatePublishedSharedRouteVisibility,
 } from '@/services/api';
 import type {
+  AppLanguage,
   PublishedSharedRoute,
   PublishedSharedRouteStop,
   SharedRouteComment,
@@ -29,9 +31,12 @@ import {
   View,
 } from 'react-native';
 
-function formatDateTime(value?: string | null) {
-  if (!value) return '시간 없음';
-  return new Date(value).toLocaleString('ko-KR', {
+const LANGUAGES: AppLanguage[] = ['ko', 'en', 'ja'];
+
+function formatDateTime(value: string | null | undefined, lang: AppLanguage) {
+  if (!value) return t(lang, momentsCopy.noTime);
+  const locale = lang === 'ko' ? 'ko-KR' : lang === 'ja' ? 'ja-JP' : 'en-US';
+  return new Date(value).toLocaleString(locale, {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -43,13 +48,14 @@ function sortStops(stops: PublishedSharedRouteStop[]) {
   return [...stops].sort((a, b) => a.sort_order - b.sort_order);
 }
 
-function visibilityLabel(value?: string) {
-  return value === 'public' ? '공개' : '비공개 초안';
+function visibilityLabel(value: string | undefined, lang: AppLanguage) {
+  return value === 'public' ? t(lang, momentsCopy.public) : t(lang, momentsCopy.privateDraft);
 }
 
 export default function PublishedSharedRoutePreviewScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const { token, isAuthChecked } = useAuthSession();
+  const [lang, setLang] = useState<AppLanguage>('ko');
   const [route, setRoute] = useState<PublishedSharedRoute | null>(null);
   const [comments, setComments] = useState<SharedRouteComment[]>([]);
   const [commentBody, setCommentBody] = useState('');
@@ -101,12 +107,12 @@ export default function PublishedSharedRoutePreviewScreen() {
         setComments([]);
       }
     } catch (err: any) {
-      setError(err.message || '공유 루트를 불러오지 못했습니다.');
+      setError(err.message || t(lang, momentsCopy.routeLoadFailed));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [isAuthChecked, params.id, token]);
+  }, [isAuthChecked, lang, params.id, token]);
 
   const handleToggleVisibility = useCallback(async () => {
     if (!token || !route || isUpdatingVisibility) return;
@@ -120,11 +126,11 @@ export default function PublishedSharedRoutePreviewScreen() {
         setComments([]);
       }
     } catch (err: any) {
-      setError(err.message || '공개 설정을 변경하지 못했습니다.');
+      setError(err.message || t(lang, momentsCopy.visibilityUpdateFailed));
     } finally {
       setIsUpdatingVisibility(false);
     }
-  }, [isUpdatingVisibility, route, token]);
+  }, [isUpdatingVisibility, lang, route, token]);
 
   const handleRecordShare = useCallback(async () => {
     if (!route || route.visibility !== 'public' || isSharing) return;
@@ -134,11 +140,11 @@ export default function PublishedSharedRoutePreviewScreen() {
       const nextRoute = await recordPublicSharedRouteShare(route.id);
       setRoute({ ...nextRoute, liked_by_me: route.liked_by_me });
     } catch (err: any) {
-      setError(err.message || '공유 횟수를 기록하지 못했습니다.');
+      setError(err.message || t(lang, momentsCopy.shareRecordFailed));
     } finally {
       setIsSharing(false);
     }
-  }, [isSharing, route]);
+  }, [isSharing, lang, route]);
 
   const handleLikeRoute = useCallback(async () => {
     if (!token || !route || route.visibility !== 'public' || isLiking || hasLiked) return;
@@ -148,11 +154,11 @@ export default function PublishedSharedRoutePreviewScreen() {
       const result = await likePublicSharedRoute(token, route.id);
       setRoute(result.route);
     } catch (err: any) {
-      setError(err.message || '추천을 기록하지 못했습니다.');
+      setError(err.message || t(lang, momentsCopy.likeRecordFailed));
     } finally {
       setIsLiking(false);
     }
-  }, [hasLiked, isLiking, route, token]);
+  }, [hasLiked, isLiking, lang, route, token]);
 
   const handleImportRoute = useCallback(async () => {
     if (!token || !route || route.visibility !== 'public' || isImporting) return;
@@ -162,11 +168,11 @@ export default function PublishedSharedRoutePreviewScreen() {
       const journey = await importPublicSharedRoute(token, route.id);
       router.push(`/journeys/${journey.id}` as never);
     } catch (err: any) {
-      setError(err.message || '공유 루트를 내 Journey로 가져오지 못했습니다.');
+      setError(err.message || t(lang, momentsCopy.importPublicRouteFailed));
     } finally {
       setIsImporting(false);
     }
-  }, [isImporting, route, token]);
+  }, [isImporting, lang, route, token]);
 
   const handleCreateComment = useCallback(async () => {
     if (!token || !route || route.visibility !== 'public' || isCommenting) return;
@@ -182,11 +188,11 @@ export default function PublishedSharedRoutePreviewScreen() {
         current ? { ...current, comment_count: current.comment_count + 1 } : current,
       );
     } catch (err: any) {
-      setError(err.message || '댓글을 남기지 못했습니다.');
+      setError(err.message || t(lang, momentsCopy.commentCreateFailed));
     } finally {
       setIsCommenting(false);
     }
-  }, [commentBody, isCommenting, route, token]);
+  }, [commentBody, isCommenting, lang, route, token]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -200,7 +206,7 @@ export default function PublishedSharedRoutePreviewScreen() {
     return (
       <View style={styles.loadingState}>
         <ActivityIndicator size="large" color="#1E3A8A" />
-        <Text style={styles.loadingText}>공유 루트를 불러오는 중입니다.</Text>
+        <Text style={styles.loadingText}>{t(lang, momentsCopy.loadingSharedRoute)}</Text>
       </View>
     );
   }
@@ -213,24 +219,40 @@ export default function PublishedSharedRoutePreviewScreen() {
         <RefreshControl refreshing={isRefreshing} onRefresh={() => loadRoute('refresh')} />
       }>
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backButtonText}>뒤로</Text>
+        <Text style={styles.backButtonText}>{t(lang, momentsCopy.back)}</Text>
       </TouchableOpacity>
+      <View style={styles.languageSegmented}>
+        {LANGUAGES.map((language) => (
+          <TouchableOpacity
+            key={language}
+            style={[styles.languageSegment, lang === language && styles.languageSegmentActive]}
+            onPress={() => setLang(language)}>
+            <Text
+              style={[
+                styles.languageSegmentText,
+                lang === language && styles.languageSegmentTextActive,
+              ]}>
+              {LANGUAGE_LABELS[language]}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {error ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>루트를 불러오지 못했습니다</Text>
+          <Text style={styles.emptyTitle}>{t(lang, momentsCopy.routeOpenFailedTitle)}</Text>
           <Text style={styles.emptyText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => loadRoute()}>
-            <Text style={styles.retryButtonText}>다시 시도</Text>
+            <Text style={styles.retryButtonText}>{t(lang, momentsCopy.retry)}</Text>
           </TouchableOpacity>
         </View>
       ) : route ? (
         <>
           <View style={styles.header}>
-            <Text style={styles.eyebrow}>Shared Route Preview</Text>
+            <Text style={styles.eyebrow}>{t(lang, momentsCopy.sharedRoutePreview)}</Text>
             <Text style={styles.title}>{route.title}</Text>
             <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>{visibilityLabel(route.visibility)}</Text>
+              <Text style={styles.statusText}>{visibilityLabel(route.visibility, lang)}</Text>
             </View>
           </View>
 
@@ -238,24 +260,23 @@ export default function PublishedSharedRoutePreviewScreen() {
 
           <View style={styles.summaryPanel}>
             <Text style={styles.summaryText}>
-              {route.summary || '라이딩 중 남긴 기록을 바탕으로 만든 공유 루트 초안입니다.'}
+              {route.summary || t(lang, momentsCopy.routeDraftFallback)}
             </Text>
             <View style={styles.routeLine}>
               <Text style={styles.routePoint} numberOfLines={1}>
-                {route.start_name || '출발지 미정'}
+                {route.start_name || t(lang, momentsCopy.unknownStart)}
               </Text>
               <View style={styles.routeDivider} />
               <Text style={styles.routePoint} numberOfLines={1}>
-                {route.end_name || '도착지 미정'}
+                {route.end_name || t(lang, momentsCopy.unknownEnd)}
               </Text>
             </View>
           </View>
 
           <View style={styles.checkPanel}>
-            <Text style={styles.checkTitle}>공개 전 확인</Text>
+            <Text style={styles.checkTitle}>{t(lang, momentsCopy.publishCheckTitle)}</Text>
             <Text style={styles.checkText}>
-              사진, 위치, 제목, 본문이 여행기처럼 자연스럽게 이어지는지 확인해 주세요.
-              공개하면 Moments의 공유 루트 탭에 표시됩니다.
+              {t(lang, momentsCopy.publishCheckBody)}
             </Text>
             {token && (
               <TouchableOpacity
@@ -267,10 +288,10 @@ export default function PublishedSharedRoutePreviewScreen() {
                 onPress={handleToggleVisibility}>
                 <Text style={styles.visibilityButtonText}>
                   {isUpdatingVisibility
-                    ? '변경 중'
+                    ? t(lang, momentsCopy.changing)
                     : route.visibility === 'public'
-                    ? '비공개로 돌리기'
-                    : 'Moments에 공개하기'}
+                    ? t(lang, momentsCopy.makePrivate)
+                    : t(lang, momentsCopy.publishToMoments)}
                 </Text>
               </TouchableOpacity>
             )}
@@ -279,15 +300,15 @@ export default function PublishedSharedRoutePreviewScreen() {
           <View style={styles.statsGrid}>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>{route.like_count}</Text>
-              <Text style={styles.statLabel}>추천</Text>
+              <Text style={styles.statLabel}>{t(lang, momentsCopy.likes)}</Text>
             </View>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>{route.comment_count}</Text>
-              <Text style={styles.statLabel}>댓글</Text>
+              <Text style={styles.statLabel}>{t(lang, momentsCopy.comments)}</Text>
             </View>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>{route.share_count}</Text>
-              <Text style={styles.statLabel}>공유</Text>
+              <Text style={styles.statLabel}>{t(lang, momentsCopy.shares)}</Text>
             </View>
           </View>
 
@@ -298,7 +319,13 @@ export default function PublishedSharedRoutePreviewScreen() {
                 disabled={!token || isLiking || hasLiked}
                 onPress={handleLikeRoute}>
                 <Text style={styles.actionButtonText}>
-                  {!token ? '로그인 후 추천' : hasLiked ? '추천 완료' : isLiking ? '추천 중' : '추천하기'}
+                  {!token
+                    ? t(lang, momentsCopy.loginToLike)
+                    : hasLiked
+                    ? t(lang, momentsCopy.likeDone)
+                    : isLiking
+                    ? t(lang, momentsCopy.liking)
+                    : t(lang, momentsCopy.likeAction)}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -306,7 +333,7 @@ export default function PublishedSharedRoutePreviewScreen() {
                 disabled={isSharing}
                 onPress={handleRecordShare}>
                 <Text style={styles.actionButtonSecondaryText}>
-                  {isSharing ? '공유 기록 중' : '공유 카운트 기록'}
+                  {isSharing ? t(lang, momentsCopy.recordingShare) : t(lang, momentsCopy.recordShare)}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -321,18 +348,22 @@ export default function PublishedSharedRoutePreviewScreen() {
               disabled={!token || isImporting}
               onPress={handleImportRoute}>
               <Text style={styles.importButtonText}>
-                {!token ? '로그인 후 내 루트로 가져오기' : isImporting ? '가져오는 중' : '내 Journey로 가져오기'}
+                {!token
+                  ? t(lang, momentsCopy.loginToImportRoute)
+                  : isImporting
+                  ? t(lang, momentsCopy.importing)
+                  : t(lang, momentsCopy.importToJourney)}
               </Text>
             </TouchableOpacity>
           )}
 
           {route.visibility === 'public' && (
             <View style={styles.commentSection}>
-              <Text style={styles.sectionTitle}>댓글</Text>
+              <Text style={styles.sectionTitle}>{t(lang, momentsCopy.commentsTitle)}</Text>
               {comments.length === 0 ? (
                 <View style={styles.commentEmptyBox}>
                   <Text style={styles.commentEmptyText}>
-                    아직 댓글이 없습니다. 이 루트를 준비하는 라이더에게 첫 질문을 남겨보세요.
+                    {t(lang, momentsCopy.noCommentsBody)}
                   </Text>
                 </View>
               ) : (
@@ -353,7 +384,7 @@ export default function PublishedSharedRoutePreviewScreen() {
                             {comment.author.display_name || 'RideKorea Rider'}
                           </Text>
                           <Text style={styles.commentDate}>
-                            {formatDateTime(comment.created_at)}
+                            {formatDateTime(comment.created_at, lang)}
                           </Text>
                         </View>
                       </View>
@@ -369,7 +400,7 @@ export default function PublishedSharedRoutePreviewScreen() {
                     style={styles.commentInput}
                     value={commentBody}
                     onChangeText={setCommentBody}
-                    placeholder="루트에 대한 질문이나 응원을 남겨보세요."
+                    placeholder={t(lang, momentsCopy.commentPlaceholder)}
                     placeholderTextColor="#94A3B8"
                     multiline
                     maxLength={1000}
@@ -382,14 +413,14 @@ export default function PublishedSharedRoutePreviewScreen() {
                     disabled={!commentBody.trim() || isCommenting}
                     onPress={handleCreateComment}>
                     <Text style={styles.commentButtonText}>
-                      {isCommenting ? '등록 중' : '댓글 남기기'}
+                      {isCommenting ? t(lang, momentsCopy.registering) : t(lang, momentsCopy.leaveComment)}
                     </Text>
                   </TouchableOpacity>
                 </View>
               ) : (
                 <View style={styles.commentLoginBox}>
                   <Text style={styles.commentLoginText}>
-                    댓글을 남기려면 Journey 탭에서 Google 로그인 후 다시 열어주세요.
+                    {t(lang, momentsCopy.commentLoginBody)}
                   </Text>
                 </View>
               )}
@@ -397,12 +428,12 @@ export default function PublishedSharedRoutePreviewScreen() {
           )}
 
           <View style={styles.timelineSection}>
-            <Text style={styles.sectionTitle}>공유 타임라인</Text>
+            <Text style={styles.sectionTitle}>{t(lang, momentsCopy.sharedTimeline)}</Text>
             {stops.length === 0 ? (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyTitle}>공유할 기록이 없습니다</Text>
+                <Text style={styles.emptyTitle}>{t(lang, momentsCopy.noShareRecordsTitle)}</Text>
                 <Text style={styles.emptyText}>
-                  라이딩 중 사진과 메모를 남긴 뒤 다시 초안을 만들어 주세요.
+                  {t(lang, momentsCopy.noShareRecordsBody)}
                 </Text>
               </View>
             ) : (
@@ -416,8 +447,8 @@ export default function PublishedSharedRoutePreviewScreen() {
                         {index < stops.length - 1 && <View style={styles.timelineLine} />}
                       </View>
                       <View style={styles.timelineCard}>
-                        <Text style={styles.timelineTime}>{formatDateTime(stop.created_at)}</Text>
-                        <Text style={styles.timelineTitle}>{stop.title || '제목 없는 스팟'}</Text>
+                        <Text style={styles.timelineTime}>{formatDateTime(stop.created_at, lang)}</Text>
+                        <Text style={styles.timelineTitle}>{stop.title || t(lang, momentsCopy.untitledStop)}</Text>
                         {!!stop.body && <Text style={styles.timelineBody}>{stop.body}</Text>}
                         {photoUrl && (
                           <Image source={{ uri: mediaUrl(photoUrl) }} style={styles.timelineImage} />
@@ -437,8 +468,8 @@ export default function PublishedSharedRoutePreviewScreen() {
         </>
       ) : (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>초안을 찾을 수 없습니다</Text>
-          <Text style={styles.emptyText}>Journey 기록에서 다시 생성해 주세요.</Text>
+          <Text style={styles.emptyTitle}>{t(lang, momentsCopy.draftNotFoundTitle)}</Text>
+          <Text style={styles.emptyText}>{t(lang, momentsCopy.draftNotFoundBody)}</Text>
         </View>
       )}
     </ScrollView>
@@ -481,6 +512,34 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontSize: 13,
     fontWeight: '900',
+  },
+  languageSegmented: {
+    alignSelf: 'flex-end',
+    alignItems: 'center',
+    backgroundColor: '#E2E8F0',
+    borderRadius: 8,
+    flexDirection: 'row',
+    marginBottom: 14,
+    padding: 3,
+  },
+  languageSegment: {
+    alignItems: 'center',
+    borderRadius: 6,
+    justifyContent: 'center',
+    minWidth: 34,
+    paddingHorizontal: 7,
+    paddingVertical: 6,
+  },
+  languageSegmentActive: {
+    backgroundColor: '#0F172A',
+  },
+  languageSegmentText: {
+    color: '#475569',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  languageSegmentTextActive: {
+    color: '#FFFFFF',
   },
   header: {
     marginBottom: 16,

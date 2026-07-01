@@ -1,7 +1,7 @@
 import { SharedRouteCard } from '@/components/routes/SharedRouteCard';
 import { useAuthSession } from '@/context/AuthSessionContext';
 import { SHARED_ROUTE_SAMPLES } from '@/data/shared-routes';
-import { LANGUAGE_LABELS, momentsCopy, nextLanguage, t } from '@/i18n';
+import { LANGUAGE_LABELS, momentsCopy, t } from '@/i18n';
 import {
   getPublicSharedRoutes,
   getRecentPublicDiaries,
@@ -25,6 +25,7 @@ import {
 } from 'react-native';
 
 type FeedMode = 'routes' | 'diaries';
+const LANGUAGES: AppLanguage[] = ['ko', 'en', 'ja'];
 
 function formatDate(value: string, lang: AppLanguage) {
   const locale = lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'ko-KR';
@@ -176,9 +177,22 @@ export default function MomentsScreen() {
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
           <Text style={styles.eyebrow}>Moments</Text>
-          <TouchableOpacity style={styles.langButton} onPress={() => setLang(prev => nextLanguage(prev))}>
-            <Text style={styles.langButtonText}>{LANGUAGE_LABELS[nextLanguage(lang)]}</Text>
-          </TouchableOpacity>
+          <View style={styles.languageSegmented}>
+            {LANGUAGES.map((language) => (
+              <TouchableOpacity
+                key={language}
+                style={[styles.languageSegment, lang === language && styles.languageSegmentActive]}
+                onPress={() => setLang(language)}>
+                <Text
+                  style={[
+                    styles.languageSegmentText,
+                    lang === language && styles.languageSegmentTextActive,
+                  ]}>
+                  {LANGUAGE_LABELS[language]}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
         <Text style={styles.title}>{t(lang, momentsCopy.title)}</Text>
         <Text style={styles.copy}>
@@ -230,6 +244,7 @@ export default function MomentsScreen() {
             {publicRoutes.map((route) => (
               <SharedRouteCard
                 key={route.id}
+                lang={lang}
                 route={toSharedRouteCardModel(route, lang)}
                 onImport={handleImportRoute}
                 onOpen={handleOpenRoute}
@@ -238,6 +253,7 @@ export default function MomentsScreen() {
             {SHARED_ROUTE_SAMPLES.map((route) => (
               <SharedRouteCard
                 key={route.id}
+                lang={lang}
                 route={route}
                 onImport={handleImportRoute}
                 onOpen={handleOpenRoute}
@@ -347,17 +363,32 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textTransform: 'uppercase',
   },
-  langButton: {
-    minWidth: 40,
-    minHeight: 32,
+  languageSegmented: {
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#E2E8F0',
     borderRadius: 8,
-    backgroundColor: '#E0F2FE',
+    flexDirection: 'row',
+    padding: 3,
   },
-  langButtonText: {
-    color: '#0369A1',
-    fontSize: 12,
+  languageSegment: {
+    alignItems: 'center',
+    borderRadius: 6,
+    justifyContent: 'center',
+    minWidth: 34,
+    paddingHorizontal: 7,
+    paddingVertical: 6,
+  },
+  languageSegmentActive: {
+    backgroundColor: '#0F172A',
+  },
+  languageSegmentText: {
+    color: '#475569',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  languageSegmentTextActive: {
+    color: '#FFFFFF',
+    fontSize: 11,
     fontWeight: '900',
   },
   title: {

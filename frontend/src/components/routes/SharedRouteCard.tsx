@@ -1,28 +1,32 @@
-import type { SharedRoute } from '@/types/ridekorea';
+import { momentsCopy, t } from '@/i18n';
+import type { AppLanguage, SharedRoute } from '@/types/ridekorea';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface SharedRouteCardProps {
+  lang: AppLanguage;
   route: SharedRoute;
   onImport: (route: SharedRoute) => void;
   onOpen?: (route: SharedRoute) => void;
 }
 
-function formatDuration(hours: number) {
-  if (hours <= 0) return '기록 없음';
+function formatDuration(hours: number, lang: AppLanguage) {
+  const copy = (item: Record<AppLanguage, string>) => t(lang, item);
+  if (hours <= 0) return copy(momentsCopy.noRecord);
 
   const roundedHours = Math.floor(hours);
   const minutes = Math.round((hours - roundedHours) * 60);
 
   if (minutes === 0) {
-    return `${roundedHours}시간`;
+    return `${roundedHours}${copy(momentsCopy.hours)}`;
   }
 
-  return `${roundedHours}시간 ${minutes}분`;
+  return `${roundedHours}${copy(momentsCopy.hours)} ${minutes}${copy(momentsCopy.minutes)}`;
 }
 
-export function SharedRouteCard({ route, onImport, onOpen }: SharedRouteCardProps) {
+export function SharedRouteCard({ lang, route, onImport, onOpen }: SharedRouteCardProps) {
   const firstStop = route.stops[0];
+  const copy = (item: Record<AppLanguage, string>) => t(lang, item);
 
   return (
     <TouchableOpacity
@@ -42,13 +46,13 @@ export function SharedRouteCard({ route, onImport, onOpen }: SharedRouteCardProp
             </Text>
             <Text style={styles.author} numberOfLines={1}>
               {route.authorName}
-              {route.authorCountry ? ` · ${route.authorCountry}` : ''}
+              {route.authorCountry ? ` / ${route.authorCountry}` : ''}
             </Text>
           </View>
 
           <View style={[styles.statPill, route.likedByMe && styles.statPillActive]}>
             <Text style={[styles.statPillText, route.likedByMe && styles.statPillTextActive]}>
-              {route.likedByMe ? '추천 완료' : `${route.likeCount} 추천`}
+              {route.likedByMe ? copy(momentsCopy.liked) : `${route.likeCount} ${copy(momentsCopy.likes)}`}
             </Text>
           </View>
         </View>
@@ -69,25 +73,25 @@ export function SharedRouteCard({ route, onImport, onOpen }: SharedRouteCardProp
 
         <View style={styles.metricGrid}>
           <View style={styles.metricBox}>
-            <Text style={styles.metricLabel}>거리</Text>
+            <Text style={styles.metricLabel}>{copy(momentsCopy.distance)}</Text>
             <Text style={styles.metricValue}>{route.distanceKm.toFixed(1)} km</Text>
           </View>
           <View style={styles.metricBox}>
-            <Text style={styles.metricLabel}>시간</Text>
-            <Text style={styles.metricValue}>{formatDuration(route.durationHours)}</Text>
+            <Text style={styles.metricLabel}>{copy(momentsCopy.time)}</Text>
+            <Text style={styles.metricValue}>{formatDuration(route.durationHours, lang)}</Text>
           </View>
           <View style={styles.metricBox}>
-            <Text style={styles.metricLabel}>기록</Text>
-            <Text style={styles.metricValue}>{route.stops.length}개 스팟</Text>
+            <Text style={styles.metricLabel}>{copy(momentsCopy.records)}</Text>
+            <Text style={styles.metricValue}>{route.stops.length} {copy(momentsCopy.stops)}</Text>
           </View>
         </View>
 
         {firstStop && (
           <View style={styles.highlightBox}>
-            <Text style={styles.highlightLabel}>대표 메모</Text>
+            <Text style={styles.highlightLabel}>{copy(momentsCopy.featuredNote)}</Text>
             <Text style={styles.highlightTitle}>{firstStop.title}</Text>
             <Text style={styles.highlightBody} numberOfLines={2}>
-              {firstStop.body || '라이더가 남긴 스팟 기록을 확인해 보세요.'}
+              {firstStop.body || copy(momentsCopy.defaultStopNote)}
             </Text>
           </View>
         )}
@@ -102,7 +106,7 @@ export function SharedRouteCard({ route, onImport, onOpen }: SharedRouteCardProp
 
         <View style={styles.footer}>
           <Text style={styles.socialText}>
-            댓글 {route.commentCount} · 공유 {route.shareCount}
+            {copy(momentsCopy.comments)} {route.commentCount} / {copy(momentsCopy.shares)} {route.shareCount}
           </Text>
           <TouchableOpacity
             style={styles.importButton}
@@ -110,7 +114,7 @@ export function SharedRouteCard({ route, onImport, onOpen }: SharedRouteCardProp
               event.stopPropagation();
               onImport(route);
             }}>
-            <Text style={styles.importButtonText}>내 루트로 가져오기</Text>
+            <Text style={styles.importButtonText}>{copy(momentsCopy.importRoute)}</Text>
           </TouchableOpacity>
         </View>
       </View>

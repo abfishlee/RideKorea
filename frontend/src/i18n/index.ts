@@ -1046,6 +1046,271 @@ export const momentsCopy = {
     en: 'Could not load public records.',
     ja: '公開記録を読み込めませんでした。',
   },
+  liked: {
+    ko: '추천 완료',
+    en: 'Liked',
+    ja: 'おすすめ済み',
+  },
+  likes: {
+    ko: '추천',
+    en: 'likes',
+    ja: 'おすすめ',
+  },
+  distance: {
+    ko: '거리',
+    en: 'Distance',
+    ja: '距離',
+  },
+  time: {
+    ko: '시간',
+    en: 'Time',
+    ja: '時間',
+  },
+  records: {
+    ko: '기록',
+    en: 'Records',
+    ja: '記録',
+  },
+  stops: {
+    ko: '스팟',
+    en: 'stops',
+    ja: 'スポット',
+  },
+  featuredNote: {
+    ko: '대표 메모',
+    en: 'Featured note',
+    ja: '代表メモ',
+  },
+  defaultStopNote: {
+    ko: '라이더가 남긴 스팟 기록을 확인해 보세요.',
+    en: 'Open the route to read the rider notes for this stop.',
+    ja: 'ライダーが残したスポット記録を確認してみましょう。',
+  },
+  comments: {
+    ko: '댓글',
+    en: 'comments',
+    ja: 'コメント',
+  },
+  shares: {
+    ko: '공유',
+    en: 'shares',
+    ja: '共有',
+  },
+  importRoute: {
+    ko: '내 루트로 가져오기',
+    en: 'Import route',
+    ja: '自分のルートに追加',
+  },
+  noRecord: {
+    ko: '기록 없음',
+    en: 'No record',
+    ja: '記録なし',
+  },
+  hours: {
+    ko: '시간',
+    en: 'h',
+    ja: '時間',
+  },
+  minutes: {
+    ko: '분',
+    en: 'm',
+    ja: '分',
+  },
+  sharedRoutePreview: {
+    ko: '공유 루트 미리보기',
+    en: 'Shared Route Preview',
+    ja: '共有ルートプレビュー',
+  },
+  noTime: {
+    ko: '시간 없음',
+    en: 'No time',
+    ja: '時刻なし',
+  },
+  public: {
+    ko: '공개',
+    en: 'Public',
+    ja: '公開',
+  },
+  privateDraft: {
+    ko: '비공개 초안',
+    en: 'Private draft',
+    ja: '非公開下書き',
+  },
+  visibilityUpdateFailed: {
+    ko: '공개 설정을 변경하지 못했습니다.',
+    en: 'Could not update visibility.',
+    ja: '公開設定を変更できませんでした。',
+  },
+  shareRecordFailed: {
+    ko: '공유 횟수를 기록하지 못했습니다.',
+    en: 'Could not record this share.',
+    ja: '共有回数を記録できませんでした。',
+  },
+  likeRecordFailed: {
+    ko: '추천을 기록하지 못했습니다.',
+    en: 'Could not record this like.',
+    ja: 'おすすめを記録できませんでした。',
+  },
+  importPublicRouteFailed: {
+    ko: '공유 루트를 내 Journey로 가져오지 못했습니다.',
+    en: 'Could not import this shared route into Journey.',
+    ja: '共有ルートをJourneyに取り込めませんでした。',
+  },
+  commentCreateFailed: {
+    ko: '댓글을 남기지 못했습니다.',
+    en: 'Could not post your comment.',
+    ja: 'コメントを投稿できませんでした。',
+  },
+  loadingSharedRoute: {
+    ko: '공유 루트를 불러오는 중입니다.',
+    en: 'Loading shared route.',
+    ja: '共有ルートを読み込み中です。',
+  },
+  back: {
+    ko: '뒤로',
+    en: 'Back',
+    ja: '戻る',
+  },
+  routeOpenFailedTitle: {
+    ko: '루트를 불러오지 못했습니다',
+    en: 'Could not load route',
+    ja: 'ルートを読み込めませんでした',
+  },
+  routeDraftFallback: {
+    ko: '라이딩 중 남긴 기록을 바탕으로 만든 공유 루트 초안입니다.',
+    en: 'A shared route draft built from notes left during the ride.',
+    ja: 'ライド中に残した記録をもとに作成した共有ルートの下書きです。',
+  },
+  publishCheckTitle: {
+    ko: '공개 전 확인',
+    en: 'Before publishing',
+    ja: '公開前の確認',
+  },
+  publishCheckBody: {
+    ko: '사진, 위치, 제목, 본문이 여행기처럼 자연스럽게 이어지는지 확인해 주세요. 공개하면 Moments의 공유 루트 탭에 표시됩니다.',
+    en: 'Check that photos, locations, titles, and notes read naturally as a travel story. Public routes appear in Moments.',
+    ja: '写真、位置、タイトル、本文が旅行記のように自然につながるか確認してください。公開するとMomentsの共有ルートに表示されます。',
+  },
+  changing: {
+    ko: '변경 중',
+    en: 'Updating',
+    ja: '変更中',
+  },
+  makePrivate: {
+    ko: '비공개로 돌리기',
+    en: 'Make private',
+    ja: '非公開に戻す',
+  },
+  publishToMoments: {
+    ko: 'Moments에 공개하기',
+    en: 'Publish to Moments',
+    ja: 'Momentsに公開',
+  },
+  loginToLike: {
+    ko: '로그인 후 추천',
+    en: 'Sign in to like',
+    ja: 'ログインしておすすめ',
+  },
+  likeDone: {
+    ko: '추천 완료',
+    en: 'Liked',
+    ja: 'おすすめ済み',
+  },
+  liking: {
+    ko: '추천 중',
+    en: 'Liking',
+    ja: 'おすすめ中',
+  },
+  likeAction: {
+    ko: '추천하기',
+    en: 'Like',
+    ja: 'おすすめ',
+  },
+  recordingShare: {
+    ko: '공유 기록 중',
+    en: 'Recording',
+    ja: '記録中',
+  },
+  recordShare: {
+    ko: '공유 카운트 기록',
+    en: 'Record share',
+    ja: '共有回数を記録',
+  },
+  loginToImportRoute: {
+    ko: '로그인 후 내 루트로 가져오기',
+    en: 'Sign in to import',
+    ja: 'ログインして取り込む',
+  },
+  importing: {
+    ko: '가져오는 중',
+    en: 'Importing',
+    ja: '取り込み中',
+  },
+  importToJourney: {
+    ko: '내 Journey로 가져오기',
+    en: 'Import to Journey',
+    ja: 'Journeyに取り込む',
+  },
+  commentsTitle: {
+    ko: '댓글',
+    en: 'Comments',
+    ja: 'コメント',
+  },
+  noCommentsBody: {
+    ko: '아직 댓글이 없습니다. 이 루트를 준비하는 라이더에게 첫 질문을 남겨보세요.',
+    en: 'No comments yet. Leave the first question for riders preparing this route.',
+    ja: 'コメントはまだありません。このルートを準備するライダーへ最初の質問を残してみましょう。',
+  },
+  commentPlaceholder: {
+    ko: '루트에 대한 질문이나 응원을 남겨보세요.',
+    en: 'Leave a question or encouragement about this route.',
+    ja: 'このルートへの質問や応援を残しましょう。',
+  },
+  registering: {
+    ko: '등록 중',
+    en: 'Posting',
+    ja: '投稿中',
+  },
+  leaveComment: {
+    ko: '댓글 남기기',
+    en: 'Post comment',
+    ja: 'コメントする',
+  },
+  commentLoginBody: {
+    ko: '댓글을 남기려면 Journey 탭에서 Google 로그인 후 다시 열어주세요.',
+    en: 'Sign in with Google from Journey, then reopen this route to comment.',
+    ja: 'コメントするにはJourneyタブでGoogleログイン後、このルートをもう一度開いてください。',
+  },
+  sharedTimeline: {
+    ko: '공유 타임라인',
+    en: 'Shared timeline',
+    ja: '共有タイムライン',
+  },
+  noShareRecordsTitle: {
+    ko: '공유할 기록이 없습니다',
+    en: 'No records to share',
+    ja: '共有できる記録がありません',
+  },
+  noShareRecordsBody: {
+    ko: '라이딩 중 사진과 메모를 남긴 뒤 다시 초안을 만들어 주세요.',
+    en: 'Add photos and notes while riding, then create the draft again.',
+    ja: 'ライド中に写真とメモを残してから、もう一度下書きを作成してください。',
+  },
+  untitledStop: {
+    ko: '제목 없는 스팟',
+    en: 'Untitled stop',
+    ja: 'タイトルなしスポット',
+  },
+  draftNotFoundTitle: {
+    ko: '초안을 찾을 수 없습니다',
+    en: 'Draft not found',
+    ja: '下書きが見つかりません',
+  },
+  draftNotFoundBody: {
+    ko: 'Journey 기록에서 다시 생성해 주세요.',
+    en: 'Please create it again from your Journey record.',
+    ja: 'Journey記録からもう一度作成してください。',
+  },
 } satisfies Record<string, Record<AppLanguage, string>>;
 
 export const myPathCopy = {

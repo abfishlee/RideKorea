@@ -194,3 +194,12 @@ export async function removeQueuedTrackPoints(
   );
   return getQueuedTrackPointCount(journeyId);
 }
+
+export async function clearQueuedTrackPoints(journeyId: string): Promise<number> {
+  const db = await getDb();
+  await db.runAsync(
+    'DELETE FROM ride_track_queue WHERE journey_id = ?',
+    journeyId,
+  );
+  return getQueuedTrackPointCount(journeyId);
+}

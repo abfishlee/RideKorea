@@ -5,6 +5,8 @@ import {
   updateJourneyStatus,
   uploadDiaryPhotos,
 } from '@/services/api';
+import { clearActiveRideSession, saveActiveRideSession } from '@/services/local-ride-session';
+import { clearQueuedTrackPoints } from '@/services/offline-track-queue';
 import type { AppLanguage, Course, Journey, LatLng, Spot } from '@/types/ridekorea';
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
@@ -91,6 +93,7 @@ export function useJourneyRide({
         `${selectedCourse.name_en} Riding`,
       );
       const startedJourney = await updateJourneyStatus(token, journey.id, 'riding');
+      await saveActiveRideSession(startedJourney);
       setActiveJourney(startedJourney);
       Alert.alert(
         t(lang, journeyCopy.journeyStartedTitle),
@@ -117,6 +120,7 @@ export function useJourneyRide({
 
     try {
       const startedJourney = await updateJourneyStatus(token, journey.id, 'riding');
+      await saveActiveRideSession(startedJourney, journey.started_at || journey.created_at || undefined);
       setActiveJourney(startedJourney);
       Alert.alert(
         t(lang, journeyCopy.rideStartedTitle),
@@ -137,11 +141,51 @@ export function useJourneyRide({
 
     try {
       await updateJourneyStatus(token, activeJourney.id, 'completed');
+      await clearActiveRideSession(activeJourney.id);
       Alert.alert(
         t(lang, journeyCopy.journeyCompletedTitle),
         t(lang, journeyCopy.journeyCompletedBody),
       );
       setActiveJourney(null);
+    } catch (err: any) {
+      Alert.alert(t(lang, journeyCopy.error), err.message);
+    }
+  }, [activeJourney, lang, token]);
+
+  const handleRecoverJourney = useCallback(async (journey: Journey) => {
+    if (!token) return;
+
+    try {
+      const recoveredJourney = await updateJourneyStatus(token, journey.id, 'riding');
+      await saveActiveRideSession(
+        recoveredJourney,
+        journey.started_at || journey.created_at || undefined,
+      );
+      setActiveJourney(recoveredJourney);
+      Alert.alert(
+        pick(lang, '二쇳뻾 蹂듦뎄', 'Ride recovered', 'ライドを復元'),
+        pick(
+          lang,
+          `"${recoveredJourney.title}" 湲곕줉???댁뼱媛묐땲??`,
+          `"${recoveredJourney.title}" is ready to continue.`,
+          `"${recoveredJourney.title}" を続けられます。`,
+        ),
+      );
+    } catch (err: any) {
+      Alert.alert(t(lang, journeyCopy.error), err.message);
+    }
+  }, [lang, token]);
+
+  const handleDiscardRecoveredJourney = useCallback(async (journey: Journey) => {
+    try {
+      if (token) {
+        await updateJourneyStatus(token, journey.id, 'paused');
+      }
+      await clearQueuedTrackPoints(journey.id);
+      await clearActiveRideSession(journey.id);
+      if (activeJourney?.id === journey.id) {
+        setActiveJourney(null);
+      }
     } catch (err: any) {
       Alert.alert(t(lang, journeyCopy.error), err.message);
     }
@@ -292,6 +336,8 @@ export function useJourneyRide({
     handleSaveDiary,
     handleStartExistingJourney,
     handleStartJourney,
+    handleRecoverJourney,
+    handleDiscardRecoveredJourney,
     isDiaryModalOpen,
     isSubmittingDiary,
     resetJourney,

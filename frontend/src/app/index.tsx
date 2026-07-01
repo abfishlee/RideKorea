@@ -26,6 +26,7 @@ import {
   socialLogin,
 } from '@/services/api';
 import { getImportedRouteDrafts } from '@/services/imported-routes';
+import { clearActiveRideSession, getActiveRideSession } from '@/services/local-ride-session';
 import type {
   AppLanguage,
   ImportedRouteDraft,
@@ -132,6 +133,7 @@ export default function HomeScreen() {
   const [nearbyPoiError, setNearbyPoiError] = useState<string | null>(null);
   const [isSubmittingPoiFeedback, setIsSubmittingPoiFeedback] = useState(false);
   const [isSubmittingPoiReport, setIsSubmittingPoiReport] = useState(false);
+  const [hasCheckedRideRecovery, setHasCheckedRideRecovery] = useState(false);
 
   const {
     courses,
@@ -172,6 +174,8 @@ export default function HomeScreen() {
     handleSaveDiary,
     handleStartExistingJourney,
     handleStartJourney,
+    handleRecoverJourney,
+    handleDiscardRecoveredJourney,
     isDiaryModalOpen,
     isSubmittingDiary,
     resetJourney,
@@ -229,6 +233,79 @@ export default function HomeScreen() {
 
     return () => clearTimeout(timer);
   }, [fetchCourses, resetJourney, resetMapState, token]);
+
+  useEffect(() => {
+    if (!token || hasCheckedRideRecovery) return;
+
+    const timer = setTimeout(() => {
+      void (async () => {
+        setHasCheckedRideRecovery(true);
+        const savedSession = await getActiveRideSession();
+        if (!savedSession) return;
+
+        let recoverableJourney = savedSession.journey;
+        try {
+          recoverableJourney = await getJourney(token, savedSession.journey.id);
+        } catch (err) {
+          console.log('Failed to refresh recoverable journey', err);
+        }
+
+        if (recoverableJourney.status === 'completed') {
+          await clearActiveRideSession(recoverableJourney.id);
+          return;
+        }
+
+        Alert.alert(
+          lang === 'ko' ? '진행 중인 라이딩이 있어요' : 'Resume ride?',
+          lang === 'ko'
+            ? `"${recoverableJourney.title}" 기록을 이어서 진행할까요?`
+            : `Continue recording "${recoverableJourney.title}"?`,
+          [
+            {
+              text: lang === 'ko' ? '삭제' : 'Discard',
+              style: 'destructive',
+              onPress: () => {
+                void handleDiscardRecoveredJourney(recoverableJourney);
+              },
+            },
+            {
+              text: lang === 'ko' ? '이어서 주행' : 'Resume',
+              onPress: () => {
+                void (async () => {
+                  if (recoverableJourney.source_shared_route_id) {
+                    try {
+                      const publicRoute = await getPublicSharedRoute(
+                        recoverableJourney.source_shared_route_id,
+                        token,
+                      );
+                      const nextRoute = toSharedRoute(publicRoute);
+                      setSelectedDraft(null);
+                      setSelectedServerJourney(recoverableJourney);
+                      setSelectedServerRoute(nextRoute);
+                      setActiveDraftId(`journey-${recoverableJourney.id}`);
+                      handleSelectSharedRoute(nextRoute);
+                    } catch (err) {
+                      console.log('Failed to restore source route for ride recovery', err);
+                    }
+                  }
+                  await handleRecoverJourney(recoverableJourney);
+                })();
+              },
+            },
+          ],
+        );
+      })();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [
+    handleDiscardRecoveredJourney,
+    handleRecoverJourney,
+    handleSelectSharedRoute,
+    hasCheckedRideRecovery,
+    lang,
+    token,
+  ]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -395,6 +472,7 @@ export default function HomeScreen() {
 
   const handleLogout = async () => {
     await signOut();
+    setHasCheckedRideRecovery(false);
     resetJourney();
     Alert.alert(
       lang === 'ko' ? '로그아웃' : 'Logout',

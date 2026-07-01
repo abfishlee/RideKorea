@@ -360,3 +360,48 @@ npm.cmd run test:utils
 
 - P3 라이딩 복구 UX 연결
 - SQLite outbox에 ride metadata와 photo pin queue까지 확장
+
+### 완료: P3 라이딩 복구 UX 1차
+
+적용 파일:
+
+- `frontend/src/services/local-ride-session.ts`
+- `frontend/src/services/offline-track-queue.ts`
+- `frontend/src/hooks/use-journey-ride.ts`
+- `frontend/src/app/index.tsx`
+
+완료 내용:
+
+- SQLite `ride_meta` table을 추가해 진행 중인 Journey metadata를 저장한다.
+- 공식 코스/공유 루트 Journey 시작 시 active ride session을 local DB에 저장한다.
+- Journey 완료 시 active ride session을 삭제한다.
+- 앱 시작 후 로그인 상태가 확인되면 local active ride session을 읽어 복구 여부를 묻는다.
+- 복구 선택 시 서버 Journey를 최신 상태로 확인하고 `riding` 상태로 되돌린다.
+- 가져온 공유 루트 Journey는 원본 공유 루트도 다시 불러와 지도에 표시한다.
+- 삭제 선택 시 서버 Journey를 `paused`로 바꾸고, 해당 Journey의 local queued track point와 active session을 삭제한다.
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:utils
+```
+
+결과:
+
+- `tsc --noEmit` 통과
+- `lint` 통과
+- `test:utils` 통과
+
+남은 보완:
+
+- 복구 시 이미 서버에 저장된 track point를 지도에 다시 그리는 흐름
+- ride photo pin queue를 SQLite에 저장하는 확장
+- 완료 직전 pending queue가 남아 있을 때 flush/finalize를 보장하는 흐름
+
+다음 작업:
+
+- P4 Naver Map incremental update adapter 정리
+- 또는 P3 보강으로 복구 시 track point redraw와 finalize flush 강화

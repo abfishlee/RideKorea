@@ -1,3 +1,4 @@
+import { journeyCopy, t } from '@/i18n';
 import type { AppLanguage, TravelPoi, TravelPoiReportType } from '@/types/ridekorea';
 import React from 'react';
 import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -12,33 +13,33 @@ interface TravelPoiSheetProps {
   onReport?: (reportType: TravelPoiReportType) => void;
 }
 
-const CATEGORY_LABELS: Record<string, { ko: string; en: string; color: string; background: string }> = {
-  repair: { ko: '수리', en: 'Repair', color: '#B45309', background: '#FEF3C7' },
-  food: { ko: '맛집', en: 'Food', color: '#BE123C', background: '#FFE4E6' },
-  lodging: { ko: '숙소', en: 'Lodging', color: '#6D28D9', background: '#EDE9FE' },
-  scenic: { ko: '경치', en: 'Scenic', color: '#047857', background: '#D1FAE5' },
-  transport: { ko: '교통', en: 'Transport', color: '#1D4ED8', background: '#DBEAFE' },
-  culture: { ko: '문화', en: 'Culture', color: '#0F766E', background: '#CCFBF1' },
+const CATEGORY_LABELS: Record<string, { ko: string; en: string; ja: string; color: string; background: string }> = {
+  repair: { ko: '수리', en: 'Repair', ja: '修理', color: '#B45309', background: '#FEF3C7' },
+  food: { ko: '맛집', en: 'Food', ja: '食事', color: '#BE123C', background: '#FFE4E6' },
+  lodging: { ko: '숙소', en: 'Lodging', ja: '宿泊', color: '#6D28D9', background: '#EDE9FE' },
+  scenic: { ko: '경치', en: 'Scenic', ja: '景色', color: '#047857', background: '#D1FAE5' },
+  transport: { ko: '교통', en: 'Transport', ja: '交通', color: '#1D4ED8', background: '#DBEAFE' },
+  culture: { ko: '문화', en: 'Culture', ja: '文化', color: '#0F766E', background: '#CCFBF1' },
 };
 
-function getName(poi: TravelPoi, isKo: boolean) {
-  return isKo ? poi.name : poi.name_en || poi.name;
+function getName(poi: TravelPoi, lang: AppLanguage) {
+  return lang === 'ko' ? poi.name : poi.name_en || poi.name;
 }
 
-function getDescription(poi: TravelPoi, isKo: boolean) {
-  return isKo ? poi.description : poi.description_en || poi.description;
+function getDescription(poi: TravelPoi, lang: AppLanguage) {
+  return lang === 'ko' ? poi.description : poi.description_en || poi.description;
 }
 
-function getBikePolicy(poi: TravelPoi, isKo: boolean) {
-  return isKo ? poi.bike_policy : poi.bike_policy_en || poi.bike_policy;
+function getBikePolicy(poi: TravelPoi, lang: AppLanguage) {
+  return lang === 'ko' ? poi.bike_policy : poi.bike_policy_en || poi.bike_policy;
 }
 
-function getPackingNotes(poi: TravelPoi, isKo: boolean) {
-  return isKo ? poi.packing_notes : poi.packing_notes_en || poi.packing_notes;
+function getPackingNotes(poi: TravelPoi, lang: AppLanguage) {
+  return lang === 'ko' ? poi.packing_notes : poi.packing_notes_en || poi.packing_notes;
 }
 
-function getSearchText(poi: TravelPoi, isKo: boolean) {
-  return poi.address || getName(poi, isKo);
+function getSearchText(poi: TravelPoi, lang: AppLanguage) {
+  return poi.address || getName(poi, lang);
 }
 
 function formatDate(value?: string | null) {
@@ -48,7 +49,7 @@ function formatDate(value?: string | null) {
   return date.toISOString().slice(0, 10);
 }
 
-async function openUrl(url: string, isKo: boolean) {
+async function openUrl(url: string, lang: AppLanguage) {
   try {
     const canOpen = await Linking.canOpenURL(url);
     if (!canOpen) {
@@ -57,8 +58,8 @@ async function openUrl(url: string, isKo: boolean) {
     await Linking.openURL(url);
   } catch {
     Alert.alert(
-      isKo ? '열 수 없음' : 'Cannot open',
-      isKo ? '이 기기에서 해당 동작을 실행할 수 없습니다.' : 'This action is not available on this device.',
+      t(lang, journeyCopy.cannotOpenTitle),
+      t(lang, journeyCopy.cannotOpenBody),
     );
   }
 }
@@ -72,12 +73,13 @@ export function TravelPoiSheet({
   onFeedback,
   onReport,
 }: TravelPoiSheetProps) {
-  const isKo = lang === 'ko';
   const category = CATEGORY_LABELS[poi.category] || CATEGORY_LABELS.scenic;
-  const description = getDescription(poi, isKo);
+  const copy = (item: Record<AppLanguage, string>) => t(lang, item);
+  const categoryLabel = category[lang] || category.en;
+  const description = getDescription(poi, lang);
   const isTransport = poi.category === 'transport';
-  const poiName = getName(poi, isKo);
-  const searchText = getSearchText(poi, isKo);
+  const poiName = getName(poi, lang);
+  const searchText = getSearchText(poi, lang);
   const encodedSearchText = encodeURIComponent(searchText);
   const encodedPoiName = encodeURIComponent(poiName);
   const lat = poi.location.lat;
@@ -85,34 +87,34 @@ export function TravelPoiSheet({
   const retrievedDate = formatDate(poi.retrieved_at);
   const sourceLabel = poi.attribution || poi.source_name || poi.source;
   const hasProvenance = Boolean(sourceLabel || poi.license_type || retrievedDate || poi.source_url);
-  const bikePolicy = getBikePolicy(poi, isKo);
-  const packingNotes = getPackingNotes(poi, isKo);
+  const bikePolicy = getBikePolicy(poi, lang);
+  const packingNotes = getPackingNotes(poi, lang);
 
   const handleCall = () => {
     if (!poi.phone) return;
-    void openUrl(`tel:${poi.phone.replace(/[^\d+]/g, '')}`, isKo);
+    void openUrl(`tel:${poi.phone.replace(/[^\d+]/g, '')}`, lang);
   };
 
   const handleOpenMap = () => {
-    void openUrl(`https://map.kakao.com/link/map/${encodedPoiName},${lat},${lng}`, isKo);
+    void openUrl(`https://map.kakao.com/link/map/${encodedPoiName},${lat},${lng}`, lang);
   };
 
   const handleOpenDirections = () => {
-    void openUrl(`https://map.kakao.com/link/to/${encodedPoiName},${lat},${lng}`, isKo);
+    void openUrl(`https://map.kakao.com/link/to/${encodedPoiName},${lat},${lng}`, lang);
   };
 
   const handleSearchAddress = () => {
-    void openUrl(`https://map.kakao.com/?q=${encodedSearchText}`, isKo);
+    void openUrl(`https://map.kakao.com/?q=${encodedSearchText}`, lang);
   };
 
   const handleOpenSource = () => {
     if (!poi.source_url) return;
-    void openUrl(poi.source_url, isKo);
+    void openUrl(poi.source_url, lang);
   };
 
   const handleOpenBooking = () => {
     if (!poi.booking_url) return;
-    void openUrl(poi.booking_url, isKo);
+    void openUrl(poi.booking_url, lang);
   };
 
   return (
@@ -121,7 +123,7 @@ export function TravelPoiSheet({
         <View style={styles.titleBlock}>
           <View style={[styles.badge, { backgroundColor: category.background }]}>
             <Text style={[styles.badgeText, { color: category.color }]}>
-              {isKo ? category.ko : category.en}
+              {categoryLabel}
             </Text>
           </View>
           <Text style={styles.title} numberOfLines={2}>
@@ -139,31 +141,28 @@ export function TravelPoiSheet({
         </Text>
       ) : (
         <Text style={styles.descriptionMuted}>
-          {isKo ? '아직 상세 설명이 없습니다.' : 'No detailed description yet.'}
+          {copy(journeyCopy.noPoiDescription)}
         </Text>
       )}
 
       {isTransport && (
         <View style={styles.transportGuideBox}>
           <Text style={styles.transportGuideTitle}>
-            {isKo ? '자전거 이동 체크' : 'Bike transfer check'}
+            {copy(journeyCopy.bikeTransferCheck)}
           </Text>
           {poi.transport_mode || poi.route_name ? (
             <Text style={styles.transportGuideMeta}>
-              {[poi.transport_mode, poi.route_name].filter(Boolean).join(' · ')}
+              {[poi.transport_mode, poi.route_name].filter(Boolean).join(' / ')}
             </Text>
           ) : null}
           <Text style={styles.transportGuideText}>
-            {bikePolicy ||
-              (isKo
-                ? '출발 전 항공, 철도, 버스 규정을 다시 확인하세요. 포장 규격과 탑승 가능 시간은 노선별로 달라질 수 있습니다.'
-                : 'Before travel, re-check airline, rail, and bus rules. Packing size and boarding rules can vary by route.')}
+            {bikePolicy || copy(journeyCopy.bikePolicyFallback)}
           </Text>
           {poi.packing_required !== null && poi.packing_required !== undefined ? (
             <Text style={styles.transportGuideMeta}>
               {poi.packing_required
-                ? (isKo ? '자전거 포장 필요' : 'Bike packing required')
-                : (isKo ? '포장 조건 확인 필요' : 'Check packing conditions')}
+                ? copy(journeyCopy.bikePackingRequired)
+                : copy(journeyCopy.checkPackingConditions)}
             </Text>
           ) : null}
           {packingNotes ? (
@@ -174,7 +173,7 @@ export function TravelPoiSheet({
           {poi.booking_url ? (
             <TouchableOpacity activeOpacity={0.86} onPress={handleOpenBooking}>
               <Text style={styles.transportGuideLink}>
-                {isKo ? '공식 안내 보기' : 'Open official guide'}
+                {copy(journeyCopy.openOfficialGuide)}
               </Text>
             </TouchableOpacity>
           ) : null}
@@ -196,17 +195,17 @@ export function TravelPoiSheet({
       <View style={styles.actionGrid}>
         {poi.phone && (
           <TouchableOpacity style={styles.actionButton} activeOpacity={0.86} onPress={handleCall}>
-            <Text style={styles.actionButtonText}>{isKo ? '전화' : 'Call'}</Text>
+            <Text style={styles.actionButtonText}>{copy(journeyCopy.call)}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity style={styles.actionButton} activeOpacity={0.86} onPress={handleOpenMap}>
-          <Text style={styles.actionButtonText}>{isKo ? '지도' : 'Map'}</Text>
+          <Text style={styles.actionButtonText}>{copy(journeyCopy.map)}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton} activeOpacity={0.86} onPress={handleOpenDirections}>
-          <Text style={styles.actionButtonText}>{isKo ? '길찾기' : 'Directions'}</Text>
+          <Text style={styles.actionButtonText}>{copy(journeyCopy.directions)}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton} activeOpacity={0.86} onPress={handleSearchAddress}>
-          <Text style={styles.actionButtonText}>{isKo ? '주소검색' : 'Search'}</Text>
+          <Text style={styles.actionButtonText}>{copy(journeyCopy.search)}</Text>
         </TouchableOpacity>
       </View>
 
@@ -225,7 +224,7 @@ export function TravelPoiSheet({
                 styles.feedbackButtonText,
                 poi.my_feedback === 'recommend' && styles.feedbackButtonTextActive,
               ]}>
-              {isKo ? `추천 ${poi.recommend_count}` : `Recommend ${poi.recommend_count}`}
+              {copy(journeyCopy.recommend)} {poi.recommend_count}
             </Text>
           </TouchableOpacity>
 
@@ -242,7 +241,7 @@ export function TravelPoiSheet({
                 styles.feedbackButtonText,
                 poi.my_feedback === 'caution' && styles.feedbackButtonTextActive,
               ]}>
-              {isKo ? `주의 ${poi.caution_count}` : `Caution ${poi.caution_count}`}
+              {copy(journeyCopy.caution)} {poi.caution_count}
             </Text>
           </TouchableOpacity>
         </View>
@@ -251,7 +250,7 @@ export function TravelPoiSheet({
       {onReport && (
         <View style={styles.reportBox}>
           <Text style={styles.reportTitle}>
-            {isKo ? '정보가 틀렸나요?' : 'Is this information wrong?'}
+            {copy(journeyCopy.wrongInfoPrompt)}
           </Text>
           <View style={styles.reportRow}>
             <TouchableOpacity
@@ -259,21 +258,21 @@ export function TravelPoiSheet({
               activeOpacity={0.86}
               disabled={isSubmittingReport}
               onPress={() => onReport('closed')}>
-              <Text style={styles.reportButtonText}>{isKo ? '폐업' : 'Closed'}</Text>
+              <Text style={styles.reportButtonText}>{copy(journeyCopy.reportClosed)}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.reportButton}
               activeOpacity={0.86}
               disabled={isSubmittingReport}
               onPress={() => onReport('wrong_location')}>
-              <Text style={styles.reportButtonText}>{isKo ? '위치오류' : 'Location'}</Text>
+              <Text style={styles.reportButtonText}>{copy(journeyCopy.reportLocation)}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.reportButtonDanger}
               activeOpacity={0.86}
               disabled={isSubmittingReport}
               onPress={() => onReport('danger')}>
-              <Text style={styles.reportButtonText}>{isKo ? '위험' : 'Danger'}</Text>
+              <Text style={styles.reportButtonText}>{copy(journeyCopy.reportDanger)}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -282,7 +281,7 @@ export function TravelPoiSheet({
       {hasProvenance && (
         <View style={styles.provenanceBox}>
           <Text style={styles.provenanceTitle}>
-            {isKo ? '데이터 출처' : 'Data source'}
+            {copy(journeyCopy.dataSource)}
           </Text>
           {sourceLabel ? (
             <Text style={styles.provenanceText} numberOfLines={2}>
@@ -297,14 +296,14 @@ export function TravelPoiSheet({
             ) : null}
             {retrievedDate ? (
               <Text style={styles.provenanceMeta}>
-                {isKo ? `확인 ${retrievedDate}` : `Checked ${retrievedDate}`}
+                {copy(journeyCopy.checked)} {retrievedDate}
               </Text>
             ) : null}
           </View>
           {poi.source_url ? (
             <TouchableOpacity activeOpacity={0.86} onPress={handleOpenSource}>
               <Text style={styles.sourceLink}>
-                {isKo ? '원문 보기' : 'Open source'}
+                {copy(journeyCopy.openSource)}
               </Text>
             </TouchableOpacity>
           ) : null}

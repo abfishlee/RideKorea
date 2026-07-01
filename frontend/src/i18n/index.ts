@@ -653,6 +653,176 @@ export const journeyCopy = {
     en: 'Prepare Ride',
     ja: 'このルートで準備',
   },
+  selectedRouteStop: {
+    ko: '선택한 루트 스팟',
+    en: 'this route stop',
+    ja: '選択したルートスポット',
+  },
+  plannedStopDiarySubtitle: {
+    ko: '에 내 기록을 남깁니다',
+    en: 'Add your note to',
+    ja: 'に自分の記録を残します',
+  },
+  currentPhotoSpotSubtitle: {
+    ko: '현재 위치에 사진 스팟을 만듭니다',
+    en: 'Create a photo spot here',
+    ja: '現在地に写真スポットを作成します',
+  },
+  waitingForLocationShort: {
+    ko: '위치 정보 대기 중',
+    en: 'Waiting for location',
+    ja: '位置情報を待機中',
+  },
+  diaryModalTitle: {
+    ko: '라이딩 기록 남기기',
+    en: 'Riding Diary',
+    ja: 'ライド記録を書く',
+  },
+  diaryTitlePlaceholder: {
+    ko: '제목, 예: 드디어 출발',
+    en: 'Title, e.g. Finally rolling',
+    ja: 'タイトル、例: ついに出発',
+  },
+  diaryBodyPlaceholder: {
+    ko: '오늘의 길, 날씨, 수리점, 식당, 만난 사람들을 짧게 남겨보세요.',
+    en: 'Write a short diary about the road, weather, repair shops, food, or people you met.',
+    ja: '今日の道、天気、修理店、食事、出会った人について短く残しましょう。',
+  },
+  photoPinHint: {
+    ko: '사진을 선택하면 현재 위치에 마커가 생깁니다',
+    en: 'Pick a photo to pin it here',
+    ja: '写真を選ぶと現在地にマーカーが作られます',
+  },
+  samplePhotoRiverside: {
+    ko: '강변 라이딩',
+    en: 'Riverside',
+    ja: '川沿いライド',
+  },
+  samplePhotoBike: {
+    ko: '나의 자전거',
+    en: 'My Bike',
+    ja: '私の自転車',
+  },
+  samplePhotoValley: {
+    ko: '계곡 풍경',
+    en: 'Valley',
+    ja: '渓谷の風景',
+  },
+  cancel: {
+    ko: '취소',
+    en: 'Cancel',
+    ja: 'キャンセル',
+  },
+  saveDiaryAction: {
+    ko: '기록 저장',
+    en: 'Save Diary',
+    ja: '記録を保存',
+  },
+  cannotOpenTitle: {
+    ko: '열 수 없음',
+    en: 'Cannot open',
+    ja: '開けません',
+  },
+  cannotOpenBody: {
+    ko: '이 기기에서 해당 동작을 실행할 수 없습니다.',
+    en: 'This action is not available on this device.',
+    ja: 'この端末ではこの操作を実行できません。',
+  },
+  noPoiDescription: {
+    ko: '아직 상세 설명이 없습니다.',
+    en: 'No detailed description yet.',
+    ja: '詳細説明はまだありません。',
+  },
+  bikeTransferCheck: {
+    ko: '자전거 이동 체크',
+    en: 'Bike transfer check',
+    ja: '自転車移動チェック',
+  },
+  bikePolicyFallback: {
+    ko: '출발 전 항공, 철도, 버스 규정을 다시 확인하세요. 포장 규격과 탑승 가능 시간은 노선별로 달라질 수 있습니다.',
+    en: 'Before travel, re-check airline, rail, and bus rules. Packing size and boarding rules can vary by route.',
+    ja: '出発前に航空、鉄道、バスの規定を再確認してください。梱包サイズや乗車可能時間は路線ごとに異なる場合があります。',
+  },
+  bikePackingRequired: {
+    ko: '자전거 포장 필요',
+    en: 'Bike packing required',
+    ja: '自転車の梱包が必要',
+  },
+  checkPackingConditions: {
+    ko: '포장 조건 확인 필요',
+    en: 'Check packing conditions',
+    ja: '梱包条件の確認が必要',
+  },
+  openOfficialGuide: {
+    ko: '공식 안내 보기',
+    en: 'Open official guide',
+    ja: '公式案内を見る',
+  },
+  call: {
+    ko: '전화',
+    en: 'Call',
+    ja: '電話',
+  },
+  map: {
+    ko: '지도',
+    en: 'Map',
+    ja: '地図',
+  },
+  directions: {
+    ko: '길찾기',
+    en: 'Directions',
+    ja: 'ルート案内',
+  },
+  search: {
+    ko: '주소검색',
+    en: 'Search',
+    ja: '住所検索',
+  },
+  recommend: {
+    ko: '추천',
+    en: 'Recommend',
+    ja: 'おすすめ',
+  },
+  caution: {
+    ko: '주의',
+    en: 'Caution',
+    ja: '注意',
+  },
+  wrongInfoPrompt: {
+    ko: '정보가 틀렸나요?',
+    en: 'Is this information wrong?',
+    ja: '情報が違いますか？',
+  },
+  reportClosed: {
+    ko: '폐업',
+    en: 'Closed',
+    ja: '閉業',
+  },
+  reportLocation: {
+    ko: '위치오류',
+    en: 'Location',
+    ja: '位置違い',
+  },
+  reportDanger: {
+    ko: '위험',
+    en: 'Danger',
+    ja: '危険',
+  },
+  dataSource: {
+    ko: '데이터 출처',
+    en: 'Data source',
+    ja: 'データ出典',
+  },
+  checked: {
+    ko: '확인',
+    en: 'Checked',
+    ja: '確認',
+  },
+  openSource: {
+    ko: '원문 보기',
+    en: 'Open source',
+    ja: '原文を見る',
+  },
 } satisfies Record<string, Record<AppLanguage, string>>;
 
 export const momentsCopy = {

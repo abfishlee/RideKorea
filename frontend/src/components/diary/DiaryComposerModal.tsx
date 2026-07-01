@@ -1,3 +1,4 @@
+import { journeyCopy, t } from '@/i18n';
 import type { AppLanguage, LatLng, Spot } from '@/types/ridekorea';
 import React from 'react';
 import {
@@ -31,21 +32,21 @@ interface DiaryComposerModalProps {
 
 const samplePhotos = [
   {
-    labelKo: '강변 라이딩',
-    labelEn: 'Riverside',
+    copyKey: 'samplePhotoRiverside',
     uri: 'https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?w=500',
   },
   {
-    labelKo: '나의 자전거',
-    labelEn: 'My Bike',
+    copyKey: 'samplePhotoBike',
     uri: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500',
   },
   {
-    labelKo: '계곡 풍경',
-    labelEn: 'Valley',
+    copyKey: 'samplePhotoValley',
     uri: 'https://images.unsplash.com/photo-1502759683299-cdcd6974244f?w=500',
   },
-];
+] satisfies {
+  copyKey: 'samplePhotoRiverside' | 'samplePhotoBike' | 'samplePhotoValley';
+  uri: string;
+}[];
 
 export function DiaryComposerModal({
   visible,
@@ -65,25 +66,27 @@ export function DiaryComposerModal({
   onSubmit,
 }: DiaryComposerModalProps) {
   const isKo = lang === 'ko';
+  const copy = (item: Record<AppLanguage, string>) => t(lang, item);
+  const plannedStopLabel = diaryLocationLabel || copy(journeyCopy.selectedRouteStop);
   const subtitle = selectedSpot
     ? isKo ? selectedSpot.name : selectedSpot.name_en
     : diaryLocationMode === 'planned-stop'
-      ? isKo
-        ? `${diaryLocationLabel || '선택한 루트 스팟'}에 내 기록을 남깁니다`
-        : `Add your note to ${diaryLocationLabel || 'this route stop'}`
-    : diaryLocation
-      ? isKo ? '현재 위치에 사진 스팟을 만듭니다' : 'Create a photo spot here'
-      : isKo ? '위치 정보 대기 중' : 'Waiting for location';
+      ? lang === 'en'
+        ? `${copy(journeyCopy.plannedStopDiarySubtitle)} ${plannedStopLabel}`
+        : `${plannedStopLabel}${copy(journeyCopy.plannedStopDiarySubtitle)}`
+      : diaryLocation
+        ? copy(journeyCopy.currentPhotoSpotSubtitle)
+        : copy(journeyCopy.waitingForLocationShort);
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>{isKo ? '라이딩 기록 남기기' : 'Riding Diary'}</Text>
+          <Text style={styles.modalTitle}>{copy(journeyCopy.diaryModalTitle)}</Text>
           <Text style={styles.modalSubtitle}>{subtitle}</Text>
 
           <TextInput
-            placeholder={isKo ? '제목, 예: 드디어 출발' : 'Title, e.g. Finally rolling'}
+            placeholder={copy(journeyCopy.diaryTitlePlaceholder)}
             style={styles.titleInput}
             value={diaryTitle}
             onChangeText={onDiaryTitleChange}
@@ -91,11 +94,7 @@ export function DiaryComposerModal({
           />
 
           <TextInput
-            placeholder={
-              isKo
-                ? '오늘의 길, 날씨, 수리점, 식당, 사람들을 짧게 남겨보세요.'
-                : 'Write a short diary about the road, weather, repair shops, food, or people you met.'
-            }
+            placeholder={copy(journeyCopy.diaryBodyPlaceholder)}
             style={styles.textInput}
             multiline
             numberOfLines={6}
@@ -113,7 +112,7 @@ export function DiaryComposerModal({
           ) : (
             <View style={styles.photoSelectPlaceholder}>
               <Text style={styles.photoSelectHint}>
-                {isKo ? '사진을 선택하면 현재 위치에 마커가 생깁니다' : 'Pick a photo to pin it here'}
+                {copy(journeyCopy.photoPinHint)}
               </Text>
               <View style={styles.photoMockRow}>
                 {samplePhotos.map((photo) => (
@@ -122,7 +121,7 @@ export function DiaryComposerModal({
                     style={styles.photoMockBadge}
                     onPress={() => onPhotoChange(photo.uri)}>
                     <Text style={styles.photoMockText}>
-                      {isKo ? photo.labelKo : photo.labelEn}
+                      {copy(journeyCopy[photo.copyKey])}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -135,7 +134,7 @@ export function DiaryComposerModal({
               style={[styles.modalBtn, styles.cancelBtn]}
               onPress={onCancel}
               disabled={isSubmitting}>
-              <Text style={styles.cancelBtnText}>{isKo ? '취소' : 'Cancel'}</Text>
+              <Text style={styles.cancelBtnText}>{copy(journeyCopy.cancel)}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.modalBtn, styles.submitBtn]}
@@ -145,7 +144,7 @@ export function DiaryComposerModal({
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <Text style={styles.submitBtnText}>
-                  {isKo ? '기록 저장' : 'Save Diary'}
+                  {copy(journeyCopy.saveDiaryAction)}
                 </Text>
               )}
             </TouchableOpacity>

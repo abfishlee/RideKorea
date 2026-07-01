@@ -126,6 +126,7 @@ export interface AuthResponse {
 
 export interface Voucher {
   id?: string;
+  user_id?: string;
   spot_id?: string;
   code?: string;
   title?: string;
@@ -135,6 +136,8 @@ export interface Voucher {
   reward_title?: string;
   reward_title_en?: string;
   reward_amount?: number;
+  is_redeemed?: boolean;
+  created_at?: string;
   expires_at?: string;
   [key: string]: unknown;
 }

@@ -64,3 +64,44 @@ $env:PYTHONPATH='backend'; .\venv\Scripts\python.exe -m unittest discover -s bac
 1. Wallet UX refresh/unread 상태 보강
 2. Naver Client ID 입력 후 실제 기기 WebView 렌더링 QA
 3. 바우처 abuse control과 redemption API 설계
+
+## 완료: Wallet UX refresh/unread 상태 보강
+
+적용 파일:
+
+- `frontend/src/app/compass.tsx`
+- `frontend/src/components/voucher/VoucherWalletModal.tsx`
+- `frontend/src/types/ridekorea.ts`
+
+완료 내용:
+
+- 지갑을 열 때마다 `/vouchers/me`를 다시 호출해 주행 중 자동 발급된 바우처가 바로 보이도록 했다.
+- 지갑 모달에 새로고침 버튼과 pull-to-refresh를 추가했다.
+- `VoucherWalletModal`의 `any[]` 타입을 제거하고 `Voucher[]` 타입으로 정리했다.
+- 사용 가능/사용 완료 개수를 상단 요약으로 분리했다.
+- 최근 24시간 내 발급된 바우처에는 `신규` 배지를 표시한다.
+- 사용 가능/사용 완료 상태 배지를 카드에 표시한다.
+- 서버 응답의 `reward_amount`, `created_at`, `is_redeemed` 필드를 타입에 반영했다.
+- 고정 금액 `5,000 KRW` 대신 바우처의 실제 `reward_amount`를 표시한다.
+- 만료일과 D-day를 함께 표시한다.
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:utils
+```
+
+검증 결과:
+
+- frontend typecheck 통과
+- frontend lint 통과
+- frontend test:utils 통과
+
+남은 보완:
+
+- 서버에 실제 redemption API와 QR/코드 사용 처리 추가
+- Wallet 화면을 단순 모달에서 별도 화면으로 확장할지 결정
+- 바우처 발급 직후 Compass 탭 badge/count를 전역 상태로 즉시 반영할지 검토

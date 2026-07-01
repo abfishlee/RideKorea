@@ -35,6 +35,7 @@ export default function CompassScreen() {
   const { token, userProfile, isAuthChecked, signOut } = useAuthSession();
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshingVouchers, setIsRefreshingVouchers] = useState(false);
 
   const [isVouchersModalOpen, setIsVouchersModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
@@ -75,6 +76,29 @@ export default function CompassScreen() {
       setIsLoading(false);
     }
   }, [isAuthChecked, token]);
+
+  const refreshVouchers = useCallback(async () => {
+    if (!token) {
+      setVouchers([]);
+      return;
+    }
+
+    setIsRefreshingVouchers(true);
+    try {
+      const wallet = await getMyVouchers(token);
+      setVouchers(wallet);
+    } catch (err) {
+      console.log('Error refreshing vouchers', err);
+    } finally {
+      setIsRefreshingVouchers(false);
+    }
+  }, [token]);
+
+  const handleOpenVoucherWallet = () => {
+    if (!token) return;
+    setIsVouchersModalOpen(true);
+    void refreshVouchers();
+  };
 
   useEffect(() => {
     const task = setTimeout(() => {
@@ -286,7 +310,7 @@ export default function CompassScreen() {
           <Text style={styles.sectionTitle}>{isKo ? '바우처' : 'Vouchers'}</Text>
           <TouchableOpacity
             style={[styles.actionCard, !token && styles.disabledCard]}
-            onPress={() => token && setIsVouchersModalOpen(true)}
+            onPress={handleOpenVoucherWallet}
             disabled={!token}>
             <View>
               <Text style={styles.primaryText}>{isKo ? '내 상생 바우처 지갑' : 'My voucher wallet'}</Text>
@@ -339,6 +363,8 @@ export default function CompassScreen() {
         visible={isVouchersModalOpen}
         lang={lang}
         vouchers={vouchers}
+        isRefreshing={isRefreshingVouchers}
+        onRefresh={refreshVouchers}
         onClose={() => setIsVouchersModalOpen(false)}
       />
 

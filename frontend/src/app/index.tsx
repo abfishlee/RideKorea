@@ -144,6 +144,7 @@ export default function HomeScreen() {
     areSharedRouteStopsVisible,
     isMapLoading,
     activeTravelPoiCategory,
+    activeRoutePath,
     setActiveTravelPoiCategory,
     fetchCourses,
     handleSelectCourse,
@@ -201,6 +202,7 @@ export default function HomeScreen() {
 
   const { handlePanToMyLocation, rideStats } = useRiderLocation({
     activeJourneyId: activeJourney?.id,
+    activeRoutePath,
     lang,
     onLocationChange: setRiderLocation,
     token,

@@ -275,3 +275,88 @@ npm.cmd run test:utils
 
 이 세 가지가 들어가면 RideKorea_b의 가장 강한 장점을 흡수하면서도, 우리 앱의 FastAPI/PostGIS 기반 확장성은 그대로 유지할 수 있다.
 
+## 6. 2026-07-01 추가 진행 기록
+
+### 완료: P1 라이딩 엔진 순수 유틸 분리 1차
+
+적용 파일:
+
+- `frontend/src/utils/route-deviation-core.ts`
+- `frontend/src/utils/route-deviation-core.test.ts`
+- `frontend/src/utils/ride-track-core.ts`
+- `frontend/src/utils/ride-track-core.test.ts`
+- `frontend/src/hooks/use-rider-location.ts`
+- `frontend/src/hooks/use-journey-map.ts`
+- `frontend/src/app/index.tsx`
+- `frontend/package.json`
+
+완료 내용:
+
+- route polyline 기준 거리 계산 유틸을 추가했다.
+- off-route 진입 threshold와 복귀 threshold를 분리한 hysteresis 기반 감지 로직을 추가했다.
+- GPS point 누적 거리 계산을 hook 밖 순수 유틸로 분리했다.
+- 선택된 공식 코스/공유 루트 path를 `useJourneyMap`에서 `activeRoutePath`로 노출했다.
+- `useRiderLocation`이 `activeRoutePath`를 받아 track point의 `is_off_route` 값을 계산하도록 연결했다.
+- `npm run test:utils`에 신규 유틸 테스트를 포함했다.
+
+검증:
+
+```powershell
+cd frontend
+npm.cmd run test:utils
+npx.cmd tsc --noEmit
+npm.cmd run lint
+```
+
+결과:
+
+- `test:utils` 통과
+- `tsc --noEmit` 통과
+- `lint` 통과
+
+다음 작업:
+
+- P2 SQLite 기반 local ride outbox 도입
+- 이후 P3 라이딩 복구 UX 연결
+
+### 완료: P2 SQLite 기반 local ride outbox 1차
+
+적용 파일:
+
+- `frontend/package.json`
+- `frontend/package-lock.json`
+- `frontend/src/services/offline-track-queue.ts`
+
+완료 내용:
+
+- `expo-sqlite` 의존성을 추가했다.
+- 기존 `enqueueTrackPoint`, `takeQueuedTrackPoints`, `markQueuedTrackPointAttempt`, `removeQueuedTrackPoints`, `getQueuedTrackPointCount` API 이름은 유지했다.
+- 내부 저장소를 SecureStore JSON queue에서 SQLite table `ride_track_queue`로 변경했다.
+- `ridekorea.db`에 WAL mode를 적용하고, `journey_id, id` index를 추가했다.
+- 기존 SecureStore queue가 남아 있으면 최초 DB 초기화 시 SQLite로 migration 후 legacy key를 삭제한다.
+- queue size 80 제한을 제거해 장거리 라이딩에서 더 안전하게 track point를 보존할 수 있게 했다.
+
+검증:
+
+```powershell
+cd frontend
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npm.cmd run test:utils
+```
+
+결과:
+
+- `tsc --noEmit` 통과
+- `lint` 통과
+- `test:utils` 통과
+
+주의:
+
+- `npm install expo-sqlite` 후 `npm audit`에서 moderate severity 11건이 표시되었다.
+- 이번 작업의 직접 오류는 아니지만, 배포 전 별도 dependency audit 작업으로 확인한다.
+
+다음 작업:
+
+- P3 라이딩 복구 UX 연결
+- SQLite outbox에 ride metadata와 photo pin queue까지 확장

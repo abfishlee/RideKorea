@@ -17,6 +17,7 @@
     "expo-router": "~56.2.11",
     "expo-secure-store": "~56.0.4",
     "expo-splash-screen": "~56.0.10",
+    "expo-sqlite": "^57.0.0",
     "expo-status-bar": "~56.0.4",
     "expo-symbols": "~56.0.6",
     "expo-system-ui": "~56.0.5",
@@ -44,7 +45,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test:utils": "tsc --ignoreConfig --module commonjs --target ES2020 --outDir ../scratch/frontend-utils-test src/utils/ride-metrics.ts src/utils/ride-metrics.test.ts src/utils/offline-track-queue-core.ts src/utils/offline-track-queue-core.test.ts && node ../scratch/frontend-utils-test/utils/ride-metrics.test.js && node ../scratch/frontend-utils-test/utils/offline-track-queue-core.test.js",
+    "test:utils": "tsc --ignoreConfig --module commonjs --target ES2020 --outDir ../scratch/frontend-utils-test src/utils/ride-metrics.ts src/utils/ride-metrics.test.ts src/utils/offline-track-queue-core.ts src/utils/offline-track-queue-core.test.ts src/utils/route-deviation-core.ts src/utils/route-deviation-core.test.ts src/utils/ride-track-core.ts src/utils/ride-track-core.test.ts && node ../scratch/frontend-utils-test/utils/ride-metrics.test.js && node ../scratch/frontend-utils-test/utils/offline-track-queue-core.test.js && node ../scratch/frontend-utils-test/utils/route-deviation-core.test.js && node ../scratch/frontend-utils-test/utils/ride-track-core.test.js",
     "lint": "expo lint"
   },
   "private": true

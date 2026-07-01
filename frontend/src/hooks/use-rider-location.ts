@@ -7,12 +7,15 @@ import {
   takeQueuedTrackPoints,
 } from '@/services/offline-track-queue';
 import type { AppLanguage } from '@/types/ridekorea';
+import { detectRouteDeviation, type DeviationState, type LatLngPoint } from '@/utils/route-deviation-core';
+import { addRideTrackPoint, createEmptyRideTrackState, type RideTrackState } from '@/utils/ride-track-core';
 import * as Location from 'expo-location';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { Alert } from 'react-native';
 import type { WebView } from 'react-native-webview';
 
 interface UseRiderLocationParams {
+  activeRoutePath?: LatLngPoint[];
   lang: AppLanguage;
   token: string | null;
   activeJourneyId?: string | null;
@@ -32,25 +35,12 @@ interface RideStats {
   distanceKm: number;
   elapsedSeconds: number;
   pendingTrackPointCount: number;
-}
-
-function toRadians(value: number) {
-  return (value * Math.PI) / 180;
-}
-
-function distanceKmBetween(from: RiderLocation, to: RiderLocation) {
-  const earthRadiusKm = 6371;
-  const dLat = toRadians(to.lat - from.lat);
-  const dLng = toRadians(to.lng - from.lng);
-  const lat1 = toRadians(from.lat);
-  const lat2 = toRadians(to.lat);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  isOffRoute: boolean;
+  distanceFromRouteMeters: number | null;
 }
 
 export function useRiderLocation({
+  activeRoutePath = [],
   activeJourneyId,
   lang,
   onLocationChange,
@@ -63,20 +53,24 @@ export function useRiderLocation({
     distanceKm: 0,
     elapsedSeconds: 0,
     pendingTrackPointCount: 0,
+    isOffRoute: false,
+    distanceFromRouteMeters: null,
   });
-  const previousLocationRef = useRef<RiderLocation | null>(null);
-  const distanceKmRef = useRef(0);
+  const rideTrackStateRef = useRef<RideTrackState>(createEmptyRideTrackState());
+  const deviationStateRef = useRef<DeviationState>({ isOffRoute: false });
   const rideStartedAtRef = useRef<number | null>(null);
   const isFlushingTrackQueueRef = useRef(false);
 
   useEffect(() => {
-    previousLocationRef.current = null;
-    distanceKmRef.current = 0;
+    rideTrackStateRef.current = createEmptyRideTrackState();
+    deviationStateRef.current = { isOffRoute: false };
     const initialStats = {
       speedKmh: null,
       distanceKm: 0,
       elapsedSeconds: 0,
       pendingTrackPointCount: 0,
+      isOffRoute: false,
+      distanceFromRouteMeters: null,
     };
 
     if (!activeJourneyId) {
@@ -150,29 +144,31 @@ export function useRiderLocation({
             }));
 
             if (activeJourneyId) {
-              const previousLocation = previousLocationRef.current;
-              if (previousLocation) {
-                const segmentKm = distanceKmBetween(previousLocation, nextLocation);
-                if (segmentKm < 1) {
-                  distanceKmRef.current += segmentKm;
-                }
-              }
-              previousLocationRef.current = nextLocation;
+              const trackUpdate = addRideTrackPoint(rideTrackStateRef.current, nextLocation);
+              rideTrackStateRef.current = trackUpdate.state;
+              const deviation = detectRouteDeviation(
+                nextLocation,
+                activeRoutePath,
+                deviationStateRef.current,
+              );
+              deviationStateRef.current = { isOffRoute: deviation.isOffRoute };
               const elapsedSeconds = rideStartedAtRef.current
                 ? Math.max(0, Math.floor((Date.now() - rideStartedAtRef.current) / 1000))
                 : 0;
               setRideStats(previous => ({
                 ...previous,
                 speedKmh,
-                distanceKm: distanceKmRef.current,
+                distanceKm: rideTrackStateRef.current.distanceKm,
                 elapsedSeconds,
+                isOffRoute: deviation.isOffRoute,
+                distanceFromRouteMeters: deviation.distanceFromRouteMeters,
               }));
 
               const trackPoint = {
                 location: nextLocation,
                 speed_kmh: speedKmh,
                 altitude_m: location.coords.altitude,
-                is_off_route: false,
+                is_off_route: deviation.isOffRoute,
                 recorded_at: new Date(location.timestamp).toISOString(),
               };
 
@@ -241,7 +237,7 @@ export function useRiderLocation({
     return () => {
       subscription?.remove();
     };
-  }, [activeJourneyId, onLocationChange, token, webViewRef]);
+  }, [activeJourneyId, activeRoutePath, onLocationChange, token, webViewRef]);
 
   const handlePanToMyLocation = useCallback(() => {
     if (userLocation) {

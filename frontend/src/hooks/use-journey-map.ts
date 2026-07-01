@@ -377,6 +377,7 @@ export function useJourneyMap({ lang, token, webViewRef }: UseJourneyMapParams) 
   ]);
 
   return {
+    activeRoutePath: cachedPath,
     courses,
     selectedCourse,
     selectedPublicDiary,

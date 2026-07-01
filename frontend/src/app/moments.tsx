@@ -1,4 +1,5 @@
 import { SharedRouteCard } from '@/components/routes/SharedRouteCard';
+import { NeoOutdoors, NeoOutdoorStyles } from '@/constants/neo-outdoors';
 import { useAuthSession } from '@/context/AuthSessionContext';
 import { SHARED_ROUTE_SAMPLES } from '@/data/shared-routes';
 import { LANGUAGE_LABELS, momentsCopy, t } from '@/i18n';
@@ -288,9 +289,17 @@ export default function MomentsScreen() {
             const author = diary.user?.display_name || t(lang, momentsCopy.anonymousRider);
 
             return (
-              <View key={diary.id} style={styles.feedCard}>
+              <View key={diary.id} style={[NeoOutdoorStyles.editorialCard, styles.feedCard]}>
                 {photoUrl && (
-                  <Image source={{ uri: mediaUrl(photoUrl) }} style={styles.feedImage} />
+                  <View style={styles.feedImageWrap}>
+                    <Image source={{ uri: mediaUrl(photoUrl) }} style={styles.feedImage} />
+                    <View style={styles.feedImageScrim} />
+                    <View style={styles.feedImageLabel}>
+                      <Text style={styles.feedImageLabelText}>
+                        {t(lang, momentsCopy.publicDiaries)}
+                      </Text>
+                    </View>
+                  </View>
                 )}
 
                 <View style={styles.feedBody}>
@@ -472,25 +481,55 @@ const styles = StyleSheet.create({
   },
   feedCard: {
     overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: NeoOutdoors.color.white,
+  },
+  feedImageWrap: {
+    width: '100%',
+    height: 210,
+    backgroundColor: NeoOutdoors.color.line,
+    overflow: 'hidden',
   },
   feedImage: {
     width: '100%',
-    height: 210,
-    backgroundColor: '#E2E8F0',
+    height: '100%',
+  },
+  feedImageScrim: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    left: 0,
+    height: 86,
+    backgroundColor: 'rgba(11,18,32,0.18)',
+  },
+  feedImageLabel: {
+    position: 'absolute',
+    right: 12,
+    bottom: 12,
+    minHeight: 28,
+    justifyContent: 'center',
+    borderRadius: NeoOutdoors.radius.chip,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.72)',
+    backgroundColor: 'rgba(11,18,32,0.62)',
+    paddingHorizontal: 12,
+  },
+  feedImageLabelText: {
+    color: NeoOutdoors.color.white,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0,
   },
   feedBody: {
-    padding: 14,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 18,
   },
   feedMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   authorRow: {
     flex: 1,
@@ -499,54 +538,63 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   avatar: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    marginRight: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 9,
   },
   avatarFallback: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    marginRight: 8,
-    backgroundColor: '#CBD5E1',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 9,
+    backgroundColor: NeoOutdoors.color.cyanWash,
+    borderWidth: 1,
+    borderColor: 'rgba(34,243,255,0.72)',
   },
   authorName: {
     flex: 1,
-    color: '#0F172A',
+    color: NeoOutdoors.color.ink,
     fontSize: 13,
     fontWeight: '900',
   },
   feedDate: {
-    color: '#94A3B8',
-    fontSize: 12,
-    fontWeight: '700',
+    color: NeoOutdoors.color.slateMuted,
+    fontSize: 11,
+    fontWeight: '900',
   },
   feedTitle: {
-    color: '#0F172A',
-    fontSize: 16,
+    color: NeoOutdoors.color.ink,
+    fontSize: 18,
     fontWeight: '900',
-    marginBottom: 7,
+    lineHeight: 24,
+    marginBottom: 8,
   },
   feedText: {
-    color: '#334155',
+    color: NeoOutdoors.color.slate,
     fontSize: 14,
-    lineHeight: 21,
+    fontWeight: '700',
+    lineHeight: 22,
   },
   locationText: {
-    color: '#64748B',
+    alignSelf: 'flex-start',
+    color: NeoOutdoors.color.deepCyan,
     fontSize: 11,
-    fontWeight: '800',
-    marginTop: 10,
+    fontWeight: '900',
+    marginTop: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: NeoOutdoors.radius.chip,
+    backgroundColor: NeoOutdoors.color.cyanWash,
   },
   mapButton: {
     alignSelf: 'flex-start',
-    minHeight: 38,
+    minHeight: 40,
     justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 14,
-    marginTop: 12,
+    borderRadius: NeoOutdoors.radius.control,
+    backgroundColor: NeoOutdoors.color.ink,
+    paddingHorizontal: 16,
+    marginTop: 14,
   },
   mapButtonText: {
     color: '#FFFFFF',

@@ -1,3 +1,4 @@
+import { journeyCopy, t } from '@/i18n';
 import { mediaUrl } from '@/services/api';
 import type { AppLanguage, SharedRouteStop } from '@/types/ridekorea';
 import React from 'react';
@@ -11,14 +12,14 @@ interface SharedRouteStopSheetProps {
   onWriteDiary?: () => void;
 }
 
-const STOP_LABELS: Record<string, { ko: string; en: string }> = {
-  photo: { ko: '사진 기록', en: 'Photo' },
-  repair: { ko: '수리', en: 'Repair' },
-  food: { ko: '맛집', en: 'Food' },
-  lodging: { ko: '숙소', en: 'Lodging' },
-  scenic: { ko: '경치', en: 'Scenic' },
-  transport: { ko: '교통', en: 'Transport' },
-  note: { ko: '메모', en: 'Note' },
+const STOP_LABEL_COPY_KEYS: Record<string, keyof typeof journeyCopy> = {
+  photo: 'stopPhoto',
+  repair: 'stopRepair',
+  food: 'stopFood',
+  lodging: 'stopLodging',
+  scenic: 'stopScenic',
+  transport: 'stopTransport',
+  note: 'stopNote',
 };
 
 export function SharedRouteStopSheet({
@@ -28,8 +29,8 @@ export function SharedRouteStopSheet({
   onClose,
   onWriteDiary,
 }: SharedRouteStopSheetProps) {
-  const isKo = lang === 'ko';
-  const label = STOP_LABELS[stop.type] || STOP_LABELS.note;
+  const copy = (item: Record<AppLanguage, string>) => t(lang, item);
+  const labelKey = STOP_LABEL_COPY_KEYS[stop.type] || 'stopNote';
   const imageUrl = stop.photoUrl ? mediaUrl(stop.photoUrl) : null;
 
   return (
@@ -37,7 +38,7 @@ export function SharedRouteStopSheet({
       <View style={styles.headerRow}>
         <View style={styles.titleBlock}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{isKo ? label.ko : label.en}</Text>
+            <Text style={styles.badgeText}>{copy(journeyCopy[labelKey])}</Text>
           </View>
           <Text style={styles.title} numberOfLines={2}>
             {stop.title}
@@ -51,7 +52,7 @@ export function SharedRouteStopSheet({
       {imageUrl && <Image source={{ uri: imageUrl }} style={styles.image} />}
 
       <Text style={styles.body}>
-        {stop.body || (isKo ? '이 스팟에는 아직 상세 메모가 없습니다.' : 'No detail note for this stop yet.')}
+        {stop.body || copy(journeyCopy.noSharedStopNote)}
       </Text>
 
       <Text style={styles.locationText}>
@@ -61,7 +62,7 @@ export function SharedRouteStopSheet({
       {canWriteDiary && (
         <TouchableOpacity style={styles.writeButton} onPress={onWriteDiary}>
           <Text style={styles.writeButtonText}>
-            {isKo ? '이 스팟에 내 기록 남기기' : 'Add my note here'}
+            {copy(journeyCopy.addMyNoteHere)}
           </Text>
         </TouchableOpacity>
       )}

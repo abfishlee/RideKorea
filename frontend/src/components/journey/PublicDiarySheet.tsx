@@ -1,3 +1,4 @@
+import { journeyCopy, t } from '@/i18n';
 import { mediaUrl } from '@/services/api';
 import type { AppLanguage, Diary } from '@/types/ridekorea';
 import React from 'react';
@@ -10,16 +11,17 @@ interface PublicDiarySheetProps {
   onOpenMoments?: () => void;
 }
 
-function formatDate(value?: string) {
+function formatDate(value: string | undefined, lang: AppLanguage) {
   if (!value) return '';
-  return new Date(value).toLocaleDateString('ko-KR', {
+  const locale = lang === 'ko' ? 'ko-KR' : lang === 'ja' ? 'ja-JP' : 'en-US';
+  return new Date(value).toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
   });
 }
 
 export function PublicDiarySheet({ diary, lang, onClose, onOpenMoments }: PublicDiarySheetProps) {
-  const isKo = lang === 'ko';
+  const copy = (item: Record<AppLanguage, string>) => t(lang, item);
   const photoUrl = diary.photo_urls?.[0] ? mediaUrl(diary.photo_urls[0]) : null;
   const author = diary.user?.display_name || 'RideKorea Rider';
 
@@ -27,12 +29,12 @@ export function PublicDiarySheet({ diary, lang, onClose, onOpenMoments }: Public
     <View style={styles.sheet}>
       <View style={styles.headerRow}>
         <View style={styles.titleBlock}>
-          <Text style={styles.eyebrow}>{isKo ? '공개 라이딩 기록' : 'Public Diary'}</Text>
+          <Text style={styles.eyebrow}>{copy(journeyCopy.publicRidingDiary)}</Text>
           <Text style={styles.title} numberOfLines={2}>
-            {diary.title || (isKo ? '제목 없는 기록' : 'Untitled diary')}
+            {diary.title || copy(journeyCopy.untitledPublicDiary)}
           </Text>
           <Text style={styles.meta} numberOfLines={1}>
-            {author} · {formatDate(diary.created_at)}
+            {author} / {formatDate(diary.created_at, lang)}
           </Text>
         </View>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -43,7 +45,7 @@ export function PublicDiarySheet({ diary, lang, onClose, onOpenMoments }: Public
       {photoUrl && <Image source={{ uri: photoUrl }} style={styles.image} />}
 
       <Text style={styles.body} numberOfLines={5}>
-        {diary.diary_text || (isKo ? '아직 본문이 없는 공개 기록입니다.' : 'No diary text yet.')}
+        {diary.diary_text || copy(journeyCopy.noPublicDiaryText)}
       </Text>
 
       {diary.lat && diary.lng && (
@@ -55,7 +57,7 @@ export function PublicDiarySheet({ diary, lang, onClose, onOpenMoments }: Public
       {onOpenMoments && (
         <TouchableOpacity style={styles.momentsButton} onPress={onOpenMoments}>
           <Text style={styles.momentsButtonText}>
-            {isKo ? 'Moments에서 더 보기' : 'Open Moments'}
+            {copy(journeyCopy.openMoments)}
           </Text>
         </TouchableOpacity>
       )}

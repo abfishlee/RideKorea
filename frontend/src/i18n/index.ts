@@ -823,6 +823,71 @@ export const journeyCopy = {
     en: 'Open source',
     ja: '原文を見る',
   },
+  publicRidingDiary: {
+    ko: '공개 라이딩 기록',
+    en: 'Public Diary',
+    ja: '公開ライド日記',
+  },
+  untitledPublicDiary: {
+    ko: '제목 없는 기록',
+    en: 'Untitled diary',
+    ja: 'タイトルなしの日記',
+  },
+  noPublicDiaryText: {
+    ko: '아직 본문이 없는 공개 기록입니다.',
+    en: 'No diary text yet.',
+    ja: '本文がまだない公開記録です。',
+  },
+  openMoments: {
+    ko: 'Moments에서 더 보기',
+    en: 'Open Moments',
+    ja: 'Momentsでさらに見る',
+  },
+  stopPhoto: {
+    ko: '사진 기록',
+    en: 'Photo',
+    ja: '写真記録',
+  },
+  stopRepair: {
+    ko: '수리',
+    en: 'Repair',
+    ja: '修理',
+  },
+  stopFood: {
+    ko: '맛집',
+    en: 'Food',
+    ja: '食事',
+  },
+  stopLodging: {
+    ko: '숙소',
+    en: 'Lodging',
+    ja: '宿泊',
+  },
+  stopScenic: {
+    ko: '경치',
+    en: 'Scenic',
+    ja: '景色',
+  },
+  stopTransport: {
+    ko: '교통',
+    en: 'Transport',
+    ja: '交通',
+  },
+  stopNote: {
+    ko: '메모',
+    en: 'Note',
+    ja: 'メモ',
+  },
+  noSharedStopNote: {
+    ko: '이 스팟에는 아직 상세 메모가 없습니다.',
+    en: 'No detail note for this stop yet.',
+    ja: 'このスポットにはまだ詳細メモがありません。',
+  },
+  addMyNoteHere: {
+    ko: '이 스팟에 내 기록 남기기',
+    en: 'Add my note here',
+    ja: 'このスポットに自分の記録を残す',
+  },
 } satisfies Record<string, Record<AppLanguage, string>>;
 
 export const momentsCopy = {

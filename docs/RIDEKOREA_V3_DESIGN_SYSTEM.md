@@ -112,7 +112,7 @@ Priority: low.
 
 - [x] Refresh shared route detail timeline.
 - [x] Refresh journey detail public diary and imported route panels.
-- [ ] Keep all API calls and navigation unchanged.
+- [x] Keep all API calls and navigation unchanged.
 
 ### Phase 5: Polish
 
@@ -137,3 +137,14 @@ Priority: low.
 - Import button still stops card press propagation before importing.
 - Public diary map open flow remains routed by `publicDiaryId`.
 - Recent Phase 3 visual changes did not add or remove API calls.
+
+### Detail Screens Refresh
+
+- Shared route detail still loads through `getPublishedSharedRoute` with public fallback through `getPublicSharedRoute`.
+- Shared route detail still preserves comments, likes, shares, visibility updates, and route import API calls.
+- Shared route import still navigates to `/journeys/{journey.id}` after `importPublicSharedRoute`.
+- Journey detail still loads journey data and track points through `getJourney` and `getJourneyTrackPoints`.
+- Imported source route preview still loads through `getPublicSharedRoute`.
+- Journey publishing still uses `publishJourneyAsSharedRoute` and navigates to `/shared-routes/{route.id}`.
+- Diary visibility updates still use `updateSpotDiaryVisibility`.
+- Back navigation remains `router.back()` on both detail screens.

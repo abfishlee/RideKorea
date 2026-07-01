@@ -15,7 +15,7 @@ import { findSharedRouteById } from '@/data/shared-routes';
 import { useJourneyMap } from '@/hooks/use-journey-map';
 import { useJourneyRide } from '@/hooks/use-journey-ride';
 import { useRiderLocation } from '@/hooks/use-rider-location';
-import { nextLanguage, t } from '@/i18n';
+import { authCopy, nextLanguage, t } from '@/i18n';
 import {
   claimVoucher,
   createTravelPoiReport,
@@ -484,11 +484,11 @@ export default function HomeScreen() {
       await signIn(data.access_token);
 
       Alert.alert(
-        lang === 'ko' ? '로그인 성공' : 'Login Success',
-        lang === 'ko' ? '구글 소셜 로그인에 성공했습니다.' : 'Google login successful!',
+        t(lang, authCopy.loginSuccessTitle),
+        t(lang, authCopy.loginSuccessBody),
       );
     } catch (err: any) {
-      Alert.alert(lang === 'ko' ? '로그인 실패' : 'Login Failed', err.message);
+      Alert.alert(t(lang, authCopy.loginFailedTitle), err.message);
     } finally {
       setIsGoogleLoginLoading(false);
     }
@@ -516,8 +516,8 @@ export default function HomeScreen() {
 
       if (returnedState !== state) {
         Alert.alert(
-          lang === 'ko' ? '로그인 실패' : 'Login Failed',
-          lang === 'ko' ? '로그인 응답 검증에 실패했습니다.' : 'Failed to verify the login response.',
+          t(lang, authCopy.loginFailedTitle),
+          t(lang, authCopy.loginVerifyFailedBody),
         );
         return;
       }
@@ -528,11 +528,11 @@ export default function HomeScreen() {
       }
 
       Alert.alert(
-        lang === 'ko' ? '로그인 실패' : 'Login Failed',
-        lang === 'ko' ? '토큰을 받아오지 못했습니다.' : 'Failed to retrieve token.',
+        t(lang, authCopy.loginFailedTitle),
+        t(lang, authCopy.loginTokenMissingBody),
       );
     } catch (err: any) {
-      Alert.alert(lang === 'ko' ? '오류' : 'Error', err.message);
+      Alert.alert(t(lang, authCopy.errorTitle), err.message);
     }
   };
 
@@ -676,7 +676,7 @@ export default function HomeScreen() {
         lang={lang}
         isLoading={isGoogleLoginLoading}
         onLoginPress={handleGoogleLogin}
-        onToggleLanguage={() => setLang(prev => nextLanguage(prev))}
+        onChangeLanguage={setLang}
       />
     );
   }

@@ -270,6 +270,36 @@ export const authCopy = {
     en: "By continuing, you agree to RideKorea's Terms and Privacy Policy.",
     ja: '続行すると、RideKoreaの利用規約とプライバシーポリシーに同意したものとみなされます。',
   },
+  loginSuccessTitle: {
+    ko: '로그인 완료',
+    en: 'Signed in',
+    ja: 'ログイン完了',
+  },
+  loginSuccessBody: {
+    ko: 'Google 계정으로 로그인되었습니다.',
+    en: 'You are signed in with Google.',
+    ja: 'Googleアカウントでログインしました。',
+  },
+  loginFailedTitle: {
+    ko: '로그인 실패',
+    en: 'Sign-in failed',
+    ja: 'ログイン失敗',
+  },
+  loginVerifyFailedBody: {
+    ko: '로그인 응답을 확인하지 못했습니다. 다시 시도해주세요.',
+    en: 'We could not verify the sign-in response. Please try again.',
+    ja: 'ログイン応答を確認できませんでした。もう一度お試しください。',
+  },
+  loginTokenMissingBody: {
+    ko: '로그인 토큰을 받지 못했습니다. 다시 시도해주세요.',
+    en: 'We could not retrieve the sign-in token. Please try again.',
+    ja: 'ログイントークンを取得できませんでした。もう一度お試しください。',
+  },
+  errorTitle: {
+    ko: '오류',
+    en: 'Error',
+    ja: 'エラー',
+  },
 } satisfies Record<string, Record<AppLanguage, string>>;
 
 export const journeyCopy = {

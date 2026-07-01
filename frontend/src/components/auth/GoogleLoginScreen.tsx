@@ -1,4 +1,4 @@
-import { authCopy, LANGUAGE_LABELS, nextLanguage, t } from '@/i18n';
+import { authCopy, LANGUAGE_LABELS, t } from '@/i18n';
 import type { AppLanguage } from '@/types/ridekorea';
 import React from 'react';
 import {
@@ -14,21 +14,36 @@ interface GoogleLoginScreenProps {
   lang: AppLanguage;
   isLoading: boolean;
   onLoginPress: () => void;
-  onToggleLanguage: () => void;
+  onChangeLanguage: (lang: AppLanguage) => void;
 }
+
+const LANGUAGES: AppLanguage[] = ['ko', 'en', 'ja'];
 
 export function GoogleLoginScreen({
   lang,
   isLoading,
   onLoginPress,
-  onToggleLanguage,
+  onChangeLanguage,
 }: GoogleLoginScreenProps) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <TouchableOpacity style={styles.langButton} onPress={onToggleLanguage}>
-          <Text style={styles.langButtonText}>{LANGUAGE_LABELS[nextLanguage(lang)]}</Text>
-        </TouchableOpacity>
+        <View style={styles.languageSegmented}>
+          {LANGUAGES.map((language) => (
+            <TouchableOpacity
+              key={language}
+              style={[styles.languageSegment, lang === language && styles.languageSegmentActive]}
+              onPress={() => onChangeLanguage(language)}>
+              <Text
+                style={[
+                  styles.languageSegmentText,
+                  lang === language && styles.languageSegmentTextActive,
+                ]}>
+                {LANGUAGE_LABELS[language]}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <View style={styles.brandBlock}>
           <Text style={styles.logoMark}>RK</Text>
@@ -73,18 +88,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 28,
   },
-  langButton: {
+  languageSegmented: {
     alignSelf: 'flex-end',
-    borderColor: '#CBD5E1',
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 10,
+    flexDirection: 'row',
+    padding: 4,
   },
-  langButtonText: {
-    color: '#334155',
+  languageSegment: {
+    alignItems: 'center',
+    borderRadius: 8,
+    minWidth: 44,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  languageSegmentActive: {
+    backgroundColor: '#1E3A8A',
+  },
+  languageSegmentText: {
+    color: '#475569',
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '900',
+  },
+  languageSegmentTextActive: {
+    color: '#FFFFFF',
   },
   brandBlock: {
     alignItems: 'center',

@@ -8,6 +8,9 @@
 - [x] 제휴처 바우처 코드 처리, 정산 요약, 바우처 지갑 진입 문구 QA
 - [x] `frontend/src/i18n/index.ts`에 Compass 전용 `compassScreenCopy` 추가
 - [x] `frontend/src/app/compass.tsx`가 화면 문구를 직접 문자열이 아닌 copy key로 읽도록 변경
+- [x] Auth/Login 화면의 KO/EN/JA 문구 QA
+- [x] 로그인 화면 언어 선택을 KO/EN/JA 세그먼트 컨트롤로 변경
+- [x] Google 로그인 성공, 실패, 검증 실패, 토큰 누락 Alert를 `authCopy` 기반으로 전환
 
 ## QA 기준
 
@@ -18,7 +21,6 @@
 
 ## 남은 작업
 
-- [ ] Auth/Login 화면의 KO/EN/JA 문구를 새 copy 기준으로 재검수
 - [ ] Journey 화면의 기록, 경로, 인증센터 문구 QA
 - [ ] Moments/Diary 화면의 사진 스팟, 댓글, 공유 문구 QA
 - [ ] My Path 화면의 공유 루트/가져오기 문구 QA

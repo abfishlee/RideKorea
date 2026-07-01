@@ -1,3 +1,4 @@
+import { journeyCopy, t } from '@/i18n';
 import type { AppLanguage, ImportedRouteDraft, SharedRoute } from '@/types/ridekorea';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -12,13 +13,18 @@ interface ImportedRoutePlanSheetProps {
   onComplete: () => void;
 }
 
-function formatDuration(hours: number) {
+function formatDuration(hours: number, lang: AppLanguage) {
   const roundedHours = Math.floor(hours);
   const minutes = Math.round((hours - roundedHours) * 60);
+  const copy = (item: Record<AppLanguage, string>) => t(lang, item);
 
-  if (hours <= 0) return '기록 없음';
-  if (minutes === 0) return `${roundedHours}시간`;
-  return `${roundedHours}시간 ${minutes}분`;
+  if (hours <= 0) return copy(journeyCopy.noRecord);
+  if (lang === 'en') {
+    if (minutes === 0) return `${roundedHours}${copy(journeyCopy.hours)}`;
+    return `${roundedHours}${copy(journeyCopy.hours)} ${minutes}${copy(journeyCopy.minutes)}`;
+  }
+  if (minutes === 0) return `${roundedHours}${copy(journeyCopy.hours)}`;
+  return `${roundedHours}${copy(journeyCopy.hours)} ${minutes}${copy(journeyCopy.minutes)}`;
 }
 
 export function ImportedRoutePlanSheet({
@@ -30,14 +36,14 @@ export function ImportedRoutePlanSheet({
   onStart,
   onComplete,
 }: ImportedRoutePlanSheetProps) {
-  const isKo = lang === 'ko';
+  const copy = (item: Record<AppLanguage, string>) => t(lang, item);
   const stops = route?.stops ?? [];
 
   return (
     <View style={styles.sheet}>
       <View style={styles.headerRow}>
         <View style={styles.titleBlock}>
-          <Text style={styles.badge}>{isKo ? '가져온 루트' : 'Imported route'}</Text>
+          <Text style={styles.badge}>{copy(journeyCopy.importedRoute)}</Text>
           <Text style={styles.title} numberOfLines={2}>
             {draft.title}
           </Text>
@@ -54,15 +60,15 @@ export function ImportedRoutePlanSheet({
       <View style={styles.metricRow}>
         <View style={styles.metricBox}>
           <Text style={styles.metricValue}>{draft.distanceKm.toFixed(1)} km</Text>
-          <Text style={styles.metricLabel}>{isKo ? '거리' : 'Distance'}</Text>
+          <Text style={styles.metricLabel}>{copy(journeyCopy.distance)}</Text>
         </View>
         <View style={styles.metricBox}>
-          <Text style={styles.metricValue}>{formatDuration(draft.durationHours)}</Text>
-          <Text style={styles.metricLabel}>{isKo ? '예상 시간' : 'Time'}</Text>
+          <Text style={styles.metricValue}>{formatDuration(draft.durationHours, lang)}</Text>
+          <Text style={styles.metricLabel}>{copy(journeyCopy.estimatedTime)}</Text>
         </View>
         <View style={styles.metricBox}>
-          <Text style={styles.metricValue}>{draft.stopCount}개</Text>
-          <Text style={styles.metricLabel}>{isKo ? '스팟' : 'Stops'}</Text>
+          <Text style={styles.metricValue}>{draft.stopCount}{copy(journeyCopy.countSuffix)}</Text>
+          <Text style={styles.metricLabel}>{copy(journeyCopy.stops)}</Text>
         </View>
       </View>
 
@@ -82,11 +88,11 @@ export function ImportedRoutePlanSheet({
       <View style={styles.actionRow}>
         {isActive ? (
           <TouchableOpacity style={[styles.actionButton, styles.completeButton]} onPress={onComplete}>
-            <Text style={styles.actionButtonText}>{isKo ? '계획 주행 종료' : 'Finish'}</Text>
+            <Text style={styles.actionButtonText}>{copy(journeyCopy.finish)}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={[styles.actionButton, styles.startButton]} onPress={onStart}>
-            <Text style={styles.actionButtonText}>{isKo ? '이 루트로 출발 준비' : 'Prepare Ride'}</Text>
+            <Text style={styles.actionButtonText}>{copy(journeyCopy.prepareRide)}</Text>
           </TouchableOpacity>
         )}
       </View>

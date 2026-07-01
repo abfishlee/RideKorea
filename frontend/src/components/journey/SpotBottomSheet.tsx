@@ -1,3 +1,4 @@
+import { journeyCopy, t } from '@/i18n';
 import type { AppLanguage, Spot } from '@/types/ridekorea';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -22,18 +23,19 @@ export function SpotBottomSheet({
   onCompleteJourney,
 }: SpotBottomSheetProps) {
   const isKo = lang === 'ko';
+  const copy = (item: Record<AppLanguage, string>) => t(lang, item);
 
   return (
     <View style={styles.bottomSheet}>
       <View style={styles.bottomSheetHeader}>
         <View style={styles.badgeRow}>
           <View style={styles.spotTypeBadge}>
-            <Text style={styles.spotTypeBadgeText}>{isKo ? '인증 스팟' : 'Certification'}</Text>
+            <Text style={styles.spotTypeBadgeText}>{copy(journeyCopy.spotCertification)}</Text>
           </View>
           {spot.is_voucher_active && (
             <View style={styles.partnerBadge}>
               <Text style={styles.partnerBadgeText}>
-                {isKo ? '지역 상생 혜택' : 'Local Reward'} {(spot.voucher_amount || 0).toLocaleString()}원
+                {copy(journeyCopy.localReward)} {(spot.voucher_amount || 0).toLocaleString()} KRW
               </Text>
             </View>
           )}
@@ -45,28 +47,28 @@ export function SpotBottomSheet({
 
       <Text style={styles.spotName}>{isKo ? spot.name : spot.name_en}</Text>
       <Text style={styles.spotNameEn}>{isKo ? spot.name_en : spot.name}</Text>
-      <Text style={styles.storyHeader}>{isKo ? '이 지역의 이야기' : 'Story of the Region'}</Text>
+      <Text style={styles.storyHeader}>{copy(journeyCopy.regionStory)}</Text>
       <Text style={styles.spotDesc}>
         {isKo
-          ? spot.description || '상세 설명이 없습니다.'
-          : spot.description_en || 'No English description available.'}
+          ? spot.description || copy(journeyCopy.noDescription)
+          : spot.description_en || copy(journeyCopy.noDescription)}
       </Text>
 
       {hasActiveJourney ? (
         <View style={styles.actionRow}>
           <TouchableOpacity style={[styles.actionBtn, styles.diaryBtn]} onPress={onOpenDiary}>
             <Text style={styles.actionBtnText}>
-              {isKo ? '스팟 인증 & 일지 작성' : 'Certify Stamp & Write Diary'}
+              {copy(journeyCopy.certifyDiary)}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionBtn, styles.stopBtn]} onPress={onCompleteJourney}>
-            <Text style={styles.actionBtnText}>{isKo ? '종주 완료' : 'Complete'}</Text>
+            <Text style={styles.actionBtnText}>{copy(journeyCopy.completeJourneyAction)}</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <TouchableOpacity style={[styles.actionBtn, styles.startBtn]} onPress={onStartJourney}>
           <Text style={styles.actionBtnText}>
-            {isKo ? '종주 기록 시작하기' : 'Start Riding Journey'}
+            {copy(journeyCopy.startJourneyAction)}
           </Text>
         </TouchableOpacity>
       )}

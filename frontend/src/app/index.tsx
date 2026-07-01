@@ -15,7 +15,7 @@ import { findSharedRouteById } from '@/data/shared-routes';
 import { useJourneyMap } from '@/hooks/use-journey-map';
 import { useJourneyRide } from '@/hooks/use-journey-ride';
 import { useRiderLocation } from '@/hooks/use-rider-location';
-import { authCopy, nextLanguage, t } from '@/i18n';
+import { authCopy, journeyCopy, t } from '@/i18n';
 import {
   claimVoucher,
   createTravelPoiReport,
@@ -284,10 +284,10 @@ export default function HomeScreen() {
       .then((voucher) => {
         claimedVoucherSpotIdsRef.current.add(spotId);
         Alert.alert(
-          lang === 'ko' ? '지역 바우처가 도착했어요' : 'Voucher unlocked',
+          t(lang, journeyCopy.voucherUnlockedTitle),
           lang === 'ko'
-            ? `${spot.name} 주변에서 사용할 수 있는 바우처를 지갑에 담았습니다.`
-            : `${voucher.title_en || spot.name_en} has been added to your wallet.`,
+            ? `${spot.name} ${t(lang, journeyCopy.voucherUnlockedBody)}`
+            : `${voucher.title_en || spot.name_en} ${t(lang, journeyCopy.voucherUnlockedBody)}`,
         );
       })
       .catch((err) => {
@@ -320,20 +320,18 @@ export default function HomeScreen() {
         }
 
         Alert.alert(
-          lang === 'ko' ? '진행 중인 라이딩이 있어요' : 'Resume ride?',
-          lang === 'ko'
-            ? `"${recoverableJourney.title}" 기록을 이어서 진행할까요?`
-            : `Continue recording "${recoverableJourney.title}"?`,
+          t(lang, journeyCopy.resumeRideTitle),
+          `"${recoverableJourney.title}" ${t(lang, journeyCopy.resumeRideBody)}`,
           [
             {
-              text: lang === 'ko' ? '삭제' : 'Discard',
+              text: t(lang, journeyCopy.discard),
               style: 'destructive',
               onPress: () => {
                 void handleDiscardRecoveredJourney(recoverableJourney);
               },
             },
             {
-              text: lang === 'ko' ? '이어서 주행' : 'Resume',
+              text: t(lang, journeyCopy.resume),
               onPress: () => {
                 void (async () => {
                   if (recoverableJourney.source_shared_route_id) {
@@ -391,7 +389,7 @@ export default function HomeScreen() {
 
       const route = findSharedRouteById(draft.sourceRouteId);
       if (!route) {
-        Alert.alert('루트 없음', '가져온 루트 원본을 찾지 못했습니다.');
+        Alert.alert(t(lang, journeyCopy.routeMissingTitle), t(lang, journeyCopy.routeMissingBody));
         return;
       }
 
@@ -400,7 +398,7 @@ export default function HomeScreen() {
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [handleSelectSharedRoute, importedDrafts, params.draftId]);
+  }, [handleSelectSharedRoute, importedDrafts, lang, params.draftId]);
 
   useEffect(() => {
     const journeyId = params.journeyId;
@@ -411,14 +409,14 @@ export default function HomeScreen() {
         try {
           const nextJourney = await getJourney(token, journeyId);
           if (!nextJourney.source_shared_route_id) {
-            Alert.alert('원본 루트 없음', '이 Journey에는 가져온 공유 루트가 연결되어 있지 않습니다.');
+            Alert.alert(t(lang, journeyCopy.sourceRouteMissingTitle), t(lang, journeyCopy.sourceRouteMissingBody));
             return;
           }
 
           const publicRoute = await getPublicSharedRoute(nextJourney.source_shared_route_id, token);
           const nextRoute = toSharedRoute(publicRoute);
           if (nextRoute.stops.length === 0) {
-            Alert.alert('스팟 없음', '지도에 표시할 원본 루트 스팟이 없습니다.');
+            Alert.alert(t(lang, journeyCopy.stopsMissingTitle), t(lang, journeyCopy.stopsMissingBody));
             return;
           }
 
@@ -428,13 +426,13 @@ export default function HomeScreen() {
           setActiveDraftId(null);
           handleSelectSharedRoute(nextRoute);
         } catch (err: any) {
-          Alert.alert('루트 준비 실패', err.message || '가져온 루트를 불러오지 못했습니다.');
+          Alert.alert(t(lang, journeyCopy.routePrepareFailedTitle), err.message || t(lang, journeyCopy.routePrepareFailedBody));
         }
       })();
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [handleSelectSharedRoute, params.journeyId, token]);
+  }, [handleSelectSharedRoute, lang, params.journeyId, token]);
 
   useEffect(() => {
     const publicDiaryId = params.publicDiaryId;
@@ -462,13 +460,14 @@ export default function HomeScreen() {
             }));
           }
         } catch (err: any) {
-          Alert.alert('공개 일지 없음', err.message || '지도에서 열 공개 일지를 찾지 못했습니다.');
+          Alert.alert(t(lang, journeyCopy.publicDiaryMissingTitle), err.message || t(lang, journeyCopy.publicDiaryMissingBody));
         }
       })();
     }, 0);
 
     return () => clearTimeout(timer);
   }, [
+    lang,
     params.publicDiaryId,
     setSelectedPublicDiary,
     setSelectedSharedRouteStop,
@@ -541,8 +540,8 @@ export default function HomeScreen() {
     setHasCheckedRideRecovery(false);
     resetJourney();
     Alert.alert(
-      lang === 'ko' ? '로그아웃' : 'Logout',
-      lang === 'ko' ? '정상적으로 로그아웃되었습니다.' : 'Logged out successfully.',
+      t(lang, journeyCopy.logout),
+      t(lang, journeyCopy.logoutBody),
     );
   };
 
@@ -557,10 +556,8 @@ export default function HomeScreen() {
     if (!selectedDraft) return;
     setActiveDraftId(selectedDraft.id);
     Alert.alert(
-      lang === 'ko' ? '출발 준비 완료' : 'Ready to ride',
-      lang === 'ko'
-        ? '이 루트를 기준으로 주행을 시작할 준비가 되었습니다. 실제 트랙 저장은 서버 Journey 루트에서 지원됩니다.'
-        : 'This route is ready. Actual track recording is supported for server-imported journeys.',
+      t(lang, journeyCopy.readyRideTitle),
+      t(lang, journeyCopy.readyRideBody),
     );
   };
 
@@ -573,20 +570,16 @@ export default function HomeScreen() {
   const handleCompleteImportedPlan = () => {
     setActiveDraftId(null);
     Alert.alert(
-      lang === 'ko' ? '계획 주행 종료' : 'Ride ended',
-      lang === 'ko'
-        ? '계획 주행 상태를 종료했습니다.'
-        : 'The planned ride state has ended.',
+      t(lang, journeyCopy.plannedRideEndedTitle),
+      t(lang, journeyCopy.plannedRideEndedBody),
     );
   };
 
   const loadNearbyPois = async () => {
     if (!riderLocation) {
       Alert.alert(
-        lang === 'ko' ? '현재 위치 대기 중' : 'Waiting for location',
-        lang === 'ko'
-          ? 'GPS 위치가 잡히면 주변 수리소, 식당, 숙소 정보를 볼 수 있습니다.'
-          : 'Nearby repair, food, and lodging information will appear after GPS is ready.',
+        t(lang, journeyCopy.waitingForLocationTitle),
+        t(lang, journeyCopy.waitingForLocationBody),
       );
       return;
     }
@@ -607,9 +600,7 @@ export default function HomeScreen() {
     } catch (err: any) {
       setNearbyPoiError(
         err.message ||
-          (lang === 'ko'
-            ? '주변 여행 정보를 불러오지 못했습니다.'
-            : 'Failed to load nearby travel information.'),
+          t(lang, journeyCopy.nearbyLoadFailedBody),
       );
     } finally {
       setIsLoadingNearbyPois(false);
@@ -626,11 +617,9 @@ export default function HomeScreen() {
       setNearbyPois((prev) => prev.map((poi) => poi.id === result.poi.id ? result.poi : poi));
     } catch (err: any) {
       Alert.alert(
-        lang === 'ko' ? '반응 저장 실패' : 'Feedback failed',
+        t(lang, journeyCopy.feedbackFailedTitle),
         err.message ||
-          (lang === 'ko'
-            ? 'POI 반응을 저장하지 못했습니다.'
-            : 'Could not save your POI feedback.'),
+          t(lang, journeyCopy.feedbackFailedBody),
       );
     } finally {
       setIsSubmittingPoiFeedback(false);
@@ -644,18 +633,14 @@ export default function HomeScreen() {
       setIsSubmittingPoiReport(true);
       await createTravelPoiReport(token, selectedTravelPoi.id, reportType);
       Alert.alert(
-        lang === 'ko' ? '신고 접수 완료' : 'Report submitted',
-        lang === 'ko'
-          ? '운영자 검수 목록에 추가했습니다. 지도 정보 개선에 도움을 주셔서 고마워요.'
-          : 'This POI has been added to the admin review queue. Thanks for helping improve the map.',
+        t(lang, journeyCopy.reportSubmittedTitle),
+        t(lang, journeyCopy.reportSubmittedBody),
       );
     } catch (err: any) {
       Alert.alert(
-        lang === 'ko' ? '신고 실패' : 'Report failed',
+        t(lang, journeyCopy.reportFailedTitle),
         err.message ||
-          (lang === 'ko'
-            ? 'POI 신고를 저장하지 못했습니다.'
-            : 'Could not submit this POI report.'),
+          t(lang, journeyCopy.reportFailedBody),
       );
     } finally {
       setIsSubmittingPoiReport(false);
@@ -702,7 +687,7 @@ export default function HomeScreen() {
         importedDrafts={importedDrafts}
         selectedDraft={selectedDraft}
         userProfile={userProfile}
-        onToggleLanguage={() => setLang(prev => nextLanguage(prev))}
+        onChangeLanguage={setLang}
         onSelectCourse={(course) => {
           setSelectedDraft(null);
           setSelectedServerJourney(null);

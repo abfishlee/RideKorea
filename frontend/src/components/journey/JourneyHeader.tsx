@@ -1,4 +1,4 @@
-import { journeyCopy, LANGUAGE_LABELS, nextLanguage, t } from '@/i18n';
+import { journeyCopy, LANGUAGE_LABELS, t } from '@/i18n';
 import type { AppLanguage, Course, ImportedRouteDraft, UserProfile } from '@/types/ridekorea';
 import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -10,7 +10,7 @@ interface JourneyHeaderProps {
   importedDrafts: ImportedRouteDraft[];
   selectedDraft: ImportedRouteDraft | null;
   userProfile: UserProfile | null;
-  onToggleLanguage: () => void;
+  onChangeLanguage: (lang: AppLanguage) => void;
   onSelectCourse: (course: Course) => void;
   onSelectDraft: (draft: ImportedRouteDraft) => void;
   onLogout: () => void;
@@ -23,7 +23,7 @@ export function JourneyHeader({
   importedDrafts,
   selectedDraft,
   userProfile,
-  onToggleLanguage,
+  onChangeLanguage,
   onSelectCourse,
   onSelectDraft,
   onLogout,
@@ -33,9 +33,18 @@ export function JourneyHeader({
       <View style={styles.headerRow}>
         <View style={styles.brandGroup}>
           <Text style={styles.brandTitle}>RideKorea</Text>
-          <TouchableOpacity style={styles.langToggle} onPress={onToggleLanguage}>
-            <Text style={styles.langToggleText}>{LANGUAGE_LABELS[nextLanguage(lang)]}</Text>
-          </TouchableOpacity>
+          <View style={styles.langSegmented}>
+            {(['ko', 'en', 'ja'] as AppLanguage[]).map((language) => (
+              <TouchableOpacity
+                key={language}
+                style={[styles.langSegment, lang === language && styles.langSegmentActive]}
+                onPress={() => onChangeLanguage(language)}>
+                <Text style={[styles.langSegmentText, lang === language && styles.langSegmentTextActive]}>
+                  {LANGUAGE_LABELS[language]}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         {userProfile ? (
@@ -127,20 +136,30 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#1E3A8A',
   },
-  langToggle: {
-    backgroundColor: '#F8FAFC',
+  langSegmented: {
+    backgroundColor: '#E2E8F0',
     borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: 'row',
+    padding: 3,
   },
-  langToggleText: {
+  langSegment: {
+    alignItems: 'center',
+    borderRadius: 7,
+    justifyContent: 'center',
+    minWidth: 30,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+  },
+  langSegmentActive: {
+    backgroundColor: '#1E3A8A',
+  },
+  langSegmentText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#334155',
+    color: '#475569',
+  },
+  langSegmentTextActive: {
+    color: '#FFFFFF',
   },
   profileBox: {
     flexDirection: 'row',

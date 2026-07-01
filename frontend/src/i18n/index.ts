@@ -418,6 +418,241 @@ export const journeyCopy = {
     en: 'Error',
     ja: 'エラー',
   },
+  logoutBody: {
+    ko: '정상적으로 로그아웃되었습니다.',
+    en: 'Logged out successfully.',
+    ja: 'ログアウトしました。',
+  },
+  voucherUnlockedTitle: {
+    ko: '지역 바우처가 열렸어요',
+    en: 'Voucher unlocked',
+    ja: '地域バウチャーを獲得しました',
+  },
+  voucherUnlockedBody: {
+    ko: '주변에서 사용할 수 있는 바우처를 지갑에 담았습니다.',
+    en: 'A voucher near this spot has been added to your wallet.',
+    ja: 'このスポット周辺で使えるバウチャーをウォレットに追加しました。',
+  },
+  resumeRideTitle: {
+    ko: '진행 중인 라이딩이 있어요',
+    en: 'Resume ride?',
+    ja: '進行中のライドがあります',
+  },
+  resumeRideBody: {
+    ko: '기록을 이어서 진행할까요?',
+    en: 'Continue recording this ride?',
+    ja: 'このライド記録を再開しますか？',
+  },
+  discard: {
+    ko: '삭제',
+    en: 'Discard',
+    ja: '削除',
+  },
+  resume: {
+    ko: '이어서 주행',
+    en: 'Resume',
+    ja: '再開',
+  },
+  routeMissingTitle: {
+    ko: '루트 없음',
+    en: 'Route not found',
+    ja: 'ルートがありません',
+  },
+  routeMissingBody: {
+    ko: '가져온 루트 원본을 찾지 못했습니다.',
+    en: 'Could not find the original imported route.',
+    ja: '取り込んだルートの元データが見つかりません。',
+  },
+  sourceRouteMissingTitle: {
+    ko: '원본 루트 없음',
+    en: 'Source route missing',
+    ja: '元ルートがありません',
+  },
+  sourceRouteMissingBody: {
+    ko: '이 Journey에는 가져온 공유 루트가 연결되어 있지 않습니다.',
+    en: 'This Journey is not linked to an imported shared route.',
+    ja: 'このJourneyには取り込んだ共有ルートが紐づいていません。',
+  },
+  stopsMissingTitle: {
+    ko: '스팟 없음',
+    en: 'No stops',
+    ja: 'スポットがありません',
+  },
+  stopsMissingBody: {
+    ko: '지도에 표시할 원본 루트 스팟이 없습니다.',
+    en: 'There are no source route stops to show on the map.',
+    ja: '地図に表示する元ルートのスポットがありません。',
+  },
+  routePrepareFailedTitle: {
+    ko: '루트 준비 실패',
+    en: 'Route setup failed',
+    ja: 'ルート準備に失敗しました',
+  },
+  routePrepareFailedBody: {
+    ko: '가져온 루트를 불러오지 못했습니다.',
+    en: 'Could not load the imported route.',
+    ja: '取り込んだルートを読み込めませんでした。',
+  },
+  publicDiaryMissingTitle: {
+    ko: '공개 일지 없음',
+    en: 'Diary not found',
+    ja: '公開日記がありません',
+  },
+  publicDiaryMissingBody: {
+    ko: '지도에서 열 공개 일지를 찾지 못했습니다.',
+    en: 'Could not find the public diary to open on the map.',
+    ja: '地図で開く公開日記が見つかりません。',
+  },
+  waitingForLocationTitle: {
+    ko: '현재 위치 대기 중',
+    en: 'Waiting for location',
+    ja: '現在地を取得中',
+  },
+  waitingForLocationBody: {
+    ko: 'GPS 위치가 잡히면 주변 수리소, 식당, 숙소 정보를 볼 수 있습니다.',
+    en: 'Nearby repair, food, and lodging information will appear after GPS is ready.',
+    ja: 'GPS位置が取得できると、周辺の修理店、食堂、宿泊情報を確認できます。',
+  },
+  readyRideTitle: {
+    ko: '출발 준비 완료',
+    en: 'Ready to ride',
+    ja: '出発準備完了',
+  },
+  readyRideBody: {
+    ko: '이 루트를 기준으로 주행을 시작할 준비가 되었습니다. 실제 트랙 저장은 서버 Journey 루트에서 지원됩니다.',
+    en: 'This route is ready. Actual track recording is supported for server-imported journeys.',
+    ja: 'このルートを基準にライドを始める準備ができました。実際のトラック保存はサーバー連携Journeyで利用できます。',
+  },
+  plannedRideEndedTitle: {
+    ko: '계획 주행 종료',
+    en: 'Ride ended',
+    ja: '計画ライド終了',
+  },
+  plannedRideEndedBody: {
+    ko: '계획 주행 상태를 종료했습니다.',
+    en: 'The planned ride state has ended.',
+    ja: '計画ライド状態を終了しました。',
+  },
+  nearbyLoadFailedBody: {
+    ko: '주변 여행 정보를 불러오지 못했습니다.',
+    en: 'Failed to load nearby travel information.',
+    ja: '周辺の旅行情報を読み込めませんでした。',
+  },
+  feedbackFailedTitle: {
+    ko: '반응 저장 실패',
+    en: 'Feedback failed',
+    ja: '反応の保存に失敗しました',
+  },
+  feedbackFailedBody: {
+    ko: 'POI 반응을 저장하지 못했습니다.',
+    en: 'Could not save your POI feedback.',
+    ja: 'POIへの反応を保存できませんでした。',
+  },
+  reportSubmittedTitle: {
+    ko: '신고 접수 완료',
+    en: 'Report submitted',
+    ja: '報告を受け付けました',
+  },
+  reportSubmittedBody: {
+    ko: '운영자 검수 목록에 추가했습니다. 지도 정보 개선을 도와주셔서 고마워요.',
+    en: 'This POI has been added to the admin review queue. Thanks for helping improve the map.',
+    ja: 'このPOIを管理者レビューに追加しました。地図情報の改善にご協力いただきありがとうございます。',
+  },
+  reportFailedTitle: {
+    ko: '신고 실패',
+    en: 'Report failed',
+    ja: '報告に失敗しました',
+  },
+  reportFailedBody: {
+    ko: 'POI 신고를 저장하지 못했습니다.',
+    en: 'Could not submit this POI report.',
+    ja: 'POI報告を送信できませんでした。',
+  },
+  spotCertification: {
+    ko: '인증 스팟',
+    en: 'Certification',
+    ja: '認証スポット',
+  },
+  localReward: {
+    ko: '지역 상생 혜택',
+    en: 'Local Reward',
+    ja: '地域特典',
+  },
+  regionStory: {
+    ko: '이 지역의 이야기',
+    en: 'Story of the Region',
+    ja: 'この地域の物語',
+  },
+  noDescription: {
+    ko: '상세 설명이 없습니다.',
+    en: 'No English description available.',
+    ja: '詳細説明はまだありません。',
+  },
+  certifyDiary: {
+    ko: '스팟 인증 & 일지 작성',
+    en: 'Certify Stamp & Write Diary',
+    ja: 'スポット認証 & 日記を書く',
+  },
+  completeJourneyAction: {
+    ko: '종주 완료',
+    en: 'Complete',
+    ja: '完了',
+  },
+  startJourneyAction: {
+    ko: '종주 기록 시작하기',
+    en: 'Start Riding Journey',
+    ja: 'ライド記録を始める',
+  },
+  importedRoute: {
+    ko: '가져온 루트',
+    en: 'Imported route',
+    ja: '取り込んだルート',
+  },
+  noRecord: {
+    ko: '기록 없음',
+    en: 'No record',
+    ja: '記録なし',
+  },
+  hours: {
+    ko: '시간',
+    en: 'h',
+    ja: '時間',
+  },
+  minutes: {
+    ko: '분',
+    en: 'm',
+    ja: '分',
+  },
+  distance: {
+    ko: '거리',
+    en: 'Distance',
+    ja: '距離',
+  },
+  estimatedTime: {
+    ko: '예상 시간',
+    en: 'Time',
+    ja: '予想時間',
+  },
+  stops: {
+    ko: '스팟',
+    en: 'Stops',
+    ja: 'スポット',
+  },
+  countSuffix: {
+    ko: '개',
+    en: '',
+    ja: '件',
+  },
+  finish: {
+    ko: '계획 주행 종료',
+    en: 'Finish',
+    ja: '計画ライド終了',
+  },
+  prepareRide: {
+    ko: '이 루트로 출발 준비',
+    en: 'Prepare Ride',
+    ja: 'このルートで準備',
+  },
 } satisfies Record<string, Record<AppLanguage, string>>;
 
 export const momentsCopy = {

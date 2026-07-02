@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { authCopy, LANGUAGE_LABELS, t } from '@/i18n';
 import type { AppLanguage } from '@/types/ridekorea';
 import React from 'react';
@@ -52,8 +53,7 @@ export function GoogleLoginScreen({
         </View>
 
         <View style={styles.brandBlock}>
-          <Text style={styles.logoMark}>RK</Text>
-          <Text style={styles.title}>RideKorea</Text>
+          <BrandLogo />
           <Text style={styles.subtitle}>{t(lang, authCopy.subtitle)}</Text>
         </View>
 
@@ -136,21 +136,6 @@ const styles = StyleSheet.create({
   brandBlock: {
     alignItems: 'center',
     gap: 12,
-  },
-  logoMark: {
-    backgroundColor: '#1E3A8A',
-    borderRadius: 16,
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: '900',
-    overflow: 'hidden',
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-  },
-  title: {
-    color: '#0F172A',
-    fontSize: 34,
-    fontWeight: '900',
   },
   subtitle: {
     color: '#475569',

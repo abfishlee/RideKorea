@@ -210,6 +210,15 @@ Use this checklist before merging visual changes, especially on Journey, Moments
 
 Decision: keep the high-energy Neo-Outdoors accents, but restrict them to navigation, route state, ride state, and small editorial emphasis. Do not expand neon into dense content surfaces.
 
+## Brand Asset Application
+
+Completed: the NatureCode transparent logo from `brand_assets` is now applied through a shared `BrandLogo` component.
+
+- Login screen: uses the full logo lockup above the Google/dev login actions.
+- Journey header: uses the compact logo lockup beside the language selector.
+- Source asset: `brand_assets/naturecode_logo_transparent.png`.
+- App asset: `frontend/assets/images/naturecode-logo.png`.
+
 ### Keep
 
 - Electric Cyan stays on planned routes, active tabs, active route badges, and small highlight borders.

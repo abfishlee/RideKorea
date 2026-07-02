@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { journeyCopy, LANGUAGE_LABELS, t } from '@/i18n';
 import type { AppLanguage, Course, ImportedRouteDraft, UserProfile } from '@/types/ridekorea';
 import React from 'react';
@@ -32,7 +33,7 @@ export function JourneyHeader({
     <View style={styles.floatingHeader}>
       <View style={styles.headerRow}>
         <View style={styles.brandGroup}>
-          <Text style={styles.brandTitle}>RideKorea</Text>
+          <BrandLogo compact />
           <View style={styles.langSegmented}>
             {(['ko', 'en', 'ja'] as AppLanguage[]).map((language) => (
               <TouchableOpacity
@@ -130,11 +131,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  brandTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#1E3A8A',
   },
   langSegmented: {
     backgroundColor: '#E2E8F0',
